@@ -457,6 +457,34 @@ targets:
   # quelques minutes de plus par build, et surtout un test d'interface — la catégorie de test la
   # plus capricieuse qui soit — capable de bloquer une livraison parce qu'une animation a mis une
   # demi-seconde de trop. Les captures se demandent, elles ne s'imposent pas.
+  # LA MONTRE A ENFIN UNE CIBLE QUI LA PILOTE.
+  #
+  # La chaîne sait la PHOTOGRAPHIER depuis le chantier 33 — on construit, on installe,
+  # `simctl io screenshot`. Photographier n'est pas piloter : une image dit à quoi l'écran
+  # ressemble, pas qu'on peut s'en servir. La montre était la seule partie du produit qu'aucun
+  # test ne touchait, et c'est celle qui vient de passer des mois à parler français à tout le
+  # monde.
+  #
+  # Le support de XCUITest sur watchOS existe depuis Xcode 12.5 et il est PARTIEL : pas
+  # d'enregistrement, et des éléments qui n'entrent dans l'arbre d'accessibilité qu'après un
+  # défilement. Les tests portent donc sur ce qui est visible à l'ouverture.
+  #
+  # `TEST_TARGET_NAME` désigne l'app que `XCUIApplication()` lance. Sans lui, la cible compile et
+  # ne lance rien.
+  RunUpWatchUITests:
+    type: bundle.ui-testing
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: RunUpWatchUITests
+    dependencies:
+      - target: RunUpWatch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hicsuntco.runup.watchkitapp.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: RunUpWatch
+
   RunUpUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -496,6 +524,21 @@ schemes:
     build:
       targets:
         RunUpWatch: [run]
+
+  # LE SCHÉMA DE TEST NE LISTE PAS `RunUpWatch` EN CIBLE DE BUILD, et c'est une précaution prise
+  # sur un retour public plutôt que sur une supposition : lister l'app de la montre dans le
+  # schéma de ses tests d'interface a empêché Xcode de créer le schéma de l'app elle-même, celui
+  # dont la commande de build se sert. La dépendance déclarée sur la cible suffit à la faire
+  # construire.
+  MontreTests:
+    build:
+      targets:
+        RunUpWatchUITests: [test]
+    test:
+      # Debug, comme partout ailleurs : c'est la configuration dans laquelle l'app est éprouvée.
+      config: Debug
+      targets:
+        - RunUpWatchUITests
   Captures:
     build:
       targets:

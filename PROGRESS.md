@@ -410,6 +410,54 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 46 — la montre est enfin pilotée, pas seulement photographiée (C2)
+
+### Ce qui manquait
+
+Aucune cible de test d'interface watchOS. La chaîne sait **photographier** la montre depuis le
+chantier 33 — on construit, on installe, `simctl io screenshot`. Photographier n'est pas piloter :
+une image dit à quoi l'écran ressemble, pas qu'on peut s'en servir.
+
+La montre était donc la seule partie du produit qu'aucun test ne touchait. Et c'est celle qui
+vient de passer des mois à parler français à tout le monde.
+
+### Ce qui a été cherché avant d'écrire
+
+La règle 8 s'applique en plein : je ne savais pas si XCUITest existe sur watchOS. Réponse :
+**oui, depuis Xcode 12.5, et partiellement.** Pas d'enregistrement, et des retours publics
+décrivent des éléments qui n'entrent dans l'arbre d'accessibilité qu'après un défilement.
+
+Un piège, confirmé par un dépôt qui a fait la même chose en XcodeGen : **le schéma de test ne doit
+pas lister l'app de la montre comme cible de build** — « doing so stopped Xcode auto-creating the
+scheme the build command needs ». La dépendance déclarée sur la cible suffit à la faire
+construire. `MontreTests` ne liste donc que la cible de test.
+
+Et un avertissement qui ne nous concerne pas, vérifié plutôt que supposé : une construction non
+signée ferait planter une **extension de widget** de montre au premier lancement. Notre
+`RunUpWatch` n'en a pas.
+
+### Les trois cas, et pourquoi ceux-là
+
+- **L'écran s'ouvre et porte son bouton.** Le test de fumée : jusqu'ici, rien ne prouvait que
+  l'app de poignet démarre.
+- **Lancée en anglais, elle affiche « Today » et PAS « Aujourd'hui ».** C'est le défaut qui a
+  vécu des mois — la cible ne portait pas le catalogue de traductions. Corrigé au chantier 18, et
+  gardé jusqu'ici par rien d'autre qu'une relecture : **les captures de montre ne sont prises
+  qu'en français**, donc aucune image ne pouvait le revoir.
+- **Et en espagnol**, parce que deux langues qui s'accordent ne font pas trois — c'est la leçon
+  de `comparer.py`, et elle vaut ici.
+
+L'étape passe **avant** les captures dans `montre.yml` : une app qui ne démarre pas doit échouer
+en deux minutes, pas après la séance photo.
+
+### Ce que ce premier test ne fait pas
+
+Il ne lance pas de séance. `workout.start()` ouvre une session HealthKit et la construction des
+tests n'est pas signée ; piloter un démarrage de course demandera de traiter ce cas, et ce n'est
+pas la première chose à écrire. Les délais sont à vingt secondes : un premier lancement sur un
+simulateur watchOS neuf est lent, et un échec par impatience ressemble exactement à un échec par
+défaut.
+
 ## Chantier 45 — dire pourquoi cette séance, aujourd'hui (C1)
 
 ### Ce qui existait, et ce qui manquait

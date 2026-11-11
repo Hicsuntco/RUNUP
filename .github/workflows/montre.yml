@@ -202,6 +202,31 @@ jobs:
       # puis l'appareil redémarre. C'est le seul endroit que watchOS lit avec certitude, et c'est
       # vérifiable : l'étape RELIT ce qu'elle a posé et s'arrête si ça ne correspond pas, pour
       # échouer sur la cause plutôt que sur le symptôme.
+      # PILOTER LA MONTRE, ET PAS SEULEMENT LA PHOTOGRAPHIER.
+      #
+      # La suite de ce workflow prend des images : elle dit à quoi l'écran ressemble, pas qu'on
+      # peut s'en servir. Cette étape-ci lance l'app sur le simulateur et la pilote — c'est la
+      # première fois qu'un test touche la montre.
+      #
+      # ELLE TOURNE DANS LES TROIS LANGUES, et c'est tout son intérêt : la montre a dit
+      # « Aujourd'hui » à tout le monde pendant des mois, parce que sa cible ne portait pas le
+      # catalogue de traductions. Les captures, elles, ne sont prises qu'en français — ce défaut
+      # ne pouvait donc être revu par rien.
+      #
+      # Sans `CODE_SIGNING_ALLOWED=NO` : un retour public décrit une extension de widget qui
+      # plante au premier lancement d'une construction non signée sur un simulateur neuf. Notre
+      # montre n'a pas d'extension, donc rien ne l'impose — mais rien ne l'exige non plus, et un
+      # test se lance avec le moins d'écarts possible par rapport à ce qu'on livre.
+      - name: Piloter la montre, dans les trois langues
+        run: |
+          set -euo pipefail
+          xcodebuild test \
+            -project RunUp.xcodeproj \
+            -scheme MontreTests \
+            -configuration Debug \
+            -destination "id=${{ steps.construire.outputs.udid }}" \
+            -derivedDataPath build/montre
+
       - name: Photographier, langue par langue
         run: |
           set -euo pipefail

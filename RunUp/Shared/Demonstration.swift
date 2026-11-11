@@ -29,7 +29,28 @@ enum Demonstration {
     /// moindre autre fil n'existe. Les lectures qui suivent ne voient jamais qu'une constante.
     nonisolated(unsafe) private(set) static var enCours = false
 
+    /// On FILME plutôt que de photographier. Voir `animationsFigees`.
+    nonisolated(unsafe) private(set) static var filme = false
+
+    /// LES ANIMATIONS SONT FIGÉES QUAND ON PHOTOGRAPHIE, PAS QUAND ON FILME.
+    ///
+    /// La campagne 166 a photographié `4-club.png` — une des six images livrées à Apple —
+    /// PENDANT que le tracé de la sortie se dessinait : la tête lumineuse de l'animation figée au
+    /// milieu du trait, et la ligne arrêtée avant sa fin. La campagne 165, à six heures d'écart,
+    /// l'avait eu fini. Personne ne choisit : c'est le minutage, et c'est le hasard qui décide de
+    /// ce qu'Apple reçoit.
+    ///
+    /// Une photo doit montrer un écran POSÉ. Un film, lui, n'a d'intérêt que par son mouvement —
+    /// d'où la distinction plutôt qu'un simple « pas d'animation en démonstration ».
+    ///
+    /// Figer est appliqué EN UN SEUL ENDROIT, à la racine des vues, par une `transaction` qui
+    /// vide l'animation de tout ce qui passe en dessous. L'app compte 22 appels à `RUMotion` et
+    /// une cinquantaine d'animations écrites à la main : les corriger une par une aurait laissé
+    /// la cinquante et unième dehors sans que rien ne le dise.
+    static var animationsFigees: Bool { enCours && !filme }
+
     #if DEBUG
     static func commencer() { enCours = true }
+    static func filmer() { filme = true }
     #endif
 }

@@ -62,7 +62,10 @@ final class ApercuUITests: XCTestCase {
                           "Aperçu non demandé.")
 
         let app = XCUIApplication()
-        app.launchArguments = ["--captures", "--ecran=prog", "--clair"]
+        // `--film` : les animations jouent. Sans lui, l'app les fige — c'est ce qu'il faut
+        // pour une photo, et exactement ce qu'il ne faut pas pour un film. Voir
+        // `Demonstration.animationsFigees`.
+        app.launchArguments = ["--captures", "--film", "--ecran=prog", "--clair"]
         if let langue = ProcessInfo.processInfo.environment["RUNUP_LANG"] {
             app.launchArguments += ["-AppleLanguages", "(\(langue))", "-AppleLocale", langue]
         }

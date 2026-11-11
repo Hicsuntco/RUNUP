@@ -406,6 +406,69 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 43 — Apple recevait un tracé à moitié dessiné, et c'était au hasard
+
+### D'abord, ce que la comparaison a prouvé
+
+Campagne 166 contre 165, **même jour**, 181 images : **169 identiques**. `fil` — l'écran que le
+mur dessine — est identique dans les trois langues et les deux thèmes, comme les trois autres
+écrans du Club. La découpe du chantier 42 n'a rien changé.
+
+Huit des douze écarts sont `course-en-cours`, l'horloge. Restaient `4-club.png` en espagnol
+(10 077 pixels) et en français (5 pixels), et une boîte de 24 pixels sur `grand-texte/accueil`.
+
+### Ce que l'image montrait
+
+Le tracé de la sortie, en bas de la carte. Dans la campagne 165 la ligne se termine net. Dans la
+166, **une tête blanche lumineuse est posée au milieu du dernier segment, et la ligne s'arrête
+avant sa fin**.
+
+`SelfDrawingRoute` dessine le parcours en 1,45 s à l'apparition. La campagne 166 a pris la photo
+pendant. La 165, six heures plus tôt, l'avait eu fini.
+
+**`4-club.png` est une des six images livrées à Apple.** Ce n'est donc pas un défaut de
+comparaison : c'est le minutage qui décidait de ce qu'Apple reçoit, et il pouvait tout aussi bien
+tomber à 60 % du tracé.
+
+### La règle, et pourquoi elle est posée là
+
+**Une photo montre un écran posé. Un film garde son mouvement.** Les deux tournent dans le même
+mode démonstration, et c'est pour ça que le défaut a vécu : « pas d'animation en démonstration »
+aurait aplati le film d'aperçu, dont c'est tout l'intérêt.
+
+La distinction tient à un argument de lancement, `--film`, posé par `ApercuUITests` et par lui
+seul. **Le drapeau est sur le film, pas sur les photos**, et le sens compte : oublier de déclarer
+un film donne un film sans mouvement, ça se voit en le regardant ; oublier de déclarer une photo
+ramène le non-déterminisme EN SILENCE. C'est le sens où l'erreur se voit.
+
+### Figer en un seul endroit
+
+Une `transaction` à la racine des vues, qui vide l'animation de tout ce qui passe en dessous.
+
+C'était le choix contre lequel il fallait se décider : corriger `SelfDrawingRoute` seul aurait
+réglé le cas observé et laissé les autres. Mesuré : l'app compte **22 appels à `RUMotion`** et
+**une cinquantaine d'animations écrites à la main** dans les vues — dont l'apparition en cascade
+du fil et le ressort des anneaux de l'accueil, tous deux sur des écrans photographiés. Les
+corriger une par une aurait laissé la cinquante et unième dehors sans que rien ne le dise.
+
+### Ce qui le garde
+
+`check_film.py` et ses **7 cas** vérifient les cinq faits lisibles dans le code : le film se
+déclare, les photos ne se déclarent pas, l'app allume le mode film, la règle dit bien « en
+démonstration ET pas en train de filmer », et la racine applique une `transaction`.
+
+**Sa première version ne voyait rien.** Elle cherchait `--film` dans le fichier entier — or le
+commentaire qui explique le drapeau contient le drapeau, et celui qui explique la `transaction`
+contient `animationsFigees`. Retirer le vrai code laissait le contrôle vert : il relisait sa
+propre explication. Deux cas du banc tiennent cette correction, et c'est exactement le piège que
+`check_vides` avait rencontré en novembre.
+
+### Ce qu'aucun script ne saura dire
+
+Si l'image est effectivement posée. Aucun contrôle ne lit une animation. La preuve reste la
+comparaison de deux campagnes prises à des heures différentes — ce qui est précisément comment
+ce défaut a été trouvé, et pourquoi le chantier 40 valait la peine.
+
 ## Chantier 42 — le mur, et les onze fils qu'il fallait ne pas confondre (B5, dernier morceau)
 
 ### Pourquoi celui-ci n'était pas un déplacement

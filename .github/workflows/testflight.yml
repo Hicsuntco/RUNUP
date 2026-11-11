@@ -425,6 +425,20 @@ jobs:
           cd ci_scripts && python3 test_prive.py
           cd .. && python3 ci_scripts/check_prive.py
 
+      # La campagne 166 a photographié `4-club.png` — une des six images livrées à Apple — PENDANT
+      # que le tracé de la sortie se dessinait : tête lumineuse figée au milieu du trait, ligne
+      # arrêtée avant sa fin. La 165, six heures plus tôt, l'avait eu fini. C'est le minutage qui
+      # décidait de ce qu'Apple reçoit.
+      #
+      # L'app fige donc ses animations en démonstration, SAUF quand on la filme. La distinction
+      # tient à `--film`, posé par le seul `ApercuUITests`. Le drapeau est sur le film et pas sur
+      # les photos parce que les deux oublis ne coûtent pas la même chose : un film sans mouvement
+      # se voit en le regardant, une photo prise en plein vol ne se voit pas du tout.
+      - name: Le film se déclare-t-il, et les photos sont-elles figées
+        run: |
+          cd ci_scripts && python3 test_film.py
+          cd .. && python3 ci_scripts/check_film.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

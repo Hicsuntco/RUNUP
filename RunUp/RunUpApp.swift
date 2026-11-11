@@ -87,6 +87,14 @@ private struct RootView: View {
                 })
             }
         }
+        // UNE PHOTO MONTRE UN ÉCRAN POSÉ, PAS UNE ANIMATION EN VOL.
+        //
+        // Une seule `transaction`, à la racine : elle vide l'animation de TOUT ce qui passe en
+        // dessous. L'app compte 22 appels à `RUMotion` et une cinquantaine d'animations écrites à
+        // la main dans les vues — les corriger une par une aurait laissé la cinquante et unième
+        // dehors, sans que rien ne le dise. Voir `Demonstration.animationsFigees` pour l'image
+        // livrée à Apple qui a fait écrire ceci.
+        .transaction { if Demonstration.animationsFigees { $0.animation = nil } }
         .alert("Tes données n'ont pas pu être ouvertes", isPresented: $storeFailureAlertPresented) {
             Button("Continuer", role: .cancel) {}
         } message: {
@@ -112,6 +120,8 @@ private struct RootView: View {
                     // En PREMIER, avant la moindre vue : trois services consultent ce drapeau
                     // dès leur première question. Voir `Demonstration`.
                     Demonstration.commencer()
+                    // On filme ? Alors les animations jouent. Voir `Demonstration.animationsFigees`.
+                    if CaptureSeed.filmDemande { Demonstration.filmer() }
                     // Santé est coupée AVANT que quoi que ce soit ne la touche : la construction
                     // des captures n'est pas signée, donc elle n'a pas le droit HealthKit, et le
                     // premier appel tuait le processus. Voir `HealthKitService.desactiver()`.

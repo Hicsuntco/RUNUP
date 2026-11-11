@@ -44,6 +44,17 @@ enum CaptureSeed {
         ProcessInfo.processInfo.arguments.contains(drapeau)
     }
 
+    /// `--film` : on FILME, on ne photographie pas.
+    ///
+    /// Le drapeau est posé sur le film et non sur les photos, et le sens compte. Les deux tournent
+    /// en mode démonstration ; seul le film a besoin que les animations jouent. Si quelqu'un
+    /// ajoute un film et oublie de le déclarer, ça se voit en regardant le film. S'il ajoute une
+    /// capture et oublie de la déclarer, le non-déterminisme revient EN SILENCE — et c'est
+    /// exactement ce qui s'est produit : voir `Demonstration.animationsFigees`.
+    static var filmDemande: Bool {
+        ProcessInfo.processInfo.arguments.contains("--film")
+    }
+
     /// Le profil à ouvrir par-dessus l'écran, passé en `--profil=2`.
     ///
     /// Séparé de `--ecran=` parce qu'une page de profil n'est PAS un `AppScreen` : elle se

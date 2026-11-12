@@ -99,4 +99,23 @@ final class SessionFamilyTests: XCTestCase {
                                      adjustment: nil, kind: .longRun)
         XCTAssertEqual(session.family, .longRun)
     }
+
+    /// UN GESTE N'EST PAS UNE CHARGE, et la famille ne sait pas le dire.
+    ///
+    /// `.functional` réunit le circuit intense HYROX — une vraie séance dure — et les transitions
+    /// d'un duathlon, qui s'apprennent à allure de promenade. Les deux sont « exigeantes » au
+    /// sens de l'avertissement de déplacement, qui préfère avertir en trop ; une seule compte
+    /// contre le plafond de deux séances de qualité par semaine.
+    func testUnGesteEstDistinguéDuneSeanceDure() {
+        XCTAssertTrue(SessionKind.triTransitions.estUnGeste)
+        XCTAssertTrue(SessionKind.triSwimTechnique.estUnGeste)
+        XCTAssertFalse(SessionKind.hyroxIntenseCircuit.estUnGeste,
+                       "le circuit intense est une vraie séance dure")
+        XCTAssertFalse(SessionKind.hyroxTechnique.estUnGeste,
+                       "la technique HYROX porte le rôle de qualité dans le moteur")
+        XCTAssertFalse(SessionKind.vo2maxIntervals.estUnGeste)
+        // Les deux gestes restent « exigeants » pour l'avertissement de déplacement : c'est leur
+        // famille qui le dit, et ce test fixe le fait que les deux notions sont distinctes.
+        XCTAssertTrue(SessionKind.triTransitions.family.isDemanding)
+    }
 }

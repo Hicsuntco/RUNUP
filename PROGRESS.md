@@ -4250,3 +4250,25 @@ C'est un chantier de contenu, avec une source par station.
 Observation non corrigée, parce qu'elle n'est pas une affirmation d'entraînement : le sous-titre de
 la division Open dit « le format le plus couru », ce qui est une affirmation sur la participation
 pour laquelle je n'ai pas de source. La source officielle dit « the standard HYROX ».
+
+### Et le test élargi a d'abord échoué sur deux faux positifs — les miens
+
+La première version du compte a été refusée par la CI sur l'ultra et le duathlon, et c'est le TEST
+qui avait tort, pas le moteur :
+
+- **ultra** : « Sortie de nuit » et « Enchaînement · jour 1 » comptés. J'avais gardé
+  `isDemanding`, qui inclut la famille `.longRun`, en croyant que l'exclusion par jour suffirait —
+  mais une semaine d'ultra porte PLUSIEURS séances de famille `.longRun`, et n'exclure que le jour
+  de sortie longue préféré en laissait deux dans le compte ;
+- **duathlon** : « Transitions · T1 et T2 » comptée. Elle porte le rôle `.easy` et le moteur ne l'a
+  jamais comptée — son propre commentaire dit pourquoi : « hors de l'axe d'effort […] ce qu'on y
+  travaille n'est pas une filière énergétique, c'est un geste ».
+
+Correspondance type → rôle extraite mécaniquement du moteur pour trancher : **aucun type ne porte
+deux rôles différents**. La distinction est donc nette, et elle est maintenant écrite là où vivent
+les types — `SessionKind.estUnGeste`, qui dit aussi pourquoi `SessionFamily.isDemanding` ne peut pas
+y répondre : il sert l'avertissement de déplacement, où avertir en trop ne coûte rien, et il réunit
+donc le circuit intense HYROX avec des transitions qui s'apprennent à allure de promenade.
+
+Après correction, les deux semaines mises en cause comptent exactement deux séances dures — le
+plafond, pas au-dessus. Il n'y avait donc qu'un seul défaut de moteur, celui de HYROX.

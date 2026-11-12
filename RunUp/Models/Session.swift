@@ -109,6 +109,32 @@ enum SessionFamily: String, CaseIterable, Codable, Equatable {
     }
 }
 
+extension SessionKind {
+    /// Un GESTE et non une charge : ce qu'on y travaille n'est pas une filière énergétique.
+    ///
+    /// # POURQUOI LA FAMILLE NE SUFFIT PAS À RÉPONDRE
+    ///
+    /// La famille `.functional` réunit deux choses très différentes : le circuit intense HYROX,
+    /// qui est une vraie séance dure, et les transitions d'un duathlon, qui s'apprennent à allure
+    /// de promenade. Le moteur les distingue par leur RÔLE — `.speed` contre `.easy` — et le rôle
+    /// vit sur l'archétype, pas sur la séance produite.
+    ///
+    /// `SessionFamily.isDemanding` ne les distingue pas non plus, et c'est VOULU : il sert
+    /// l'avertissement de déplacement, où avertir en trop coûte un haussement d'épaules là où
+    /// avertir en moins coûte une semaine d'arrêt. Le plafond de qualité, lui, doit les
+    /// distinguer — compter les transitions comme une séance dure ferait refuser une semaine que
+    /// le moteur n'a jamais chargée.
+    ///
+    /// Deux types seulement, et ce sont ceux que le commentaire de `family` nomme déjà : la
+    /// technique de nage et les transitions.
+    var estUnGeste: Bool {
+        switch self {
+        case .triTransitions, .triSwimTechnique: return true
+        default: return false
+        }
+    }
+}
+
 enum SessionKind: String, Codable, Equatable, CaseIterable {
     case easyFooting = "easy_footing"
     case lightIntervals = "light_intervals"

@@ -206,9 +206,17 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
     /// règle que le moteur applique (`peseSurLesJambes`) et celle que l'avertissement de
     /// déplacement lit déjà.
     ///
-    /// La sortie longue est exclue PAR SON JOUR et non par sa famille : en HYROX, la course
-    /// compromise porte le rôle de sortie longue mais la famille « fonctionnel », et l'exclure
-    /// par la famille ne l'exclurait pas.
+    /// LA SORTIE LONGUE S'EXCLUT DES DEUX FAÇONS, et la première version ne faisait que l'une.
+    ///
+    /// Par sa FAMILLE, parce qu'une semaine d'ultra en porte plusieurs : la sortie longue, le
+    /// premier jour d'un enchaînement et la sortie de nuit sont toutes de famille `.longRun`, et
+    /// n'exclure que le jour de sortie longue préféré en laissait deux dans le compte. Et par son
+    /// JOUR, parce qu'en HYROX la course compromise porte le rôle de sortie longue mais la
+    /// famille « fonctionnel » — l'exclure par la famille ne l'exclurait pas.
+    ///
+    /// Les gestes sont écartés : les transitions d'un duathlon s'apprennent à allure de
+    /// promenade, le moteur leur donne le rôle `.easy` et ne les a jamais comptées. Voir
+    /// `SessionKind.estUnGeste`, qui porte la raison.
     ///
     /// Le plafond ne compte que ce qui se court CHAUSSÉ, pour la raison écrite dans le moteur :
     /// un plan de triathlon pose trois séances intenses sur trois tissus différents, et les
@@ -234,6 +242,8 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
                     .compactMap { $0.session }
                     .filter { seance in
                         seance.family.isDemanding
+                            && seance.family != .longRun
+                            && !(seance.kind?.estUnGeste ?? false)
                             && (seance.kind?.disciplines.contains { $0.wearsShoes } ?? false)
                     }
                 XCTAssertLessThanOrEqual(

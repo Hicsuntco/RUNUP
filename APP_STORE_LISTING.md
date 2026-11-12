@@ -537,7 +537,9 @@ Tout ce qui précède disparaît à la suppression du compte : `routes` et `rout
 `ON DELETE CASCADE` sur `users`, ce que `api/account/[action].js` promet explicitement.
 
 ## URLs requises
-- **URL de support** : `mailto:charlottegrudep@gmail.com`
+- **URL de support** : `https://hukaia.github.io/RUNUP/support.html`
+  (la page porte l'adresse mail et renvoie à la politique ; voir `ci_scripts/liens.py`,
+  qui est ce que `asc.py push-metadata` envoie réellement)
 - **URL de politique de confidentialité** : `https://hukaia.github.io/RUNUP/privacy.html`
 - **URL marketing** (optionnelle) : —
 

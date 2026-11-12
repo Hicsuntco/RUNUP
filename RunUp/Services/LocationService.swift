@@ -155,6 +155,19 @@ final class LocationService: NSObject {
 
     func stop() {
         manager.stopUpdatingLocation()
+        // LE DRAPEAU D'ARRIÈRE-PLAN SE REND AVEC LES MISES À JOUR.
+        //
+        // Il était posé à `true` au démarrage et jamais remis à `false`. Ce que ça coûte
+        // vraiment, mesuré plutôt que supposé : RIEN en batterie — sans mises à jour actives,
+        // iOS ne livre aucune position, donc le drapeau seul ne consomme pas et n'affiche aucun
+        // indicateur. Le risque est LATENT : tout chemin futur appelant `startUpdatingLocation`
+        // hériterait de la livraison en arrière-plan sans l'avoir décidée. Il n'y en a qu'un
+        // aujourd'hui, `start()`, et c'est précisément le moment de fermer la porte — pas après
+        // qu'un second l'ait franchie.
+        //
+        // Après `stopUpdatingLocation()` et pas avant : baisser le drapeau pendant que les mises
+        // à jour tournent est ce qu'Apple interdit.
+        manager.allowsBackgroundLocationUpdates = false
     }
 
     /// Auto-pause: keeps GPS delivery running (so speed readings stay live) but stops crediting

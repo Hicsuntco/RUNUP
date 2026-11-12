@@ -170,6 +170,17 @@ struct AllegementDuJour: Codable, Equatable, Sendable {
         // là où il n'y a pas de séance.
         guard seance.durationMinutes > 0 else { return seance }
         var allegee = seance
+        // POURQUOI PAS `role == .speed` ICI, alors que c'est la réponse unique ailleurs.
+        //
+        // Le rôle dit ce qu'une séance coûte au budget de la SEMAINE, et seules les séances du
+        // générateur en portent un. L'allègement du jour s'applique aussi en course libre, où la
+        // séance est recalculée à chaque affichage et n'a pas de rôle — lire le rôle y rendrait
+        // l'allègement muet sur un fractionné.
+        //
+        // La question posée ici est d'ailleurs une TROISIÈME, voisine des deux autres : non pas
+        // « est-ce que ça compte au budget » (le rôle), ni « faut-il un jour de récupération
+        // derrière » (`SessionFamily.isDemanding`), mais « y a-t-il de l'intensité à retirer ».
+        // Elle se répond sur le contenu de la séance, donc partout.
         let qualite = seance.isIntervalSession
             || seance.zone.contains("3") || seance.zone.contains("4")
         allegee.durationMinutes = Int(Double(seance.durationMinutes) * (qualite ? 0.7 : 0.85))

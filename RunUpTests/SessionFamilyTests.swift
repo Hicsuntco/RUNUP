@@ -100,22 +100,32 @@ final class SessionFamilyTests: XCTestCase {
         XCTAssertEqual(session.family, .longRun)
     }
 
-    /// UN GESTE N'EST PAS UNE CHARGE, et la famille ne sait pas le dire.
+    /// LE RÔLE ET LA FAMILLE RÉPONDENT À DEUX QUESTIONS DIFFÉRENTES, et ce test fixe l'écart.
     ///
-    /// `.functional` réunit le circuit intense HYROX — une vraie séance dure — et les transitions
-    /// d'un duathlon, qui s'apprennent à allure de promenade. Les deux sont « exigeantes » au
-    /// sens de l'avertissement de déplacement, qui préfère avertir en trop ; une seule compte
-    /// contre le plafond de deux séances de qualité par semaine.
-    func testUnGesteEstDistinguéDuneSeanceDure() {
-        XCTAssertTrue(SessionKind.triTransitions.estUnGeste)
-        XCTAssertTrue(SessionKind.triSwimTechnique.estUnGeste)
-        XCTAssertFalse(SessionKind.hyroxIntenseCircuit.estUnGeste,
-                       "le circuit intense est une vraie séance dure")
-        XCTAssertFalse(SessionKind.hyroxTechnique.estUnGeste,
-                       "la technique HYROX porte le rôle de qualité dans le moteur")
-        XCTAssertFalse(SessionKind.vo2maxIntervals.estUnGeste)
-        // Les deux gestes restent « exigeants » pour l'avertissement de déplacement : c'est leur
-        // famille qui le dit, et ce test fixe le fait que les deux notions sont distinctes.
-        XCTAssertTrue(SessionKind.triTransitions.family.isDemanding)
+    /// La famille dit « faut-il un jour de récupération derrière ? » et se répond plus large
+    /// exprès, pour l'avertissement de déplacement. Le rôle dit « est-ce que ça compte contre le
+    /// plafond de deux séances de qualité par semaine ». Les confondre a fait compter les
+    /// transitions d'un duathlon, qui s'apprennent à allure de promenade, comme une séance dure —
+    /// et, dans l'autre sens, a laissé le plafond HYROX se vérifier sur une sous-chaîne de titre.
+    func testLeRoleEtLaFamilleRepondentADeuxQuestions() {
+        let transitions = WorkoutSession(title: "Transitions", subtitle: "", durationMinutes: 30,
+                                         pace: "—", zone: "Technique", kind: .triTransitions,
+                                         role: .easy)
+        XCTAssertTrue(transitions.family.isDemanding,
+                      "un jour de récupération derrière : la famille le dit")
+        XCTAssertNotEqual(transitions.role, .speed,
+                          "mais elle ne coûte rien au plafond hebdomadaire")
+
+        let circuit = WorkoutSession(title: "Circuit intense", subtitle: "", durationMinutes: 40,
+                                     pace: "—", zone: "Z3-4", kind: .hyroxIntenseCircuit,
+                                     role: .speed)
+        XCTAssertTrue(circuit.family.isDemanding)
+        XCTAssertEqual(circuit.role, .speed, "celle-ci coûte une place sur deux")
+
+        // Une séance venue d'ailleurs que du générateur n'a pas de rôle, et « on ne sait pas »
+        // doit rester distinct de « facile » — voir `WorkoutSession.role`.
+        let saisieAlaMain = WorkoutSession(title: "Sortie", subtitle: "", durationMinutes: 45,
+                                          pace: "5:30", zone: "Z2")
+        XCTAssertNil(saisieAlaMain.role)
     }
 }

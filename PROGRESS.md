@@ -4272,3 +4272,56 @@ donc le circuit intense HYROX avec des transitions qui s'apprennent à allure de
 
 Après correction, les deux semaines mises en cause comptent exactement deux séances dures — le
 plafond, pas au-dessus. Il n'y avait donc qu'un seul défaut de moteur, celui de HYROX.
+
+---
+
+## 12 novembre 2026 — « cette séance est-elle dure ? » avait trois réponses
+
+Demandé par Charlotte après le chantier HYROX. Le défaut du bloc spécifique n'est pas passé par une
+ligne manquante : il est passé par l'écart entre trois réponses à la même question.
+
+| Qui demandait | Par quoi il répondait | Ce que ça valait |
+| --- | --- | --- |
+| Le générateur, pour son plafond | le **rôle** de l'archétype (`.speed`) | juste, mais `private` et perdu à la génération |
+| L'avertissement de déplacement | la **famille** (`isDemanding`) | délibérément plus large |
+| Le test de sécurité | une **sous-chaîne de titre** | ne survit pas à une traduction — et c'est lui qui est resté vert |
+
+### Ce qui a changé
+
+`SessionRole` quitte le `private enum` du moteur et devient un type du modèle, `Codable`, porté par
+la séance produite. C'est maintenant la **seule** réponse à « est-ce que ça compte contre le plafond
+de deux séances de qualité par semaine ».
+
+Il est **optionnel exprès**, et ce n'est pas une commodité de migration : « on ne sait pas » doit
+être représentable. Une séance enregistrée avant ce champ, ou construite ailleurs que par le
+générateur — course libre, graine de captures, saisie manuelle — n'a pas de rôle, et la faire passer
+par défaut pour une séance facile serait exactement le genre de valeur fausse mais plausible qui ne
+casse rien et rend les comptes faux.
+
+Le test de sécurité y gagne en même temps qu'il devient juste : la version intermédiaire approchait
+la règle avec **quatre** conditions — famille exigeante, pas de famille `.longRun`, pas un geste,
+chaussée — et la CI l'avait refusée deux fois. Il en a maintenant **deux** : le rôle et les
+chaussures. La sortie longue est écartée par définition, puisque c'est un rôle à elle. Et il exige
+que **chaque séance générée porte un rôle** : sans ce cas, un chemin de génération qui l'oublierait
+ferait simplement baisser le compte, et le plafond redeviendrait vérifié pour la mauvaise raison.
+
+`SessionKind.estUnGeste`, écrit une heure plus tôt, est **supprimé** : il n'existait que parce que le
+rôle n'était pas observable.
+
+### Ce que l'unification ne fait PAS, et pourquoi
+
+Elle ne réduit pas tout à une seule notion, parce qu'il y a bien **trois questions voisines et
+distinctes**, et que les confondre est précisément ce qui a produit les faux positifs de la CI :
+
+1. « Est-ce que ça compte au budget de la semaine ? » → `WorkoutSession.role`.
+2. « Faut-il un jour de récupération derrière ? » → `SessionFamily.isDemanding`, plus large exprès :
+   pour l'avertissement de déplacement, avertir en trop coûte un haussement d'épaules là où avertir
+   en moins coûte une semaine d'arrêt.
+3. « Y a-t-il de l'intensité à retirer ? » → le contenu de la séance, dans
+   `AllegementDuJour.appliquee`. Elle ne peut pas lire le rôle : l'allègement du jour s'applique
+   aussi en course libre, où la séance n'en porte pas, et le lire y rendrait l'allègement muet sur
+   un fractionné.
+
+Chacune est désormais répondue **une fois**, à un endroit nommé, avec un renvoi vers ses deux
+voisines. C'est l'absence de ces renvois qui avait laissé une sous-chaîne de titre tenir le rôle de
+garde de sécurité.

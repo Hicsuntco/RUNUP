@@ -201,22 +201,19 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
     /// la place de la troisième.
     ///
     /// Compter sur le titre est le défaut que `SessionKind` a été introduit pour réparer ailleurs
-    /// dans ce dépôt : un titre se traduit et se reformule, un type non. Le compte se fait donc
-    /// sur `SessionFamily.isDemanding` et `Discipline.wearsShoes` — c'est-à-dire exactement la
-    /// règle que le moteur applique (`peseSurLesJambes`) et celle que l'avertissement de
-    /// déplacement lit déjà.
+    /// dans ce dépôt : un titre se traduit et se reformule, un type non.
     ///
-    /// LA SORTIE LONGUE S'EXCLUT DES DEUX FAÇONS, et la première version ne faisait que l'une.
+    /// # LE COMPTE SE FAIT SUR LE RÔLE, PARCE QUE C'EST LA RÈGLE DU MOTEUR
     ///
-    /// Par sa FAMILLE, parce qu'une semaine d'ultra en porte plusieurs : la sortie longue, le
-    /// premier jour d'un enchaînement et la sortie de nuit sont toutes de famille `.longRun`, et
-    /// n'exclure que le jour de sortie longue préféré en laissait deux dans le compte. Et par son
-    /// JOUR, parce qu'en HYROX la course compromise porte le rôle de sortie longue mais la
-    /// famille « fonctionnel » — l'exclure par la famille ne l'exclurait pas.
+    /// Une version intermédiaire comptait sur `SessionFamily.isDemanding` plus deux exceptions —
+    /// écarter la famille `.longRun`, écarter les gestes — et la CI l'a refusée : une semaine
+    /// d'ultra porte PLUSIEURS séances de famille `.longRun`, et les transitions d'un duathlon
+    /// s'apprennent à allure de promenade. Quatre conditions pour approcher une règle qui en a
+    /// une seule.
     ///
-    /// Les gestes sont écartés : les transitions d'un duathlon s'apprennent à allure de
-    /// promenade, le moteur leur donne le rôle `.easy` et ne les a jamais comptées. Voir
-    /// `SessionKind.estUnGeste`, qui porte la raison.
+    /// `WorkoutSession.role` porte désormais la réponse, et il n'y a plus qu'à la lire. La sortie
+    /// longue est écartée par définition — c'est un rôle à elle — et aucune exception n'est
+    /// nécessaire.
     ///
     /// Le plafond ne compte que ce qui se court CHAUSSÉ, pour la raison écrite dans le moteur :
     /// un plan de triathlon pose trois séances intenses sur trois tissus différents, et les
@@ -237,15 +234,18 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
                 let jours = AdaptivePlanEngine.generateWeekSessions(
                     weekNumber: week, tier: profile.weekTier, profile: profile
                 )
-                let dures = jours
-                    .filter { $0.weekday != profile.preferredLongRunDay }
-                    .compactMap { $0.session }
-                    .filter { seance in
-                        seance.family.isDemanding
-                            && seance.family != .longRun
-                            && !(seance.kind?.estUnGeste ?? false)
-                            && (seance.kind?.disciplines.contains { $0.wearsShoes } ?? false)
-                    }
+                let seances = jours.compactMap { $0.session }.filter { $0.durationMinutes > 0 }
+                // UN RÔLE MANQUANT DOIT ÊTRE BRUYANT. Sans ce cas, un chemin de génération qui
+                // oublierait de poser le rôle ferait simplement baisser le compte, et le plafond
+                // redeviendrait vérifié pour la mauvaise raison — la panne exacte qu'on répare.
+                XCTAssertTrue(
+                    seances.allSatisfy { $0.role != nil },
+                    "\(famille.nom) : S\(week) produit une séance sans rôle"
+                )
+                let dures = seances.filter { seance in
+                    seance.role == .speed
+                        && (seance.kind?.disciplines.contains { $0.wearsShoes } ?? false)
+                }
                 XCTAssertLessThanOrEqual(
                     dures.count, 2,
                     "\(famille.nom) : S\(week) programme \(dures.count) séances dures chaussées "

@@ -607,7 +607,10 @@ enum AdaptivePlanEngine {
         return (index, max(count, 1))
     }
 
-    private enum SessionRole { case easy, speed, longRun }
+    // `SessionRole` vivait ici, en `private`. Il est désormais porté par la séance produite — voir
+    // `SessionRole` dans `Session.swift`, qui dit ce que sa confidentialité coûtait : le plafond de
+    // qualité n'était vérifiable nulle part en aval de la génération, et le test de sécurité s'est
+    // rabattu sur une sous-chaîne de titre.
 
     private struct SessionArchetype {
         var role: SessionRole
@@ -1658,7 +1661,11 @@ enum AdaptivePlanEngine {
                 zone: archetype.zone,
                 adjustment: adjustment,
                 kind: archetype.kind,
-                intervals: archetype.intervals
+                intervals: archetype.intervals,
+                // LE RÔLE VOYAGE AVEC LA SÉANCE. C'est lui qui dit si elle compte contre le
+                // plafond de deux séances de qualité par semaine, et le perdre à la génération
+                // rendait ce plafond invérifiable en aval.
+                role: archetype.role
             )
             session.adaptationNote = archetype.adaptationNote
             // L'ALLÈGEMENT DU JOUR MORD EN DERNIER, sur la séance telle qu'elle s'affichera. La

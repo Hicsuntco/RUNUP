@@ -97,6 +97,12 @@ enum SessionFamily: String, CaseIterable, Codable, Equatable {
     /// maximum, jamais dos à dos — exprimée sur l'axe des familles, pour que le déplacement manuel
     /// d'une séance puisse prévenir quand il s'apprête à la défaire.
     ///
+    /// CE N'EST PAS LE PLAFOND DE QUALITÉ, et les deux ne doivent pas être confondus : celui-ci
+    /// se lit sur `WorkoutSession.role`. La question posée ici est « faut-il un jour de
+    /// récupération derrière ? », et elle se répond plus large exprès (voir ci-dessous). Compter
+    /// le budget hebdomadaire avec cette réponse-là faisait passer les transitions d'un duathlon,
+    /// qui s'apprennent à allure de promenade, pour une séance dure.
+    ///
     /// Le renforcement en fait partie. Toutes les séances fonctionnelles ne sont pas dures — la
     /// technique de station l'est peu — mais les circuits intenses et les courses compromises
     /// dominent la famille, et sur une question de blessure, avertir en trop coûte un haussement
@@ -109,30 +115,38 @@ enum SessionFamily: String, CaseIterable, Codable, Equatable {
     }
 }
 
-extension SessionKind {
-    /// Un GESTE et non une charge : ce qu'on y travaille n'est pas une filière énergétique.
-    ///
-    /// # POURQUOI LA FAMILLE NE SUFFIT PAS À RÉPONDRE
-    ///
-    /// La famille `.functional` réunit deux choses très différentes : le circuit intense HYROX,
-    /// qui est une vraie séance dure, et les transitions d'un duathlon, qui s'apprennent à allure
-    /// de promenade. Le moteur les distingue par leur RÔLE — `.speed` contre `.easy` — et le rôle
-    /// vit sur l'archétype, pas sur la séance produite.
-    ///
-    /// `SessionFamily.isDemanding` ne les distingue pas non plus, et c'est VOULU : il sert
-    /// l'avertissement de déplacement, où avertir en trop coûte un haussement d'épaules là où
-    /// avertir en moins coûte une semaine d'arrêt. Le plafond de qualité, lui, doit les
-    /// distinguer — compter les transitions comme une séance dure ferait refuser une semaine que
-    /// le moteur n'a jamais chargée.
-    ///
-    /// Deux types seulement, et ce sont ceux que le commentaire de `family` nomme déjà : la
-    /// technique de nage et les transitions.
-    var estUnGeste: Bool {
-        switch self {
-        case .triTransitions, .triSwimTechnique: return true
-        default: return false
-        }
-    }
+/// La place d'une séance dans la semaine, et ce qu'elle coûte au budget hebdomadaire.
+///
+/// # UNE QUESTION QUI AVAIT TROIS RÉPONSES
+///
+/// « Cette séance est-elle dure ? » se posait de trois façons dans ce dépôt, et le défaut du bloc
+/// spécifique HYROX est passé par l'écart entre elles :
+///
+/// - le générateur répondait par ce rôle, qui vivait en `private` dans `AdaptivePlanEngine` et ne
+///   survivait pas à la génération — la séance produite ne le portait pas ;
+/// - l'avertissement de déplacement répondait par `SessionFamily.isDemanding`, délibérément plus
+///   large ;
+/// - le test de sécurité répondait par une SOUS-CHAÎNE DE TITRE, qui ne survit pas à une
+///   traduction. C'est lui qui est resté vert pendant que cinq séances dures tombaient dans la
+///   même semaine.
+///
+/// Le rôle est donc porté par la séance, et c'est la seule réponse à « est-ce que ça compte
+/// contre le plafond de deux séances de qualité par semaine ».
+///
+/// # CE QU'IL NE REMPLACE PAS
+///
+/// `SessionFamily.isDemanding` répond à une AUTRE question — « faut-il un jour de récupération
+/// derrière ? » — et reste plus large exprès : pour l'avertissement de déplacement, avertir en
+/// trop coûte un haussement d'épaules là où avertir en moins coûte une semaine d'arrêt. Les deux
+/// notions sont voisines et distinctes ; les confondre est ce qui avait fait compter les
+/// transitions d'un duathlon, qui s'apprennent à allure de promenade, comme une séance dure.
+enum SessionRole: String, Codable, Equatable, CaseIterable {
+    /// Endurance, récupération, technique, transitions : rien qui compte au budget.
+    case easy
+    /// Le travail de qualité, celui que le plafond hebdomadaire borne.
+    case speed
+    /// La sortie longue, qui a son propre rôle et n'est jamais comptée au budget.
+    case longRun
 }
 
 enum SessionKind: String, Codable, Equatable, CaseIterable {
@@ -518,9 +532,20 @@ struct WorkoutSession: Codable, Equatable {
     /// note décrit son adaptation. Les mélanger est ce qui a fait perdre la seconde.
     var adaptationNote: String? = nil
 
+    /// Ce que cette séance coûte au budget de qualité de la semaine — voir `SessionRole`.
+    ///
+    /// OPTIONNEL EXPRÈS, et ce n'est pas une commodité de migration. « On ne sait pas » doit être
+    /// représentable : une séance enregistrée avant ce champ, ou construite ailleurs que par le
+    /// générateur (course libre, graine de captures, saisie manuelle), n'a pas de rôle — et la
+    /// faire passer par défaut pour une séance facile serait exactement le genre de valeur fausse
+    /// mais plausible qui ne casse rien et rend les comptes faux.
+    var role: SessionRole? = nil
+
     init(title: String, subtitle: String, durationMinutes: Int, pace: String, zone: String,
          adjustment: String? = nil, kind: SessionKind? = nil,
-         intervals: IntervalStructure? = nil, adaptationNote: String? = nil) {
+         intervals: IntervalStructure? = nil, adaptationNote: String? = nil,
+         role: SessionRole? = nil) {
+        self.role = role
         self.title = title
         self.subtitle = subtitle
         self.durationMinutes = durationMinutes
@@ -553,10 +578,12 @@ struct WorkoutSession: Codable, Equatable {
         let lues = try c.decodeIfPresent(IntervalStructure.self, forKey: .intervals)
         intervals = (lues?.estVide ?? true) ? nil : lues
         adaptationNote = try c.decodeIfPresent(String.self, forKey: .adaptationNote)
+        role = try c.decodeIfPresent(SessionRole.self, forKey: .role)
     }
 
     private enum CodingKeys: String, CodingKey {
-        case title, subtitle, durationMinutes, pace, zone, adjustment, kind, intervals, adaptationNote
+        case title, subtitle, durationMinutes, pace, zone, adjustment, kind, intervals,
+             adaptationNote, role
     }
 
     /// Le titre à AFFICHER, dans la langue courante. Retombe sur le texte enregistré quand la

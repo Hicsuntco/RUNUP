@@ -4591,3 +4591,53 @@ un** liens de spécification des dépendances — « https://w3c.github.io/FileA
 de RUNUP mal adressée. Le motif vise maintenant le segment de projet, pris dans la déclaration : un
 renommage le suit, et aucune liste d'exceptions n'est à tenir. Les journaux — PROGRESS, AUDIT,
 PHASE2 — gardent leurs anciennes adresses, parce qu'ils racontent ce qui a été fait.
+
+---
+
+## 12 novembre 2026 — B8, premier morceau : ce qui n'était pas atteignable
+
+La règle écrite au regard de ce chantier est « à faire par morceaux, jamais d'un bloc, et seulement
+là où ça paie ». J'ai donc mesuré les coutures avant de découper, et deux blocs sont restés en place
+avec leur raison.
+
+### Deux blocs examinés et laissés
+
+**La sauvegarde.** Ses parties pures sont déjà dans `SauvegardeService`. Ce qui reste dans
+`AppState` est l'orchestration : récupérer trois collections du contexte, puis, après une
+restauration, relancer le programme, la course libre, l'accord de genre, le thème et les rappels, et
+revenir à l'accueil. C'est exactement le travail d'`AppState`. L'extraire aurait été du brassage.
+
+**`recoverInterruptedRunIfNeeded`.** Elle lit le profil et surtout elle **notifie** : elle touche
+l'état vivant. La déplacer aurait voulu dire lui faire rendre ce qu'elle voulait annoncer pour que
+l'appelant l'annonce à sa place — sans qu'aucun test n'y gagne.
+
+### Le morceau qui paie
+
+Les deux **réparations de données** — renommer les sorties titrées « Repos » et recalculer un
+dénivelé positif gonflé — ne dépendaient que du contexte de données. Mesuré avant de bouger : zéro
+référence à la navigation, aux feuilles, à la course en direct.
+
+Elles sont sorties dans `RunUp/Services/ReparationsAuLancement.swift`. `AppState` passe de **1 255 à
+1 155 lignes**, mais le compteur n'est pas le point : c'étaient deux méthodes **`private`** d'un
+objet qu'un test ne peut pas construire sans toute l'app derrière. C'est la même histoire que
+`LocationService.majDeLaDistance`, dont le commentaire raconte qu'une règle corrigeant une erreur de
+cinquante pour cent n'avait aucun test pour cette seule raison.
+
+### Ce que les sept nouveaux cas tiennent, et que rien ne tenait
+
+`RestDayRunTitleTests` tenait la RÈGLE — `buildRunRecord` refuse d'écrire un nouveau titre de jour de
+repos — et `ElevationGainTests` le CALCUL. Personne ne tenait la **réparation** : le marqueur qui la
+fait tourner une seule fois, la sélection des lignes à toucher, et le fait qu'elle ne touche pas les
+autres.
+
+Les sept cas : un titre « Repos » est renommé ; une course d'avant `sessionKind`, reconnue par son
+texte, l'est aussi ; une vraie séance n'est pas touchée — une réparation qui renomme trop efface ce
+que quelqu'un a couru ; elle ne tourne qu'une fois, et ce cas **fixe ce que ça coûte** (une ligne
+arrivée après, par une restauration, ne sera pas réparée) ; un dénivelé gonflé descend ; il ne monte
+jamais, parce que le défaut d'origine ne pouvait que gonfler ; et une course sans tracé garde son
+chiffre plutôt que de recevoir un zéro inventé.
+
+Les deux marqueurs `UserDefaults` sont devenus des constantes nommées, pour que les tests les
+**lisent** au lieu de les recopier : une clé recopiée qui dérive donne un test qui passe sur une
+réparation qui ne tourne plus. Et la suite partage `UserDefaults`, donc les cas les effacent avant et
+après — sans quoi le premier poserait le marqueur et les suivants passeraient en n'éprouvant rien.

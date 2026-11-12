@@ -26,6 +26,22 @@ struct HyroxDetailsStepView: View {
                     }
                 }
 
+                // DIRE LA PORTÉE DU PLAN PLUTÔT QUE DE LA LAISSER DEVINER.
+                //
+                // Open et Pro ne sont pas les seules divisions officielles : Doubles, Relay et
+                // Adaptive ont chacune leur règlement, et elles ne se préparent pas pareil — en
+                // Doubles les équipiers alternent les stations, en Relay ils se partagent les
+                // kilomètres. Le plan de cette app est écrit pour le format individuel, et deux
+                // cartes présentées seules laissaient croire que le choix était complet.
+                //
+                // On le DIT au lieu de l'élargir : écrire un plan de Doubles demande une source
+                // par format, pas une case de plus dans une énumération.
+                Text("Plan écrit pour le format individuel. Doubles et Relay se préparent autrement.")
+                    .font(RUFont.sans(.small))
+                    .foregroundColor(RUColor.text3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
+
                 EyebrowLabel(text: "Ton objectif chrono", color: RUColor.text3)
                     .padding(.top, 24).padding(.bottom, 10)
                 ChipFlowLayout {

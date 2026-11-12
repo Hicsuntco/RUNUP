@@ -4173,3 +4173,80 @@ Trois cas sur la règle pure dans `ContinuiteDuPlanTests` (la qualité perd sa s
 seulement raccourcie, le repos ne s'allège pas) et deux dans `CourseLibreTests` (l'allègement du jour
 raccourcit bien la séance de course libre et la carte peut le dire ; un allègement d'hier ne
 raccourcit rien aujourd'hui).
+
+---
+
+## 12 novembre 2026 — HYROX : un plafond de sécurité qui ne tenait que pour quatre familles sur cinq
+
+Audit de C3 (le contenu HYROX), en lecture seule d'abord. Le format annoncé est juste et sourcé :
+l'app dit « 8 × 1 km de course, 8 stations fonctionnelles », ce que confirme
+[hyrox.com](https://hyrox.com/the-fitness-race/), et elle n'affirme **aucune charge** — seulement
+« charge standard » et « charge renforcée ». C'est prudent : les poids changent par saison et par
+division ([rulebook Singles 26/27](https://hyrox.com/wp-content/uploads/2025/07/25_26_HYROX_RulebookSingles_EN.pdf)).
+
+Mais l'audit a trouvé plus grave qu'un manque de contenu.
+
+### Le bloc spécifique HYROX était le seul des vingt blocs du moteur sans séance facile
+
+Les rôles produits par chaque bloc des cinq familles, mesurés :
+
+| Famille | base | spécifique | affûtage | décharge |
+| --- | --- | --- | --- | --- |
+| Course | easy, speed, longRun | speed, speed, **easy**, longRun | easy… | easy… |
+| Ultra | easy, speed, easy, longRun | speed, **easy**, easy, longRun… | easy… | easy… |
+| Triathlon | longRun, easy, easy, speed | longRun, speed, **easy**, speed, easy | easy… | easy… |
+| Duathlon | longRun, easy, speed, easy | longRun, speed, speed, **easy** | easy… | easy… |
+| **HYROX** | easy, speed, longRun | **speed, speed, longRun** | easy, speed, longRun | easy, speed, longRun |
+
+Le plafond de deux séances de qualité par semaine s'applique en REMPLAÇANT la troisième par
+l'archétype `.easy` du bloc. Sans archétype `.easy`, il n'y a rien à mettre à la place, et
+`generateWeekSessions` garde la séance dure. **Avec six jours de course, le bloc spécifique HYROX
+posait cinq séances dures dans la même semaine** — dans le bloc déjà le plus chargé, pour une
+épreuve qui compte huit kilomètres de course.
+
+### Et le garde qui aurait dû le voir était vert pour la mauvaise raison
+
+`testNeverMoreThanTwoQualitySessionsInAWeek` cherchait « Fractionné », « Tempo » et « Rappel
+d'allure » **dans le titre**, et ne tournait que sur l'objectif course. « Fonctionnel HYROX ·
+Circuit intense » ne contient aucun de ces trois mots. Son voisin
+`testBuildWeeksAlwaysIncludeAnEasyRun` cherchait « Footing » dans le titre, et ne tournait que sur
+l'objectif course lui aussi — l'invariant qu'il tient est précisément celui que HYROX violait.
+
+Compter sur le titre est le défaut que `SessionKind` a été introduit pour réparer ailleurs dans ce
+dépôt : un titre se traduit et se reformule, un type non.
+
+### Ce qui a changé
+
+Décision de Charlotte, option recommandée : le bloc spécifique HYROX reçoit **le footing du bloc de
+base** — même type, même libellé, même entrée au catalogue. Son objet ne change pas d'un bloc à
+l'autre, et inventer une séance quasi identique aurait coûté trois traductions pour dire la même
+chose. Placé **en deuxième position**, parce que les archétypes hors sortie longue sont distribués
+dans l'ordre des jours de course : en dernier, il laissait les deux séances dures dos à dos, ce que
+le moteur interdit justement par ailleurs.
+
+Les deux invariants de sécurité sont réécrits : comptés sur `SessionFamily.isDemanding` et
+`Discipline.wearsShoes` — la règle que le moteur applique vraiment (`peseSurLesJambes`) et celle que
+l'avertissement de déplacement lit déjà — et exécutés sur **les cinq familles**, six jours de course,
+toutes les semaines du plan. La sortie longue est exclue par son JOUR et non par sa famille : en
+HYROX la course compromise porte le rôle de sortie longue mais la famille « fonctionnel », et
+l'exclure par la famille ne l'exclurait pas.
+
+### La portée du plan est dite, au lieu d'être devinée
+
+Open et Pro ne sont pas les seules divisions officielles : Doubles, Relay et Adaptive ont chacune
+leur règlement, et elles ne se préparent pas pareil — en Doubles les équipiers alternent les
+stations, en Relay ils se partagent les kilomètres. Décision de Charlotte : garder Open et Pro, et le
+dire. L'écran de division porte donc une ligne, dans les trois langues : « Plan écrit pour le format
+individuel. Doubles et Relay se préparent autrement. »
+
+### Ce qui reste, et qui est un chantier à part
+
+Charlotte a demandé **un programme d'entraînement spécifique pour HYROX** plutôt que d'ajouter les
+deux stations manquantes aux sous-titres existants. `burpee`, `sandbag` et `lunge` apparaissent
+aujourd'hui **zéro fois** dans tout le dépôt : six stations sur huit sont nommées, et les deux
+absentes sont les deux schémas de mouvement qu'une coureuse n'a aucune autre raison de travailler.
+C'est un chantier de contenu, avec une source par station.
+
+Observation non corrigée, parce qu'elle n'est pas une affirmation d'entraînement : le sous-titre de
+la division Open dit « le format le plus couru », ce qui est une affirmation sur la participation
+pour laquelle je n'ai pas de source. La source officielle dit « the standard HYROX ».

@@ -978,6 +978,28 @@ enum AdaptivePlanEngine {
         case .specifique:
             base = [
                 SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Circuit intense", subtitle: "stations enchaînées à intensité course, sous fatigue, \(loadNote)", pace: "—", zone: "Z3-4", baseDuration: 40, kind: division == .pro ? .hyroxIntenseCircuitPro : .hyroxIntenseCircuit),
+                // LE SEUL BLOC DU MOTEUR QUI N'AVAIT AUCUNE SÉANCE FACILE, ET CE QUE ÇA COÛTAIT.
+                //
+                // Le plafond de deux séances de qualité par semaine s'applique en REMPLAÇANT la
+                // troisième par l'archétype `.easy` du bloc. Sans archétype `.easy`, il n'y a rien
+                // à mettre à la place, et `generateWeekSessions` garde la séance dure : le plafond
+                // ne mordait donc pas ici, et seulement ici. Avec six jours de course, le bloc
+                // spécifique posait CINQ séances dures dans la semaine — dans le bloc déjà le plus
+                // chargé, pour une épreuve qui compte huit kilomètres de course.
+                //
+                // Les quatre autres familles de plan ont toutes une séance facile dans leur bloc
+                // spécifique ; celle-ci était la seule exception, et rien ne la signalait.
+                //
+                // Le footing est celui du bloc de base, pas un nouveau : même type, même libellé,
+                // même entrée au catalogue. Son objet ne change pas d'un bloc à l'autre —
+                // construire le volume de course que le format réclame — et inventer une séance
+                // quasi identique aurait coûté trois traductions pour dire la même chose.
+                //
+                // EN DEUXIÈME POSITION, et ce n'est pas cosmétique : les archétypes hors sortie
+                // longue sont distribués dans l'ordre des jours de course. Placé en dernier, le
+                // footing laissait les deux séances dures dos à dos — ce que la règle du moteur
+                // interdit justement par ailleurs (voir `SessionMove.stacksHardDays`).
+                SessionArchetype(role: .easy, title: "Footing base HYROX", subtitle: "endurance de fond — construit le volume de course du format", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .hyroxBaseFooting),
                 SessionArchetype(role: .speed, title: "Tempo course + sled", subtitle: "allure seuil entrecoupée de sled push/pull", pace: zones.threshold, zone: "Z3", baseDuration: 35, kind: .hyroxTempoSled),
                 SessionArchetype(role: .longRun, title: "Course compromise 6 × 1 km", subtitle: "simulation partielle : course + fonctionnel enchaînés, rythme course visé", pace: zones.marathon, zone: "Z3", baseDuration: 55, kind: .hyroxCompromisedRun6, intervals: IntervalStructure(reps: 6, repMeters: 1000, recoveryMeters: nil))
             ]

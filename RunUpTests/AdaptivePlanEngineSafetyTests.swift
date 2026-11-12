@@ -171,62 +171,114 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
 
     // MARK: - Weekly intensity distribution
 
-    /// The Spécifique block used to contain only VMA + Tempo outside the long run, so someone
-    /// running 4-5 days got 3-4 hard sessions a week and not one easy run — the inverse of the
-    /// ~80/20 polarized model. Asserted on a 5-day week, the worst case for the old cycling.
+    /// Les cinq familles de plan.
+    ///
+    /// Le bloc spécifique ne contenait d'abord que VMA + tempo hors sortie longue : quelqu'un
+    /// courant quatre ou cinq jours recevait trois à quatre séances dures par semaine et aucun
+    /// footing, soit l'inverse du modèle polarisé ~80/20. Les six jours de course demandés plus
+    /// bas sont le pire cas pour la distribution positionnelle des archétypes.
+    ///
+    /// Les blocs spécifiques se construisent famille par famille, et rien ne les comparait :
+    /// quatre fonctions d'archétypes sur cinq posaient une séance facile dans leur bloc
+    /// spécifique, la cinquième non, et aucun test ne tournait sur plus d'une famille à la fois.
+    private static let famillesDePlan: [(nom: String, objectif: GoalType, distance: RaceDistance?, dplus: Int?)] = [
+        ("course", .race, .marathon, nil),
+        ("hyrox", .hyrox, nil, nil),
+        ("ultra", .ultraTrail, .ultra50, 2500),
+        ("triathlon", .triathlon, nil, nil),
+        ("duathlon", .duathlon, nil, nil),
+    ]
+
+    /// LE PLAFOND SE COMPTE SUR LE TYPE DE SÉANCE, PAS SUR SON TITRE.
+    ///
+    /// # UN GARDE VERT POUR LA MAUVAISE RAISON
+    ///
+    /// Ce cas cherchait « Fractionné », « Tempo » et « Rappel d'allure » dans le TITRE, et ne
+    /// tournait que sur l'objectif course. Il ne pouvait donc pas voir « Fonctionnel HYROX ·
+    /// Circuit intense », qui ne contient aucun de ces trois mots — et le plafond ne tenait
+    /// effectivement pas en bloc spécifique HYROX : avec six jours de course, CINQ séances dures
+    /// tombaient dans la même semaine, parce que le bloc n'avait aucune séance facile à mettre à
+    /// la place de la troisième.
+    ///
+    /// Compter sur le titre est le défaut que `SessionKind` a été introduit pour réparer ailleurs
+    /// dans ce dépôt : un titre se traduit et se reformule, un type non. Le compte se fait donc
+    /// sur `SessionFamily.isDemanding` et `Discipline.wearsShoes` — c'est-à-dire exactement la
+    /// règle que le moteur applique (`peseSurLesJambes`) et celle que l'avertissement de
+    /// déplacement lit déjà.
+    ///
+    /// La sortie longue est exclue PAR SON JOUR et non par sa famille : en HYROX, la course
+    /// compromise porte le rôle de sortie longue mais la famille « fonctionnel », et l'exclure
+    /// par la famille ne l'exclurait pas.
+    ///
+    /// Le plafond ne compte que ce qui se court CHAUSSÉ, pour la raison écrite dans le moteur :
+    /// un plan de triathlon pose trois séances intenses sur trois tissus différents, et les
+    /// compter ensemble annulerait la raison d'être du format.
     @MainActor
     func testNeverMoreThanTwoQualitySessionsInAWeek() {
-        let profile = makeProfile(
-            goal: .race, distance: .marathon, weeksUntilRace: 15,
-            runningDays: [0, 1, 2, 4, 6]
-        )
-        let s = shape(for: profile)
-        guard let total = s.totalWeeks else { return XCTFail("Un objectif course doit avoir une durée totale") }
-
-        // Titles the engine uses for genuine quality work. The long run is excluded by design:
-        // it is its own role and is never counted against the quality budget.
-        let qualityMarkers = ["Fractionné", "Tempo", "Rappel d'allure"]
-
-        for week in 1...total {
-            let sessions = AdaptivePlanEngine.generateWeekSessions(
-                weekNumber: week, tier: profile.weekTier, profile: profile
+        for famille in Self.famillesDePlan {
+            let profile = makeProfile(
+                goal: famille.objectif, distance: famille.distance, weeksUntilRace: 15,
+                elevationM: famille.dplus, runningDays: [0, 1, 2, 4, 5, 6]
             )
-            let longDay = profile.preferredLongRunDay
-            let qualityCount = sessions
-                .filter { $0.weekday != longDay }
-                .compactMap { $0.session }
-                .filter { session in qualityMarkers.contains { session.title.contains($0) } }
-                .count
+            let s = shape(for: profile)
+            guard let total = s.totalWeeks else {
+                return XCTFail("\(famille.nom) : un objectif daté doit avoir une durée totale")
+            }
 
-            XCTAssertLessThanOrEqual(
-                qualityCount, 2,
-                "S\(week) programme \(qualityCount) séances de qualité hors sortie longue — plafond à 2"
-            )
+            for week in 1...total {
+                let jours = AdaptivePlanEngine.generateWeekSessions(
+                    weekNumber: week, tier: profile.weekTier, profile: profile
+                )
+                let dures = jours
+                    .filter { $0.weekday != profile.preferredLongRunDay }
+                    .compactMap { $0.session }
+                    .filter { seance in
+                        seance.family.isDemanding
+                            && (seance.kind?.disciplines.contains { $0.wearsShoes } ?? false)
+                    }
+                XCTAssertLessThanOrEqual(
+                    dures.count, 2,
+                    "\(famille.nom) : S\(week) programme \(dures.count) séances dures chaussées "
+                    + "hors sortie longue — \(dures.map(\.title).joined(separator: ", "))"
+                )
+            }
         }
     }
 
-    /// Every build week must offer at least one genuinely easy run outside the long run — the
-    /// aerobic base is the point, not filler.
+    /// CHAQUE BLOC DE BUILD GARDE UNE SÉANCE FACILE, DANS LES CINQ FAMILLES.
+    ///
+    /// Le socle aérobie est le fond de toute préparation, et c'est aussi ce qui permet au plafond
+    /// de qualité de mordre : sans séance facile dans le bloc, le moteur n'a rien à mettre à la
+    /// place d'une troisième séance dure et la garde. L'invariant est donc double — il tient le
+    /// volume facile ET la condition qui rend le plafond applicable.
+    ///
+    /// Compté sur la famille et non sur le mot « Footing » dans le titre, pour la raison donnée
+    /// au-dessus. Le bloc spécifique HYROX était le seul des vingt blocs du moteur à n'en avoir
+    /// aucune, et ce cas ne tournait que sur l'objectif course.
     @MainActor
     func testBuildWeeksAlwaysIncludeAnEasyRun() {
-        let profile = makeProfile(
-            goal: .race, distance: .marathon, weeksUntilRace: 15,
-            runningDays: [0, 1, 2, 4, 6]
-        )
-        let s = shape(for: profile)
-        let buildWeeks = s.baseWeeks + s.specificWeeks
-
-        for week in 1...buildWeeks {
-            let sessions = AdaptivePlanEngine.generateWeekSessions(
-                weekNumber: week, tier: profile.weekTier, profile: profile
+        for famille in Self.famillesDePlan {
+            let profile = makeProfile(
+                goal: famille.objectif, distance: famille.distance, weeksUntilRace: 15,
+                elevationM: famille.dplus, runningDays: [0, 1, 2, 4, 5, 6]
             )
-            let longDay = profile.preferredLongRunDay
-            let hasEasy = sessions
-                .filter { $0.weekday != longDay }
-                .compactMap { $0.session }
-                .contains { $0.title.contains("Footing") }
+            let s = shape(for: profile)
+            let buildWeeks = s.baseWeeks + s.specificWeeks
+            guard buildWeeks > 0 else {
+                return XCTFail("\(famille.nom) : un plan daté doit avoir des semaines de build")
+            }
 
-            XCTAssertTrue(hasEasy, "S\(week) ne contient aucun footing facile hors sortie longue")
+            for week in 1...buildWeeks {
+                let familles = AdaptivePlanEngine.generateWeekSessions(
+                    weekNumber: week, tier: profile.weekTier, profile: profile
+                )
+                .filter { $0.weekday != profile.preferredLongRunDay }
+                .compactMap { $0.session?.family }
+                XCTAssertTrue(
+                    familles.contains(.endurance) || familles.contains(.recovery),
+                    "\(famille.nom) : S\(week) ne contient aucune séance facile hors sortie longue"
+                )
+            }
         }
     }
 

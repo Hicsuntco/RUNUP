@@ -19595,6 +19595,23 @@
         }
       }
     },
+    "Plan écrit pour le format individuel. Doubles et Relay se préparent autrement.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan written for the individual format. Doubles and Relay train differently."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan creado para el formato individual. Doubles y Relay se preparan de otra forma."
+          }
+        }
+      }
+    },
     "Plat / route": {
       "extractionState": "manual",
       "localizations": {

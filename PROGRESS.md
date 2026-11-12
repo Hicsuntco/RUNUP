@@ -4123,3 +4123,53 @@ Trois cas dans `RunUpTests/ContinuiteDuPlanTests.swift` : une nuit pas encore é
 la journée et la décision se prend bien une fois la donnée versée ; une bonne nuit n'allège rien mais
 clôt la journée ; aucune source de sommeil clôt la journée tout de suite, pour que ce contrôle ne se
 relance pas à chaque ouverture chez quelqu'un qui n'a jamais connecté Apple Santé.
+
+---
+
+## 12 novembre 2026 — une notification qui promettait ce que l'écran ne montrait pas
+
+Trouvé en auditant la continuité, antérieur au chantier précédent, et traité à part.
+
+Le mécanisme d'allègement du jour accepte la phase « course libre » et posait son allègement ;
+l'accueil envoyait la notification « Séance allégée aujourd'hui ». Mais la carte de course libre
+**recalcule sa séance à chaque affichage** par `CourseLibre.duJour`, qui ne lisait pas l'allègement.
+La notification promettait donc quelque chose que l'écran ne montrait jamais. Une notification qui
+ment est pire qu'une notification absente.
+
+### Ce qui a changé
+
+La règle — une séance de qualité perd sa structure et 30 %, une séance déjà souple perd 15 % —
+vivait dans le générateur de programme. Elle est devenue **une seule fonction**,
+`AllegementDuJour.appliquee(a:)`, appliquée sur la séance **construite** plutôt que sur l'archétype.
+Le générateur l'appelle en dernier, la course libre l'appelle aussi : c'est la même nuit courte, elle
+ne peut pas vouloir dire deux choses selon l'écran.
+
+C'est aussi une simplification de ce que le chantier précédent avait livré : la variable
+`facteurAllegement` qui traversait tout le calcul de durée disparaît, et le test « est-ce une séance
+de qualité » se pose une fois, sur la séance, avec `isIntervalSession` — c'est-à-dire exactement le
+test d'origine, que ma version sur l'archétype avait rétréci à `kind.isIntervalWorkout`.
+
+Un invariant ajouté avec la règle : **un jour de repos ne s'allège pas.** La course libre en propose
+de vrais, à zéro minute ; il n'y a rien à raccourcir, et poser la mention dessus annoncerait une
+séance allégée là où il n'y a pas de séance.
+
+### Et la carte le dit
+
+Maintenant que l'allègement l'atteint, se taire serait pire qu'avant : la séance maigrirait de 15 ou
+30 % sans un mot, sur la carte dont l'en-tête dit justement qu'une suggestion sans raison est un
+ordre. Les deux phrases tiennent ensemble — la première explique la **suggestion**, la seconde la
+**réduction**.
+
+La ligne d'explication était écrite trois fois (l'ajustement du moteur, la phrase « pourquoi cette
+séance », et maintenant la course libre), chacune avec son `HStack`, sa fonte et sa couleur. Elle
+devient `LigneDExplication`, avec **deux initialiseurs** qui ne sont pas une commodité :
+`adjustment` est une clé française enregistrée que le catalogue traduit à l'affichage, tandis que la
+phrase de `PourquoiCetteSeance` est composée à l'exécution et déjà traduite. Confondre les deux la
+traduit deux fois — ce qui marche en français par identité et casse partout ailleurs.
+
+### Ce qui le garde
+
+Trois cas sur la règle pure dans `ContinuiteDuPlanTests` (la qualité perd sa structure, la souple est
+seulement raccourcie, le repos ne s'allège pas) et deux dans `CourseLibreTests` (l'allègement du jour
+raccourcit bien la séance de course libre et la carte peut le dire ; un allègement d'hier ne
+raccourcit rien aujourd'hui).

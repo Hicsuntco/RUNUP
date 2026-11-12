@@ -310,6 +310,49 @@ final class ContinuiteDuPlanTests: XCTestCase {
         XCTAssertNotNil(p.lastSameDayAdjustmentCheckDay)
     }
 
+    // MARK: - La règle d'allègement n'existe qu'à un endroit
+
+    private func seanceDeQualite(_ minutes: Int = 60) -> WorkoutSession {
+        WorkoutSession(title: "Fractionné", subtitle: "x", durationMinutes: minutes,
+                       pace: "4:30", zone: "Z4", kind: .vo2maxIntervals)
+    }
+
+    /// Une séance de qualité PERD SA STRUCTURE, elle ne fait pas la même en plus court. Forcer de
+    /// la VMA sur cinq heures de sommeil n'est pas un entraînement, c'est un risque.
+    func testUneSeanceDeQualiteAllegeePerdSaStructure() {
+        let a = AllegementDuJour(le: .now, raison: "Allégée · nuit courte")
+        let allegee = a.appliquee(a: seanceDeQualite(60))
+        XCTAssertEqual(allegee.durationMinutes, 42)
+        XCTAssertEqual(allegee.zone, "Z2")
+        XCTAssertNil(allegee.intervals)
+        XCTAssertNotNil(allegee.adaptationNote)
+        XCTAssertEqual(allegee.adjustment, "Allégée · nuit courte")
+    }
+
+    /// Une séance déjà souple est seulement raccourcie : elle garde sa zone, elle n'a pas de
+    /// structure à perdre.
+    func testUneSeanceSoupleAllegeeEstSeulementRaccourcie() {
+        let a = AllegementDuJour(le: .now, raison: "Allégée · récupération")
+        let footing = WorkoutSession(title: "Footing", subtitle: "x", durationMinutes: 40,
+                                     pace: "6:00", zone: "Z2", kind: .easyFooting)
+        let allegee = a.appliquee(a: footing)
+        XCTAssertEqual(allegee.durationMinutes, 34)
+        XCTAssertEqual(allegee.zone, "Z2")
+        XCTAssertEqual(allegee.adjustment, "Allégée · récupération")
+    }
+
+    /// UN JOUR DE REPOS NE S'ALLÈGE PAS. La course libre en propose de vrais, à zéro minute : il
+    /// n'y a rien à raccourcir, et poser la mention dessus annoncerait une séance allégée là où
+    /// il n'y a pas de séance.
+    func testUnJourDeReposNeSAllegePas() {
+        let a = AllegementDuJour(le: .now, raison: "Allégée · nuit courte")
+        let repos = WorkoutSession(title: "Repos", subtitle: "x", durationMinutes: 0,
+                                   pace: "—", zone: "—")
+        let apres = a.appliquee(a: repos)
+        XCTAssertEqual(apres.durationMinutes, 0)
+        XCTAssertNil(apres.adjustment, "rien à expliquer, il n'y a pas de séance")
+    }
+
     // MARK: - La bande de jours dit ce que la semaine porte
 
     /// La bande se lisait sur les jours de course, pas sur les séances réellement posées : elle

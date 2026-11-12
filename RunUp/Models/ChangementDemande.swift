@@ -145,6 +145,43 @@ struct AllegementDuJour: Codable, Equatable, Sendable {
         calendrier.isDate(le, inSameDayAs: jour)
     }
 
+    /// La séance, allégée.
+    ///
+    /// # LA RÈGLE N'EXISTE QU'ICI, ET C'EST LE POINT
+    ///
+    /// Elle vivait dans le générateur de programme. La course libre n'a pas de semaine générée —
+    /// sa séance du jour est recalculée à chaque affichage par `CourseLibre.duJour` — donc elle
+    /// ne l'appliquait pas : la notification « Séance allégée aujourd'hui » partait en promettant
+    /// un allègement que l'écran ne montrait jamais. Une notification qui ment est pire qu'une
+    /// notification absente.
+    ///
+    /// Forcer de la VMA sur cinq heures de sommeil n'est pas un entraînement, c'est un risque :
+    /// une séance de qualité PERD SA STRUCTURE plutôt que de faire la même en plus court. Une
+    /// séance déjà souple est seulement raccourcie.
+    ///
+    /// S'applique sur la séance CONSTRUITE, en dernier. Les plafonds du coach et du temps
+    /// disponible bornent un plan ; celui-ci répond à une nuit précise, et il a le dernier mot —
+    /// y compris sur la mention affichée, pour la même raison que la blessure passe devant la
+    /// phase du cycle : c'est l'explication la plus forte et la plus immédiate de ce qu'elle a
+    /// sous les yeux aujourd'hui.
+    func appliquee(a seance: WorkoutSession) -> WorkoutSession {
+        // UN JOUR DE REPOS NE S'ALLÈGE PAS. La course libre en propose de vrais, à zéro minute :
+        // il n'y a rien à raccourcir, et poser la mention dessus annoncerait une séance allégée
+        // là où il n'y a pas de séance.
+        guard seance.durationMinutes > 0 else { return seance }
+        var allegee = seance
+        let qualite = seance.isIntervalSession
+            || seance.zone.contains("3") || seance.zone.contains("4")
+        allegee.durationMinutes = Int(Double(seance.durationMinutes) * (qualite ? 0.7 : 0.85))
+        if qualite {
+            allegee.zone = "Z2"
+            allegee.intervals = nil
+            allegee.adaptationNote = "séance allégée aujourd'hui — allure confort, écoute-toi"
+        }
+        allegee.adjustment = raison
+        return allegee
+    }
+
     init(le: Date, raison: String) {
         self.le = le
         self.raison = raison

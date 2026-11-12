@@ -1570,22 +1570,6 @@ enum AdaptivePlanEngine {
             // plus immédiate de ce qu'elle a sous les yeux aujourd'hui.
             let allegement = profile.allegementDuJour
                 .flatMap { a in dateDuJour.map { a.sApplique(a: $0) } == true ? a : nil }
-            // Le facteur se déduit de la séance qui se trouve là, et le test se pose AVANT de
-            // passer la zone en Z2 — sinon il ne se reconnaîtrait plus lui-même.
-            var facteurAllegement = 1.0
-            if allegement != nil {
-                let qualite = archetype.kind.isIntervalWorkout
-                    || archetype.zone.contains("3") || archetype.zone.contains("4")
-                // Forcer de la VMA sur cinq heures de sommeil n'est pas un entraînement, c'est un
-                // risque : la séance de qualité perd sa structure, elle ne fait pas la même en
-                // plus court. Une séance déjà souple est seulement raccourcie.
-                facteurAllegement = qualite ? 0.7 : 0.85
-                if qualite {
-                    archetype.zone = "Z2"
-                    archetype.intervals = nil
-                    archetype.adaptationNote = "séance allégée aujourd'hui — allure confort, écoute-toi"
-                }
-            }
 
             // Taper deliberately ignores `tier`. Tier is an accumulator built up over Base and
             // Spécifique, and letting it keep inflating durations here would add 20-30 min to
@@ -1629,17 +1613,8 @@ enum AdaptivePlanEngine {
             // l'étiquette promet une semaine plus chargée pendant que la durée dit l'inverse.
             // Quand l'allègement mord, c'est lui qui a le dernier mot sur l'étiquette — c'est la
             // seule chose qui explique ce que la coureuse a sous les yeux.
-            // L'ALLÈGEMENT DU JOUR MORD EN DERNIER, sur la durée réellement affichée — comme
-            // il le faisait du temps où il réécrivait la séance après coup. Les deux plafonds
-            // bornent un plan ; lui répond à une nuit précise, et il a le dernier mot.
-            if facteurAllegement < 1 {
-                duration = Int(Double(duration) * facteurAllegement)
-            }
-
             let adjustment: String?
-            if let allegement {
-                adjustment = allegement.raison
-            } else if cappedByEase {
+            if cappedByEase {
                 adjustment = profile.trainingEase?.reason
             // Même raison qu'au-dessus, et le même raisonnement : une séance raccourcie qui
             // s'annonce « Niveau 3 » est un écran qui se contredit. Quand c'est son propre temps
@@ -1664,6 +1639,10 @@ enum AdaptivePlanEngine {
                 intervals: archetype.intervals
             )
             session.adaptationNote = archetype.adaptationNote
+            // L'ALLÈGEMENT DU JOUR MORD EN DERNIER, sur la séance telle qu'elle s'affichera. La
+            // règle est écrite une seule fois, et la course libre l'applique de la même façon :
+            // voir `AllegementDuJour.appliquee(a:)`.
+            if let allegement { session = allegement.appliquee(a: session) }
             return PlannedDay(weekday: weekday, session: session)
         }
     }

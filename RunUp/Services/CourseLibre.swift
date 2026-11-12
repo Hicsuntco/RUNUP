@@ -89,8 +89,21 @@ enum CourseLibre {
         let forme = profil.hasReadinessData ? profil.readiness : 75
         let reperes = Reperes(courses: passe, aujourdhui: aujourdhui, calendrier: calendrier)
         let (intention, raison) = intentionDuJour(reperes: reperes, forme: forme)
-        let seance = seancePour(intention, reperes: reperes, profil: profil,
+        var seance = seancePour(intention, reperes: reperes, profil: profil,
                                 jour: aujourdhui, calendrier: calendrier)
+        // L'ALLÈGEMENT DU JOUR S'APPLIQUE ICI AUSSI, et c'était un manque.
+        //
+        // Le mécanisme acceptait la course libre et posait son allègement, et l'accueil envoyait
+        // la notification « Séance allégée aujourd'hui ». Mais la carte de course libre recalcule
+        // sa séance à chaque affichage, par cette fonction, qui ne lisait pas l'allègement : la
+        // notification promettait quelque chose que l'écran ne montrait jamais.
+        //
+        // La règle n'est pas recopiée du générateur, elle est APPELÉE — c'est la même nuit
+        // courte, elle ne peut pas vouloir dire deux choses selon l'écran.
+        if let allegement = profil.allegementDuJour,
+           allegement.sApplique(a: aujourdhui, calendrier: calendrier) {
+            seance = allegement.appliquee(a: seance)
+        }
         return Suggestion(seance: seance, raison: raison)
     }
 

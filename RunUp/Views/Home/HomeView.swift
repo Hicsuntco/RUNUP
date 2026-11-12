@@ -563,6 +563,49 @@ struct HomeView: View {
     /// LA RAISON EST AFFICHÉE AVEC LA SÉANCE. Une suggestion sans raison est un ordre, et on
     /// n'obéit pas longtemps à une app ; « Hier c'était dur, aujourd'hui on récupère » se
     /// discute, donc s'accepte.
+    /// Une ligne d'explication sous le titre d'une séance : une icône, une phrase.
+    ///
+    /// Trois endroits la posent — l'ajustement du moteur, la phrase « pourquoi cette séance », et
+    /// la carte de course libre. Chacun portait son propre `HStack`, sa propre fonte et sa propre
+    /// couleur : trois copies d'une même ligne, donc trois occasions de la laisser dériver.
+    ///
+    /// DEUX INITIALISEURS, ET CE N'EST PAS UNE COMMODITÉ. Les deux sortes de texte qui passent
+    /// ici ne s'affichent pas de la même façon : `adjustment` est une clé FRANÇAISE enregistrée
+    /// en base, que le catalogue traduit à l'affichage, tandis que la phrase de
+    /// `PourquoiCetteSeance` est composée à l'exécution et DÉJÀ traduite. Confondre les deux la
+    /// traduit deux fois — ce qui marche en français par identité et casse partout ailleurs, le
+    /// défaut exact que l'en-tête de `applyCoachAction` met en garde contre. Deux noms, donc, et
+    /// aucun des deux ne peut être pris pour l'autre par distraction.
+    private struct LigneDExplication: View {
+        let icone: String
+        private let phrase: Text
+
+        /// Une clé française enregistrée, traduite ici par le catalogue.
+        init(icone: String, cle: String) {
+            self.icone = icone
+            self.phrase = Text(LocalizedStringKey(cle))
+        }
+
+        /// Une phrase déjà traduite, composée à l'exécution.
+        init(icone: String, dejaTraduite: String) {
+            self.icone = icone
+            self.phrase = Text(dejaTraduite)
+        }
+
+        var body: some View {
+            HStack(spacing: 6) {
+                Image(systemName: icone)
+                    .font(RUFont.icone(.small, weight: .semibold))
+                phrase
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .font(RUFont.sans(.small, weight: .medium))
+            // C'est une EXPLICATION — « voici pourquoi la séance est ce qu'elle est » — et une
+            // explication n'est pas un accent : on la lit une fois, on n'agit pas dessus.
+            .foregroundColor(RUColor.text2)
+        }
+    }
+
     private var freeRunCard: some View {
         let suggestion = CourseLibre.duJour(profil: profile, courses: runs)
         let seance = suggestion.seance
@@ -578,6 +621,18 @@ struct HomeView: View {
                 .foregroundColor(RUColor.text2)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 4)
+
+            // ET SI LA SÉANCE A ÉTÉ ALLÉGÉE, LA CARTE LE DIT.
+            //
+            // Elle se taisait, et l'allègement ne l'atteignait même pas. Maintenant qu'il
+            // l'atteint, se taire serait pire : la séance aurait maigri de 15 ou 30 % sans un
+            // mot, sur la carte dont l'en-tête dit justement qu'une suggestion sans raison est un
+            // ordre. Les deux phrases ne disent pas la même chose et tiennent ensemble : la
+            // première explique la SUGGESTION, celle-ci explique la RÉDUCTION.
+            if let adjustment = seance.adjustment {
+                LigneDExplication(icone: "arrow.triangle.2.circlepath", cle: adjustment)
+                    .padding(.top, 6)
+            }
 
             if profile.seanceDoneToday {
                 Text("Séance faite aujourd'hui ✓")
@@ -744,23 +799,14 @@ struct HomeView: View {
             //
             // Elle devient une ligne, sous le titre, à sa place chronologique : voici la séance,
             // voici pourquoi elle est ce qu'elle est.
+            //
+            // `cle:` et non `dejaTraduite:` : la valeur STOCKÉE est une clé française
+            // (« Allégée · nuit courte »), que le catalogue traduit. La fiche détail l'affichait
+            // déjà traduite via `StatChip` ; l'accueil montrait le français à tout le monde.
+            // Même valeur, deux écrans, deux langues.
             if let adjustment = session.adjustment {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .font(RUFont.icone(.small, weight: .semibold))
-                    // `LocalizedStringKey` et non `Text(String)` : la valeur STOCKÉE est une
-                    // clé française (« Allégée · nuit courte »), que le catalogue traduit. La
-                    // fiche détail l'affichait déjà traduite via `StatChip` ; l'accueil montrait
-                    // le français à tout le monde. Même valeur, deux écrans, deux langues.
-                    Text(LocalizedStringKey(adjustment))
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .font(RUFont.sans(.small, weight: .medium))
-                // Rose auparavant. C'est une EXPLICATION — « voici pourquoi la séance est ce
-                // qu'elle est » — et une explication n'est pas un accent : on la lit une fois,
-                // on n'agit pas dessus.
-                .foregroundColor(RUColor.text2)
-                .padding(.top, 6)
+                LigneDExplication(icone: "arrow.triangle.2.circlepath", cle: adjustment)
+                    .padding(.top, 6)
             }
             // ET LES AUTRES JOURS, CEUX OÙ LE MOTEUR N'A RIEN CORRIGÉ.
             //
@@ -772,15 +818,8 @@ struct HomeView: View {
             // n'importe quelle phrase de bloc, et deux explications sur la même carte, c'est une
             // de trop. Voir `PourquoiCetteSeance`, qui porte la décision et ses cas.
             else if let pourquoi = pourquoiCetteSeance(session, estUnJourDeRepos: isRestDay) {
-                HStack(spacing: 6) {
-                    Image(systemName: "calendar")
-                        .font(RUFont.icone(.small, weight: .semibold))
-                    Text(pourquoi)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .font(RUFont.sans(.small, weight: .medium))
-                .foregroundColor(RUColor.text2)
-                .padding(.top, 6)
+                LigneDExplication(icone: "calendar", dejaTraduite: pourquoi)
+                    .padding(.top, 6)
             }
 
             if isRestDay {

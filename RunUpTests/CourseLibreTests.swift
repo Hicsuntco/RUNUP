@@ -72,6 +72,38 @@ final class CourseLibreTests: XCTestCase {
         CourseLibre.intentionDuJour(reperes: reperes(courses), forme: forme).0
     }
 
+    // MARK: L'allègement du jour atteint enfin la course libre
+
+    /// LA NOTIFICATION NE MENT PLUS.
+    ///
+    /// Le mécanisme d'allègement acceptait la course libre et posait son allègement ; l'accueil
+    /// envoyait « Séance allégée aujourd'hui ». Mais la carte recalcule sa séance à chaque
+    /// affichage par `duJour`, qui ne lisait pas l'allègement : la notification promettait
+    /// quelque chose que l'écran ne montrait jamais.
+    func testUnAllegementDuJourRaccourcitLaSeanceDeCourseLibre() {
+        let p = profil()
+        let pleine = CourseLibre.duJour(profil: p, courses: [], jour: aujourdhui,
+                                        calendrier: calendrier).seance
+        XCTAssertGreaterThan(pleine.durationMinutes, 0)
+
+        p.allegementDuJour = AllegementDuJour(le: aujourdhui, raison: "Allégée · nuit courte")
+        let allegee = CourseLibre.duJour(profil: p, courses: [], jour: aujourdhui,
+                                         calendrier: calendrier).seance
+        XCTAssertLessThan(allegee.durationMinutes, pleine.durationMinutes)
+        // La carte le DIT : une séance qui maigrit sans un mot est un ordre, pas une suggestion.
+        XCTAssertEqual(allegee.adjustment, "Allégée · nuit courte")
+    }
+
+    /// Il ne vaut que pour SON jour civil : un allègement d'hier ne raccourcit pas aujourd'hui.
+    func testUnAllegementDunAutreJourNeRaccourcitRien() {
+        let p = profil()
+        let hier = calendrier.date(byAdding: .day, value: -1, to: aujourdhui) ?? aujourdhui
+        p.allegementDuJour = AllegementDuJour(le: hier, raison: "Allégée · nuit courte")
+        let seance = CourseLibre.duJour(profil: p, courses: [], jour: aujourdhui,
+                                        calendrier: calendrier).seance
+        XCTAssertNil(seance.adjustment)
+    }
+
     // MARK: Ce qui protège
 
     func testSansHistoriqueOnRepartCourtEtFacile() {

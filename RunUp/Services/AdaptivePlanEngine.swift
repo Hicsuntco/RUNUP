@@ -970,56 +970,63 @@ enum AdaptivePlanEngine {
         return base
     }
 
-    private static func hyroxArchetypes(for block: TrainingBlock, profile: UserProfile) -> [SessionArchetype] {
+    private static func hyroxArchetypes(for block: TrainingBlock, profile: UserProfile,
+                                        weekNumber: Int) -> [SessionArchetype] {
         let zones = PaceModel.zones(for: profile)
-        // `?? .open` veut dire « division inconnue » : voir `HyroxDivision`, où les deux valeurs
-        // héritées existent précisément pour ce cas et ne portent aucune charge.
-        let division = profile.hyroxDivision.flatMap { HyroxDivision(rawValue: $0) } ?? .open
         // `loadNote` A ÉTÉ RETIRÉ : IL N'A JAMAIS ATTEINT UN ÉCRAN.
         //
-        // Les deux sous-titres ci-dessous interpolaient « charge standard » ou « charge
-        // renforcée ». Mais `WorkoutSession.displaySubtitle` lit `kind.subtitleKey`, une clé
-        // STATIQUE du catalogue, et jette le sous-titre composé ici dès que la séance porte un
-        // `kind` — ce qui est le cas de toutes. C'est le défaut exact que l'en-tête de
-        // `adaptationNote` raconte pour les notes d'adaptation, reconduit pour la charge.
+        // Les sous-titres interpolaient « charge standard » ou « charge renforcée ». Mais
+        // `WorkoutSession.displaySubtitle` lit `kind.subtitleKey`, une clé STATIQUE du catalogue,
+        // et jette le sous-titre composé ici dès que la séance porte un `kind` — ce qui est le cas
+        // de toutes. C'est le défaut exact que l'en-tête d'`adaptationNote` raconte pour les notes
+        // d'adaptation, reconduit pour la charge.
         //
-        // Les charges s'affichent donc là où elles peuvent : la fiche détail, qui a le profil
-        // donc la division, et qui les nomme station par station (voir `ChargesHyrox.stations`).
+        // Les charges s'affichent donc là où elles peuvent : la fiche détail, qui a le profil donc
+        // la division, et qui les nomme station par station (voir `ChargesHyrox.stations`).
+
+        // LA FAMILLE DE LA SEMAINE, et une seule.
+        //
+        // Le plafond du moteur autorise deux séances de qualité par semaine. Une famille prend une
+        // place ; la seconde reste à une séance de qualité EN COURANT, parce que l'épreuve fait
+        // huit kilomètres de course — la moitié du temps de course pour la plupart des gens — et
+        // que préparer les stations en abandonnant la vitesse à pied serait préparer la moitié de
+        // l'épreuve. Voir `ChargesHyrox.FamilleDeStations`.
+        let famille = ChargesHyrox.FamilleDeStations.pourLaSemaine(weekNumber)
+        let stationsDeLaSemaine = SessionArchetype(
+            role: .speed, title: "Stations de la semaine",
+            subtitle: "les deux stations de la famille du moment, à charge de course",
+            pace: "—", zone: "Z3-4", baseDuration: 40, kind: famille.kind
+        )
+        let footing = SessionArchetype(
+            role: .easy, title: "Footing base HYROX",
+            subtitle: "endurance de fond — construit le volume de course du format",
+            pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .hyroxBaseFooting
+        )
 
         let base: [SessionArchetype]
         switch block {
+        // DEUX FOOTINGS DANS LA LISTE, ET CE N'EST PAS UNE FAUTE DE COPIE.
+        //
+        // Les archétypes hors sortie longue sont distribués dans l'ordre des jours de course, en
+        // bouclant sur la liste. Avec deux entrées seulement, quatre jours de course donneraient
+        // famille, footing, famille — soit DEUX séances de station dans la semaine, ce que la
+        // rotation d'une famille par semaine est censée exclure. Trois entrées suffisent à ce que
+        // la famille ne tombe qu'une fois jusqu'à cinq jours de course.
         case .base:
             base = [
-                SessionArchetype(role: .easy, title: "Footing base HYROX", subtitle: "endurance de fond — construit le volume de course du format", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .hyroxBaseFooting),
-                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Technique", subtitle: "SkiErg, rameur, farmers carry, wall balls — travaille le geste", pace: "—", zone: "Technique", baseDuration: 35, kind: division.estPro ? .hyroxTechniquePro : .hyroxTechnique),
+                stationsDeLaSemaine,
+                footing,
+                footing,
                 SessionArchetype(role: .longRun, title: "Course compromise 3 × 1 km", subtitle: "course + bloc fonctionnel entre chaque km — apprivoise la fatigue du format", pace: zones.easy, zone: "Z2-3", baseDuration: 40, kind: .hyroxCompromisedRun3, intervals: IntervalStructure(reps: 3, repMeters: 1000, recoveryMeters: nil))
             ]
+        // LE FOOTING ENTRE LES DEUX SÉANCES DURES, et pas en fin de liste : même raison d'ordre.
+        // En dernier, la famille et le tempo tomberaient sur deux jours de course consécutifs —
+        // ce que le moteur interdit par ailleurs (voir `SessionMove.stacksHardDays`).
         case .specifique:
             base = [
-                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Circuit intense", subtitle: "stations enchaînées à intensité course, sous fatigue", pace: "—", zone: "Z3-4", baseDuration: 40, kind: division.estPro ? .hyroxIntenseCircuitPro : .hyroxIntenseCircuit),
-                // LE SEUL BLOC DU MOTEUR QUI N'AVAIT AUCUNE SÉANCE FACILE, ET CE QUE ÇA COÛTAIT.
-                //
-                // Le plafond de deux séances de qualité par semaine s'applique en REMPLAÇANT la
-                // troisième par l'archétype `.easy` du bloc. Sans archétype `.easy`, il n'y a rien
-                // à mettre à la place, et `generateWeekSessions` garde la séance dure : le plafond
-                // ne mordait donc pas ici, et seulement ici. Avec six jours de course, le bloc
-                // spécifique posait CINQ séances dures dans la semaine — dans le bloc déjà le plus
-                // chargé, pour une épreuve qui compte huit kilomètres de course.
-                //
-                // Les quatre autres familles de plan ont toutes une séance facile dans leur bloc
-                // spécifique ; celle-ci était la seule exception, et rien ne la signalait.
-                //
-                // Le footing est celui du bloc de base, pas un nouveau : même type, même libellé,
-                // même entrée au catalogue. Son objet ne change pas d'un bloc à l'autre —
-                // construire le volume de course que le format réclame — et inventer une séance
-                // quasi identique aurait coûté trois traductions pour dire la même chose.
-                //
-                // EN DEUXIÈME POSITION, et ce n'est pas cosmétique : les archétypes hors sortie
-                // longue sont distribués dans l'ordre des jours de course. Placé en dernier, le
-                // footing laissait les deux séances dures dos à dos — ce que la règle du moteur
-                // interdit justement par ailleurs (voir `SessionMove.stacksHardDays`).
-                SessionArchetype(role: .easy, title: "Footing base HYROX", subtitle: "endurance de fond — construit le volume de course du format", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .hyroxBaseFooting),
-                SessionArchetype(role: .speed, title: "Tempo course + sled", subtitle: "allure seuil entrecoupée de sled push/pull", pace: zones.threshold, zone: "Z3", baseDuration: 35, kind: .hyroxTempoSled),
+                stationsDeLaSemaine,
+                footing,
+                SessionArchetype(role: .speed, title: "Tempo course", subtitle: "allure seuil tenue — la moitié de l'épreuve se court", pace: zones.threshold, zone: "Z3", baseDuration: 35, kind: .tempoRun),
                 SessionArchetype(role: .longRun, title: "Course compromise 6 × 1 km", subtitle: "simulation partielle : course + fonctionnel enchaînés, rythme course visé", pace: zones.marathon, zone: "Z3", baseDuration: 55, kind: .hyroxCompromisedRun6, intervals: IntervalStructure(reps: 6, repMeters: 1000, recoveryMeters: nil))
             ]
         case .affutage:
@@ -1408,7 +1415,7 @@ enum AdaptivePlanEngine {
         let brut: [SessionArchetype]
         switch profile.goalId {
         case .hyrox:
-            brut = hyroxArchetypes(for: block, profile: profile)
+            brut = hyroxArchetypes(for: block, profile: profile, weekNumber: weekNumber)
         case .ultraTrail:
             brut = ultraTrailArchetypes(for: block, profile: profile,
                                         weekNumber: weekNumber, shape: shape)

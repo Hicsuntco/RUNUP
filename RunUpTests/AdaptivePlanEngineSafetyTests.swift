@@ -255,6 +255,44 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
         }
     }
 
+    /// UNE SEULE SÉANCE DE STATIONS PAR SEMAINE, ET UNE QUALITÉ EN COURANT À CÔTÉ.
+    ///
+    /// La répartition choisie : une famille de stations à charge de course, plus une séance de
+    /// qualité à pied — parce que l'épreuve fait huit kilomètres de course, soit la moitié du
+    /// temps de course pour la plupart des gens.
+    ///
+    /// Le piège est dans la DISTRIBUTION, pas dans la liste : les archétypes hors sortie longue
+    /// tournent en bouclant sur la liste, donc une liste trop courte répète la famille et en fait
+    /// deux séances dures. Ce cas l'éprouve sur quatre jours de course, le plus fréquent.
+    @MainActor
+    func testUneSeuleSeanceDeStationsParSemaineEnSpecifique() {
+        let profile = makeProfile(goal: .hyrox, distance: nil, weeksUntilRace: 15,
+                                  runningDays: [0, 2, 4, 6])
+        let s = shape(for: profile)
+        guard let total = s.totalWeeks else { return XCTFail("un HYROX daté doit avoir une durée") }
+
+        for week in 1...total {
+            let seances = AdaptivePlanEngine
+                .generateWeekSessions(weekNumber: week, tier: profile.weekTier, profile: profile)
+                .compactMap { $0.session }
+            let stations = seances.filter {
+                $0.kind.flatMap(ChargesHyrox.FamilleDeStations.pour) != nil
+            }
+            XCTAssertLessThanOrEqual(stations.count, 1,
+                                     "S\(week) programme \(stations.count) séances de stations")
+        }
+
+        // Et le bloc spécifique garde bien une qualité EN COURANT à côté de la famille.
+        let specifique = s.baseWeeks + 1
+        let seances = AdaptivePlanEngine
+            .generateWeekSessions(weekNumber: specifique, tier: profile.weekTier, profile: profile)
+            .compactMap { $0.session }
+        XCTAssertTrue(seances.contains { $0.kind == .tempoRun },
+                      "S\(specifique) ne contient aucune séance de qualité à pied")
+        XCTAssertTrue(seances.contains { $0.kind.flatMap(ChargesHyrox.FamilleDeStations.pour) != nil },
+                      "S\(specifique) ne contient aucune séance de stations")
+    }
+
     /// CHAQUE BLOC DE BUILD GARDE UNE SÉANCE FACILE, DANS LES CINQ FAMILLES.
     ///
     /// Le socle aérobie est le fond de toute préparation, et c'est aussi ce qui permet au plafond

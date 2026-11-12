@@ -536,6 +536,23 @@
         }
       }
     },
+    "%@ · à charge de course, technique avant charge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · at race load, technique before load"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · a carga de carrera, técnica antes que carga"
+          }
+        }
+      }
+    },
     "%@ à %@ du kilomètre": {
       "localizations": {
         "en": {
@@ -2418,6 +2435,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld′ · %@ · estaciones encadenadas, técnica antes que carga"
+          }
+        }
+      }
+    },
+    "%lld′ · deux stations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · two stations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · dos estaciones"
           }
         }
       }
@@ -32035,6 +32069,52 @@
         }
       }
     },
+    "session.hyrox_ergometres.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mille mètres chacun, sans porter ton corps"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a thousand metres each, without carrying your bodyweight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mil metros cada uno, sin cargar tu propio peso"
+          }
+        }
+      }
+    },
+    "session.hyrox_ergometres.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ergomètres · SkiErg et rameur"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ergometers · SkiErg and rower"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ergómetros · SkiErg y remo"
+          }
+        }
+      }
+    },
     "session.hyrox_intense_circuit.subtitle": {
       "extractionState": "manual",
       "localizations": {
@@ -32265,6 +32345,52 @@
         }
       }
     },
+    "session.hyrox_port.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "deux cents mètres de port, puis cent mètres de fentes chargées"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "two hundred metres of carry, then a hundred metres of loaded lunges"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "doscientos metros de carga, luego cien metros de zancadas"
+          }
+        }
+      }
+    },
+    "session.hyrox_port.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porter · carry et fentes"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carry · farmers and lunges"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar · farmers y zancadas"
+          }
+        }
+      }
+    },
     "session.hyrox_recovery_footing.subtitle": {
       "extractionState": "manual",
       "localizations": {
@@ -32307,6 +32433,98 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rodaje de recuperación"
+          }
+        }
+      }
+    },
+    "session.hyrox_sleds.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "les deux charges les plus lourdes de l'épreuve, à ta charge de course"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the two heaviest loads of the race, at your race weight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "las dos cargas más pesadas de la prueba, a tu peso de carrera"
+          }
+        }
+      }
+    },
+    "session.hyrox_sleds.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleds · poussée et traction"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleds · push and pull"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trineos · empuje y arrastre"
+          }
+        }
+      }
+    },
+    "session.hyrox_sol_debout.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "les deux stations qui te font passer du sol à debout, dont une cent fois"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the two stations that take you from the ground to standing, one of them a hundred times"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "las dos estaciones que te llevan del suelo a de pie, una de ellas cien veces"
+          }
+        }
+      }
+    },
+    "session.hyrox_sol_debout.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sol-debout · burpees et wall balls"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ground to standing · burpees and wall balls"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suelo a de pie · burpees y wall balls"
           }
         }
       }

@@ -90,14 +90,27 @@ struct SessionDetailSheet: View {
         let charges = appState.profile.hyroxDivision
             .flatMap { HyroxDivision(rawValue: $0) }?.charges
 
-        /// Les huit stations dans l'ordre de la course, avec leur charge quand on la connaît.
-        func stations() -> [(String, String, Color)] {
+        /// Les stations, avec leur charge quand on la connaît. `rangs` les restreint à une
+        /// famille ; sans lui, les huit dans l'ordre de la course.
+        func stations(_ rangs: [Int]? = nil) -> [(String, String, Color)] {
             guard let charges else {
                 return [(String(localized: "Les huit stations"),
                          String(localized: "choisis ta division pour voir tes charges"),
                          RUColor.text3)]
             }
-            return charges.stations.map { ($0.nom, $0.prescription, RUColor.rose2) }
+            let toutes = charges.stations
+            let choisies = rangs?.compactMap { toutes.indices.contains($0) ? toutes[$0] : nil }
+                ?? toutes
+            return choisies.map { ($0.nom, $0.prescription, RUColor.rose2) }
+        }
+
+        // UNE SÉANCE DE FAMILLE NE MONTRE QUE SES DEUX STATIONS. Afficher les huit sur une séance
+        // qui en travaille deux ferait lire une liste dont six lignes ne concernent pas le jour.
+        if let kind, let famille = ChargesHyrox.FamilleDeStations.pour(kind) {
+            return [(String(localized: "\(session.durationMinutes)′ · deux stations"),
+                     String(localized: "\(session.zone) · à charge de course, technique avant charge"),
+                     RUColor.rose)]
+                + stations(famille.rangs)
         }
 
         switch kind {
@@ -131,7 +144,11 @@ struct SessionDetailSheet: View {
 
         // LES FOOTINGS SONT DES COURSES, et c'est ce que l'écran doit dire. Ils tombaient dans le
         // repli « circuit fonctionnel » faute d'être reconnus.
-        case .hyroxBaseFooting, .hyroxMaintenanceFooting, .hyroxRecoveryFooting:
+        // `tempoRun` EST DANS CETTE LISTE, et il fallait y penser : le bloc spécifique HYROX
+        // prescrit maintenant un vrai tempo de course, avec le type générique. Sans cette ligne,
+        // il tombait dans le repli « circuit fonctionnel » — le défaut que les footings viennent
+        // de subir, reconduit le jour même par la séance que je venais d'ajouter.
+        case .hyroxBaseFooting, .hyroxMaintenanceFooting, .hyroxRecoveryFooting, .tempoRun:
             return [(String(localized: "Course continue"),
                      String(localized: "\(session.durationMinutes)′ · \(session.pace) /km · \(session.zone)"),
                      RUColor.rose)]

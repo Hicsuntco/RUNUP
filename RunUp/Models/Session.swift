@@ -164,6 +164,12 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
     case stridesFooting = "strides_footing"
     case easedLongRun = "eased_long_run"
     case hyroxBaseFooting = "hyrox_base_footing"
+    // LES QUATRE FAMILLES DE STATIONS, une par semaine en rotation — voir
+    // `ChargesHyrox.FamilleDeStations`, qui dit d'où vient ce découpage et ce qu'il n'affirme pas.
+    case hyroxSleds = "hyrox_sleds"
+    case hyroxPort = "hyrox_port"
+    case hyroxSolDebout = "hyrox_sol_debout"
+    case hyroxErgometres = "hyrox_ergometres"
     /// Les deux séances fonctionnelles existent en version standard et « charge renforcée »
     /// (division pro). C'était une interpolation dans le sous-titre — deux cas distincts plutôt
     /// qu'une phrase à trous, parce qu'une phrase à trous se traduit mal : l'espagnol et l'anglais
@@ -368,6 +374,7 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
         case .hyroxTechnique, .hyroxTechniquePro, .hyroxIntenseCircuit, .hyroxIntenseCircuitPro,
              .hyroxCompromisedRun3, .hyroxCompromisedRun6, .hyroxCompromisedRunLight2,
              .hyroxStationsReminder, .hyroxLightSimulation, .hyroxLightFunctional,
+             .hyroxSleds, .hyroxPort, .hyroxSolDebout, .hyroxErgometres,
              // La technique de nage et les transitions : hors de l'axe d'effort, comme le
              // renforcement HYROX. Ce qu'on y travaille n'est pas une filière énergétique, c'est
              // un geste — et dans les deux cas, c'est là que se trouvent les minutes les moins
@@ -423,7 +430,8 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
              .hyroxIntenseCircuitPro, .hyroxCompromisedRun3, .hyroxCompromisedRun6,
              .hyroxCompromisedRunLight2, .hyroxTempoSled, .hyroxMaintenanceFooting,
              .hyroxStationsReminder, .hyroxLightSimulation, .hyroxRecoveryFooting,
-             .hyroxLightFunctional:
+             .hyroxLightFunctional,
+             .hyroxSleds, .hyroxPort, .hyroxSolDebout, .hyroxErgometres:
             return [.run]
 
         case .ultraEnduranceFooting, .ultraHillRepeats, .ultraPowerHike, .ultraLongRun,

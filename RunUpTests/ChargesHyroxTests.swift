@@ -239,6 +239,63 @@ final class ChargesHyroxTests: XCTestCase {
         XCTAssertEqual(femmes.stations[Rang.rameur].prescription.filter(\.isNumber), "1000")
     }
 
+    // MARK: Les quatre familles de travail
+
+    /// LES QUATRE FAMILLES COUVRENT LES HUIT STATIONS, CHACUNE UNE FOIS.
+    ///
+    /// Une station oubliée du découpage ne serait jamais travaillée, et rien ne le dirait : la
+    /// semaine resterait pleine et les séances justes. Une station comptée deux fois la ferait
+    /// travailler deux fois plus que les autres, ce qui est le même défaut à l'envers.
+    func testLesQuatreFamillesCouvrentLesHuitStationsUneFois() {
+        let rangs = ChargesHyrox.FamilleDeStations.allCases.flatMap(\.rangs)
+        XCTAssertEqual(rangs.count, 8, "huit rangs en tout")
+        XCTAssertEqual(Set(rangs), Set(0..<8), "les huit rangs de l'épreuve, et aucun autre")
+        XCTAssertEqual(ChargesHyrox.FamilleDeStations.allCases.count, 4)
+        XCTAssertTrue(ChargesHyrox.FamilleDeStations.allCases.allSatisfy { $0.rangs.count == 2 },
+                      "deux stations par famille")
+    }
+
+    /// Chaque famille a son propre type de séance, et on retrouve la famille depuis le type.
+    func testChaqueFamilleAUnTypeDeSeanceDistinct() {
+        let types = ChargesHyrox.FamilleDeStations.allCases.map(\.kind)
+        XCTAssertEqual(Set(types).count, 4, "aucun type partagé entre deux familles")
+        for famille in ChargesHyrox.FamilleDeStations.allCases {
+            XCTAssertEqual(ChargesHyrox.FamilleDeStations.pour(famille.kind), famille)
+        }
+        // Un type qui n'est pas une famille ne doit pas en désigner une par accident.
+        XCTAssertNil(ChargesHyrox.FamilleDeStations.pour(.hyroxBaseFooting))
+        XCTAssertNil(ChargesHyrox.FamilleDeStations.pour(.tempoRun))
+    }
+
+    /// LA ROTATION PASSE PAR LES QUATRE EN QUATRE SEMAINES, puis recommence.
+    ///
+    /// Déterministe depuis le numéro de semaine, et non tirée au sort : la même semaine doit
+    /// donner la même séance à chaque régénération, sinon un changement de réglage ferait changer
+    /// la famille de la semaine en cours — c'est-à-dire la séance du jour.
+    func testLaRotationPasseParLesQuatreEnQuatreSemaines() {
+        let quatre = (1...4).map { ChargesHyrox.FamilleDeStations.pourLaSemaine($0) }
+        XCTAssertEqual(Set(quatre).count, 4, "les quatre familles sur quatre semaines")
+        // La cinquième semaine recommence au début.
+        XCTAssertEqual(ChargesHyrox.FamilleDeStations.pourLaSemaine(5),
+                       ChargesHyrox.FamilleDeStations.pourLaSemaine(1))
+        XCTAssertEqual(ChargesHyrox.FamilleDeStations.pourLaSemaine(12),
+                       ChargesHyrox.FamilleDeStations.pourLaSemaine(4))
+        // Deux appels pour la même semaine rendent la même famille.
+        XCTAssertEqual(ChargesHyrox.FamilleDeStations.pourLaSemaine(7),
+                       ChargesHyrox.FamilleDeStations.pourLaSemaine(7))
+    }
+
+    /// Une semaine aberrante ne fait pas sortir de l'index.
+    ///
+    /// Elle ne devrait pas arriver — le numéro de semaine vient du moteur — et un plantage sur
+    /// une entrée aberrante serait une mauvaise façon de l'apprendre.
+    func testUneSemaineAberranteNeFaitPasSortirDeLindex() {
+        XCTAssertEqual(ChargesHyrox.FamilleDeStations.pourLaSemaine(0),
+                       ChargesHyrox.FamilleDeStations.pourLaSemaine(1))
+        XCTAssertEqual(ChargesHyrox.FamilleDeStations.pourLaSemaine(-3),
+                       ChargesHyrox.FamilleDeStations.pourLaSemaine(1))
+    }
+
     /// La saison est affichée avec les charges : un nombre daté n'est pas de la fausse précision,
     /// un nombre sans date en serait.
     func testLaSaisonEstNommee() {

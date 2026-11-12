@@ -80,6 +80,77 @@ struct ChargesHyrox: Equatable, Sendable {
         static let wallBallsReps = 100
     }
 
+    /// Les quatre familles de travail des huit stations.
+    ///
+    /// # POURQUOI QUATRE, ET D'OÙ ÇA VIENT
+    ///
+    /// Du FORMAT, pas d'une source d'entraînement. L'épreuve groupe elle-même ses stations par ses
+    /// propres chiffres : deux ergomètres de 1000 m qui ne portent pas le corps, deux sleds de
+    /// 50 m aux charges les plus lourdes de l'épreuve, deux stations de port sur 200 et 100 m, et
+    /// deux stations qui font passer du sol à debout — dont une cent fois.
+    ///
+    /// C'est une organisation lisible du travail que l'épreuve exige, et rien de plus. Aucune
+    /// affirmation physiologique n'est portée ici : le règlement donne un format, pas une méthode,
+    /// et ce que la source ne dit pas, ce fichier ne l'invente pas.
+    ///
+    /// # UNE FAMILLE PAR SEMAINE, À CHARGE RÉELLE
+    ///
+    /// Le plafond du moteur autorise deux séances de qualité par semaine, et toutes les séances
+    /// HYROX comptent comme chaussées. Quatre familles ne peuvent donc pas être dures la même
+    /// semaine. Une famille prend donc UNE place, et la seconde reste à une séance de qualité en
+    /// courant — parce que l'épreuve fait huit kilomètres de course, soit la moitié du temps de
+    /// course pour la plupart des gens, et que préparer les stations en abandonnant la vitesse à
+    /// pied serait préparer la moitié de l'épreuve.
+    enum FamilleDeStations: String, CaseIterable, Equatable, Sendable {
+        /// Sled push et sled pull : les deux charges les plus lourdes.
+        case pousserTirer
+        /// Farmers carry et fentes sandbag : porter, et porter en avançant.
+        case porter
+        /// Burpee broad jumps et wall balls : les deux stations qui vont du sol à debout.
+        case solDebout
+        /// SkiErg et rameur : mille mètres chacun, sans porter son corps.
+        case ergometres
+
+        /// Les rangs, dans l'ordre de la course, des deux stations de cette famille.
+        var rangs: [Int] {
+            switch self {
+            case .pousserTirer: return [1, 2]
+            case .porter: return [5, 6]
+            case .solDebout: return [3, 7]
+            case .ergometres: return [0, 4]
+            }
+        }
+
+        /// Le type de séance qui travaille cette famille.
+        var kind: SessionKind {
+            switch self {
+            case .pousserTirer: return .hyroxSleds
+            case .porter: return .hyroxPort
+            case .solDebout: return .hyroxSolDebout
+            case .ergometres: return .hyroxErgometres
+            }
+        }
+
+        /// La famille qu'un type de séance travaille, ou `nil` si ce n'en est pas une.
+        static func pour(_ kind: SessionKind) -> FamilleDeStations? {
+            allCases.first { $0.kind == kind }
+        }
+
+        /// La famille travaillée en semaine `semaine`, en rotation sur quatre semaines.
+        ///
+        /// Déterministe depuis le numéro de semaine du programme, et non tirée au sort : la même
+        /// semaine doit donner la même séance à chaque régénération, sinon un changement de
+        /// réglage ferait changer la famille de la semaine en cours.
+        static func pourLaSemaine(_ semaine: Int) -> FamilleDeStations {
+            let toutes = allCases
+            // `max(1, …)` et un modulo positif : une semaine 0 ou négative ne doit pas faire
+            // sortir de l'index. Elle ne devrait pas arriver, et un plantage sur une entrée
+            // aberrante serait une mauvaise façon de l'apprendre.
+            let rang = (max(1, semaine) - 1) % toutes.count
+            return toutes[rang]
+        }
+    }
+
     /// Les huit stations, DANS L'ORDRE DE LA COURSE, avec ce qu'elles prescrivent pour cette
     /// division.
     ///

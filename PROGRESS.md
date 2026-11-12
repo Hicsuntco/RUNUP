@@ -4475,3 +4475,68 @@ soient tombées.
 
 Deux pièges de langue en deux versions du même test. Le premier se voyait en relisant, le second
 non : il fallait que la machine le dise.
+
+---
+
+## 12 novembre 2026 — HYROX, étape 2b : une famille de stations par semaine
+
+Décision de Charlotte : une famille à charge réelle par semaine, **plus une séance de qualité en
+courant**. Les quatre familles tournent sur quatre semaines, soit trois passages chacune sur un bloc
+de douze.
+
+### Les quatre familles viennent du format, pas d'une méthode
+
+L'épreuve groupe elle-même ses stations par ses propres chiffres : deux ergomètres de 1000 m qui ne
+portent pas le corps, deux sleds de 50 m aux charges les plus lourdes, deux stations de port sur 200
+et 100 m, et deux stations qui font passer du sol à debout — dont une cent fois.
+
+| Famille | Stations | Rangs dans la course |
+| --- | --- | --- |
+| Pousser-tirer | sled push, sled pull | 1, 2 |
+| Porter | farmers carry, fentes sandbag | 5, 6 |
+| Sol-debout | burpee broad jumps, wall balls | 3, 7 |
+| Ergomètres | SkiErg, rameur | 0, 4 |
+
+C'est une organisation lisible du travail que l'épreuve exige, et rien de plus. **Aucune affirmation
+physiologique n'est portée** : le règlement donne un format, pas une méthode, et ce que la source ne
+dit pas, le code ne l'invente pas.
+
+### Pourquoi une seule famille par semaine
+
+Le plafond du moteur autorise deux séances de qualité par semaine, et toutes les séances HYROX
+comptent comme chaussées. Quatre familles ne peuvent donc pas être dures la même semaine. Une
+famille prend **une** place ; la seconde reste à une séance de qualité en courant — parce que
+l'épreuve fait huit kilomètres de course, soit la moitié du temps de course pour la plupart des gens,
+et que préparer les stations en abandonnant la vitesse à pied serait préparer la moitié de l'épreuve.
+
+### Le piège était dans la distribution, pas dans la liste
+
+Les archétypes hors sortie longue sont distribués dans l'ordre des jours de course, **en bouclant
+sur la liste**. Avec deux entrées seulement, quatre jours de course donnent famille, footing,
+famille — soit **deux** séances de station dans la semaine, ce que la rotation est censée exclure.
+Le bloc de base porte donc **deux footings** dans sa liste, ce qui n'est pas une faute de copie :
+trois entrées suffisent à ce que la famille ne tombe qu'une fois jusqu'à cinq jours de course.
+
+Et en spécifique, le footing est placé **entre** la famille et le tempo, pas en fin de liste : en
+dernier, les deux séances dures tomberaient sur deux jours de course consécutifs — ce que le moteur
+interdit par ailleurs.
+
+### Un défaut reconduit le jour même, et rattrapé
+
+Le tempo du bloc spécifique utilise le type générique `tempoRun`. `hyroxSteps` l'aurait décrit comme
+un « circuit fonctionnel » par son repli — exactement le défaut que les footings venaient de subir,
+reproduit à l'heure près par la séance que je venais d'ajouter. La liste des séances de course du
+découpage le nomme explicitement.
+
+### Ce qui le garde
+
+Cinq cas dans `ChargesHyroxTests` : les quatre familles couvrent les huit stations **chacune une
+fois** (une station oubliée ne serait jamais travaillée et rien ne le dirait ; une station comptée
+deux fois serait travaillée deux fois plus que les autres), chaque famille a son type distinct et on
+retrouve la famille depuis le type, la rotation passe par les quatre en quatre semaines puis
+recommence, deux appels pour la même semaine rendent la même famille, et une semaine aberrante ne
+fait pas sortir de l'index.
+
+Un cas dans `AdaptivePlanEngineSafetyTests` : **au plus une séance de stations par semaine**, sur
+toutes les semaines du plan, avec quatre jours de course — et le bloc spécifique garde bien une
+qualité à pied à côté de la famille. C'est la distribution qu'il éprouve, pas la liste.

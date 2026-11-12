@@ -200,21 +200,67 @@ enum RUColor {
     static var azure: Color { isLight ? Color(hex: 0x0F62C8) : Color(hex: 0x5AA9FF) }
     static var grape: Color { isLight ? Color(hex: 0x5B3FD6) : Color(hex: 0x9B7CFF) }
 
-    static var textPrimary: Color { isLight ? Color(hex: 0x15151C) : Color.white }
-    static var text2: Color { isLight ? Color.black.opacity(0.72) : Color.white.opacity(0.68) }
-    /// `text3` échouait au contraste dans LES DEUX thèmes — et le sombre, qui est le thème par
-    /// défaut, était le pire des deux : 2,85:1 sur le fond de page contre 3,90 en clair, pour un
-    /// seuil de 4,5. Le sombre passait même sous le seuil « gros texte » de 3:1.
+    // ── LES QUATRE JETONS DE TEXTE ───────────────────────────────────────────────────────────
+    //
+    // OPAQUES, ET DANS LA FAMILLE DU FOND. Les trois jetons secondaires étaient des opacités de
+    // noir et de blanc — 0,72 / 0,62 / 0,22. Deux défauts, dont un seul se voyait.
+    //
+    // Le premier, mineur : une opacité se mélange à ce qui passe dessous, donc le même jeton ne
+    // rend pas la même couleur selon la surface. `text3` sortait à #616161 sur une carte blanche
+    // et à #5A595D sur la sous-surface lavande. Quatre points d'écart sur une seule voie —
+    // négligeable à l'œil, mais c'est une couleur du système de design que le système de design
+    // ne décide pas.
+    //
+    // Le second, celui qui se voit : les quatre fonds penchent tous vers le violet de l'accent
+    // (#F4F3F8, #EDEBF4, #E7E5F0 portent le bleu 4 à 9 points au-dessus du rouge), et le texte
+    // sortait en GRIS NEUTRE PUR. C'est exactement ce que le commentaire de `bg` interdit, cent
+    // cinquante lignes plus haut : « un gris pur à côté d'un rose vif prend l'air sale, un gris
+    // qui partage sa famille non ». La règle était écrite, appliquée aux fonds, et pas aux 835
+    // emplois de texte qui se posent dessus.
+    //
+    // LA TEINTE EST CELLE DU BRIEF, PAS SA LUMINOSITÉ. Le brief demande #6B6473 en secondaire :
+    // même signature de famille que nos fonds (bleu +8, vert −7), mais mesuré sur NOS surfaces il
+    // tombe à 4,56:1 sur `bg2` et 4,81 sur `card2` — au-dessus du seuil, et en dessous de ce que
+    // `text3` donnait déjà (5,76 et 5,89). Adopter la valeur telle quelle aurait fait reculer la
+    // lisibilité pour gagner une teinte. On garde donc la DIRECTION (vert −6, bleu +8 en clair ;
+    // vert −5, bleu +8 en sombre) et on résout la luminosité sous une contrainte : AUCUN FOND NE
+    // PERD DE CONTRASTE. Un gris violet se détache moins d'un fond lavande qu'un gris neutre, donc
+    // chaque valeur est calée sur le PIRE des quatre fonds et non sur le plus fréquent — calée sur
+    // la carte blanche, `text3` serait tombé à 4,94:1 sur `bg2`.
+    //
+    // LA CONTRAINTE EST TENUE FOND PAR FOND, et pas sur la moyenne ni sur le minimum. Un premier
+    // jet calé sur le minimum des quatre surfaces avait fait reculer `text4` sombre de 1,92 à
+    // 1,75:1 sur `card2` sans que rien ne le signale : le minimum global était respecté, un fond
+    // en particulier non. `check_jetons_de_texte.py` compare les cinq fonds un par un — les quatre
+    // surfaces littérales et une BORNE du fond teinté — et imprime le tableau mesuré à chaque CI.
+    // Aucun chiffre de contraste n'est donc recopié ici : il serait faux au premier réglage.
+    //
+    // `text4` ne colore pas du texte à lire — voir `check_contraste.py`, qui tient la liste fermée
+    // de ses emplois. Ses 1,7:1 sont voulus, et il suit la famille pour la même raison que les
+    // autres : un point médian gris neutre entre deux liens se voit, lui aussi.
+
+    /// LE PRIMAIRE N'A PAS BOUGÉ, et c'est une mesure, pas un oubli. `#15151C` porte déjà le bleu
+    /// 7 points au-dessus du rouge : il est dans la famille depuis le début. Le brief demande
+    /// `#15121A`, soit 18,53:1 sur une carte blanche contre 18,17 pour le nôtre — un écart qu'aucun
+    /// œil ne relève. Le changer n'aurait rien donné à voir, et aurait coûté une valeur de plus à
+    /// tenir.
     ///
-    /// Ce n'est pas un jeton décoratif : c'est celui de 150 appels — tous les eyebrows, tous les
+    /// En sombre il reste le BLANC PUR, hors famille. Un blanc légèrement violacé serait plus
+    /// cohérent et moins lisible : le primaire sombre est le seul jeton dont on veut le maximum.
+    static var textPrimary: Color { isLight ? Color(hex: 0x15151C) : Color.white }
+    static var text2: Color { isLight ? Color(hex: 0x443E4C) : Color(hex: 0xBBB6C3) }
+    /// `text3` échouait au contraste dans LES DEUX thèmes — et le sombre, qui était alors le thème
+    /// par défaut, était le pire des deux : 2,85:1 sur le fond de page contre 3,90 en clair, pour
+    /// un seuil de 4,5. Le sombre passait même sous le seuil « gros texte » de 3:1.
+    ///
+    /// Ce n'est pas un jeton décoratif : c'est celui de 318 appels — tous les eyebrows, tous les
     /// libellés de métriques, tous les horodatages. Une passe précédente avait posé le diagnostic
     /// et n'avait relevé que la branche claire, à 0,5, ce qui ne suffisait pas non plus.
     ///
-    /// Mesuré : clair 6,0–6,2:1, sombre 5,5–5,7:1 sur `bg`/`card`/`card2`. `text2` monte en
-    /// parallèle (8,6–9,2:1) — sans quoi `text3` serait devenu PLUS foncé que lui et la hiérarchie
-    /// des deux jetons se serait inversée.
-    static var text3: Color { isLight ? Color.black.opacity(0.62) : Color.white.opacity(0.52) }
-    static var text4: Color { isLight ? Color.black.opacity(0.22) : Color.white.opacity(0.2) }
+    /// Le passage à l'opaque conserve cette correction et l'améliore sur chacun des cinq fonds,
+    /// dans les deux thèmes. `check_jetons_de_texte.py` le vérifie et imprime les valeurs.
+    static var text3: Color { isLight ? Color(hex: 0x5B5563) : Color(hex: 0x9893A0) }
+    static var text4: Color { isLight ? Color(hex: 0xB7B1BF) : Color(hex: 0x514C59) }
 
     /// A near-invisible opacity-on-white (was 0.035) reads as almost no card at all — dark mode's
     /// 0.045-on-near-black works because that background is already dark enough for a faint white

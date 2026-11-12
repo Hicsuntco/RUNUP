@@ -1,0 +1,249 @@
+#!/usr/bin/env python3
+"""Les quatre jetons de texte sont opaques, dans la famille du fond, et ne perdent pas de contraste.
+
+# LE DÉFAUT
+
+`text2`, `text3` et `text4` étaient des opacités — noir à 72 / 62 / 22 % en clair, blanc à
+68 / 52 / 20 % en sombre. Deux conséquences, dont une seule se voyait.
+
+Une opacité se mélange à ce qui passe dessous : le même jeton ne rendait donc pas la même couleur
+selon la surface. `text3` sortait à #616161 sur une carte blanche et à #5A595D sur la sous-surface
+lavande. Quatre points d'écart sur une seule voie — l'œil ne le relève pas, mais c'est une couleur
+du système de design que le système de design ne décidait pas.
+
+Et surtout : les quatre fonds de l'app penchent tous vers le violet de l'accent, pendant que le
+texte sortait en gris neutre pur. Le commentaire de `RUColor.bg` énonce pourtant la règle — « un
+gris pur à côté d'un rose vif prend l'air sale, un gris qui partage sa famille non ». Elle était
+appliquée aux fonds et pas aux 835 emplois de texte posés dessus.
+
+# POURQUOI UN SCRIPT, ET PAS SEULEMENT DES VALEURS
+
+Les rapports de contraste de ces jetons vivaient dans un commentaire. Un commentaire ne retient
+personne : la valeur peut être retouchée pour une raison esthétique, et les chiffres d'à côté
+continuent d'affirmer l'ancien contraste. C'est exactement ce qui était arrivé à `text3`, dont une
+passe précédente n'avait relevé qu'une branche sur deux.
+
+Ce script ne range donc AUCUNE valeur attendue. Il lit les jetons dans `Colors.swift`, reconstruit
+ce que les anciennes opacités rendaient, et vérifie trois choses :
+
+  1. aucun jeton de texte n'est une opacité ;
+  2. chaque jeton secondaire est dans la famille du fond (bleu au-dessus du rouge, vert en
+     dessous) — les deux exceptions de `textPrimary` sont écrites et bornées ci-dessous ;
+  3. sur CHAQUE fond, aucun jeton ne rend un contraste plus faible que celui que son opacité
+     d'origine rendait. Le plancher est donc calculé, jamais recopié.
+
+# LE FOND TEINTÉ, SANS REJOUER LA RECHERCHE D'ACCENT
+
+`RUColor.bg` mélange 3,5 % de l'accent dans le neutre en clair, 10 % en sombre, et l'accent clair
+est le résultat d'une recherche dichotomique dans `AccentTheme`. Rejouer cette recherche ici
+reviendrait à écrire sa règle une deuxième fois — le défaut que ce dépôt passe son temps à retirer.
+
+On la borne à la place. Mélanger 3,5 % de n'importe quelle couleur dans le neutre ne peut pas
+l'assombrir plus que 3,5 % de NOIR PUR, et c'est le pire cas pour du texte sombre posé dessus.
+En sombre, symétriquement, 10 % de BLANC PUR donne le fond le plus clair possible, donc le pire cas
+pour du texte clair. Les deux bornes sont vraies pour les huit nuanciers sans en lire aucun.
+"""
+
+import pathlib
+import re
+import sys
+
+RACINE = pathlib.Path(__file__).resolve().parent.parent
+COULEURS = RACINE / "RunUp/DesignSystem/Colors.swift"
+
+# Les opacités d'origine, par thème. Ce sont des FAITS SUR LE PASSÉ, pas des valeurs attendues :
+# elles servent uniquement à recalculer le contraste que le jeton rendait avant d'être opaque, donc
+# le plancher que la nouvelle valeur doit tenir.
+OPACITES = {
+    "clair": {"text2": 0.72, "text3": 0.62, "text4": 0.22},
+    "sombre": {"text2": 0.68, "text3": 0.52, "text4": 0.20},
+}
+
+# Les fonds littéraux de `Colors.swift`. Le neutre de `fond(pour:)` d'abord, puis les trois
+# surfaces. Le cinquième est la borne du fond teinté, construite plus bas.
+FONDS = {
+    "clair": {"bg": 0xF4F3F8, "bg2": 0xE7E5F0, "card": 0xFFFFFF, "card2": 0xEDEBF4},
+    "sombre": {"bg": 0x08070D, "bg2": 0x121118, "card": 0x16161F, "card2": 0x201F2A},
+}
+# `melange(rose, sur: neutre, part:)` dans `RUColor.fond(pour:)`.
+PART_TEINTE = {"clair": 0.035, "sombre": 0.10}
+
+# `textPrimary` ne suit pas la règle de famille, et les deux raisons sont écrites dans
+# `Colors.swift` juste au-dessus de sa déclaration : en clair `#15151C` y est DÉJÀ (bleu +7), en
+# sombre c'est le blanc pur, volontairement hors famille parce qu'on veut son maximum de lisibilité.
+HORS_FAMILLE = {("textPrimary", "sombre")}
+
+
+def _srgb(c: int) -> float:
+    v = c / 255.0
+    return v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
+
+
+def luminance(couleur: int) -> float:
+    r, v, b = (couleur >> 16) & 255, (couleur >> 8) & 255, couleur & 255
+    return 0.2126 * _srgb(r) + 0.7152 * _srgb(v) + 0.0722 * _srgb(b)
+
+
+def contraste(a: int, b: int) -> float:
+    la, lb = luminance(a), luminance(b)
+    haut, bas = max(la, lb), min(la, lb)
+    return (haut + 0.05) / (bas + 0.05)
+
+
+def melange(couleur: int, sur: int, part: float) -> int:
+    """`part` de `couleur` sur `sur`, par les composantes — la formule de `RUColor.melange`."""
+    sortie = 0
+    for decalage in (16, 8, 0):
+        a, b = (couleur >> decalage) & 255, (sur >> decalage) & 255
+        sortie |= round(a * part + b * (1 - part)) << decalage
+    return sortie
+
+
+def fonds(theme: str) -> dict:
+    """Les fonds du thème, borne du fond teinté comprise."""
+    sortie = dict(FONDS[theme])
+    pire = 0x000000 if theme == "clair" else 0xFFFFFF
+    sortie["bg teinté (borne)"] = melange(pire, FONDS[theme]["bg"], PART_TEINTE[theme])
+    return sortie
+
+
+def sans_commentaires(source: str) -> str:
+    """Retire les `//` et les `/* */` — les tableaux de mesure en commentaire citent des hex."""
+    sortie, i, n, bloc = [], 0, len(source), 0
+    while i < n:
+        if bloc:
+            if source.startswith("/*", i):
+                bloc += 1
+                i += 2
+            elif source.startswith("*/", i):
+                bloc -= 1
+                i += 2
+            else:
+                i += 1
+        elif source.startswith("/*", i):
+            bloc = 1
+            i += 2
+        elif source.startswith("//", i):
+            while i < n and source[i] != "\n":
+                i += 1
+        else:
+            sortie.append(source[i])
+            i += 1
+    return "".join(sortie)
+
+
+DECLARATION = re.compile(
+    r"static var (textPrimary|text2|text3|text4): Color \{([^}]*)\}"
+)
+
+
+def jetons(source: str) -> dict:
+    """Les deux branches de chaque jeton : `{nom: {"clair": ..., "sombre": ...}}`.
+
+    Une branche est soit un hex, soit `Color.white` / `Color.black`, soit autre chose — et
+    « autre chose » est précisément ce que le point 1 doit attraper, donc la valeur reste la
+    chaîne brute et le contrôle de famille la signale.
+    """
+    def valeur(texte: str):
+        texte = texte.strip()
+        if (m := re.fullmatch(r"Color\(hex: (0x[0-9A-Fa-f]{6})\)", texte)):
+            return int(m.group(1), 16)
+        if texte == "Color.white":
+            return 0xFFFFFF
+        if texte == "Color.black":
+            return 0x000000
+        return texte
+
+    trouves = {}
+    for nom, corps in DECLARATION.findall(source):
+        m = re.fullmatch(r"\s*isLight \? (.+?) : (.+?)\s*", corps.strip())
+        if not m:
+            trouves[nom] = {"clair": corps.strip(), "sombre": corps.strip()}
+            continue
+        trouves[nom] = {"clair": valeur(m.group(1)), "sombre": valeur(m.group(2))}
+    return trouves
+
+
+def ecarts() -> list:
+    source = sans_commentaires(COULEURS.read_text(encoding="utf-8"))
+    trouves = jetons(source)
+    problemes = []
+
+    manquants = {"textPrimary", "text2", "text3", "text4"} - set(trouves)
+    if manquants:
+        return [(", ".join(sorted(manquants)), "",
+                 "Jeton de texte introuvable dans Colors.swift — le script ne sait plus quoi "
+                 "mesurer. Si un jeton a été renommé, renommez-le aussi ici.")]
+
+    for nom, branches in sorted(trouves.items()):
+        for theme, valeur in branches.items():
+            # 1 — opaque.
+            if not isinstance(valeur, int):
+                problemes.append((f"{nom} ({theme})", str(valeur),
+                                  "N'est pas une couleur opaque. Un jeton de texte ne peut pas "
+                                  "être une opacité : il se mélangerait au fond, et sa couleur "
+                                  "serait décidée par la surface et non par le système de design."))
+                continue
+
+            # 2 — dans la famille du fond.
+            r, v, b = (valeur >> 16) & 255, (valeur >> 8) & 255, valeur & 255
+            if (nom, theme) not in HORS_FAMILLE:
+                if not (b > r and v <= r):
+                    problemes.append((
+                        f"{nom} ({theme})", f"#{valeur:06X}",
+                        f"Hors de la famille du fond : bleu {b}, rouge {r}, vert {v}. Les quatre "
+                        "fonds penchent vers le violet de l'accent ; un gris neutre posé dessus "
+                        "prend l'air sale. Il faut le bleu au-dessus du rouge, et le vert au plus "
+                        "égal — `textPrimary` clair tient la borne basse avec vert = rouge."))
+
+            # 3 — aucun fond ne perd de contraste.
+            if nom == "textPrimary":
+                continue
+            base = 0x000000 if theme == "clair" else 0xFFFFFF
+            alpha = OPACITES[theme][nom]
+            for ou, fond in fonds(theme).items():
+                avant = contraste(melange(base, fond, alpha), fond)
+                apres = contraste(valeur, fond)
+                if apres + 0.005 < avant:
+                    problemes.append((
+                        f"{nom} ({theme})", f"#{valeur:06X}",
+                        f"Perd du contraste sur `{ou}` : {apres:.2f}:1 contre {avant:.2f}:1 que "
+                        f"rendait l'opacité {alpha:g}. Un gris violet se détache moins d'un fond "
+                        "lavande qu'un gris neutre — la valeur doit être calée sur le pire des "
+                        "fonds, pas sur le plus fréquent."))
+    return problemes
+
+
+def tableau() -> str:
+    source = sans_commentaires(COULEURS.read_text(encoding="utf-8"))
+    trouves = jetons(source)
+    lignes = []
+    for theme in ("clair", "sombre"):
+        noms = list(fonds(theme))
+        lignes.append(f"  {theme} — " + " / ".join(noms))
+        for nom in ("textPrimary", "text2", "text3", "text4"):
+            valeur = trouves.get(nom, {}).get(theme)
+            if not isinstance(valeur, int):
+                continue
+            mesures = " ".join(f"{contraste(valeur, f):5.2f}" for f in fonds(theme).values())
+            lignes.append(f"      {nom:<12} #{valeur:06X}  {mesures}")
+    return "\n".join(lignes)
+
+
+def main() -> int:
+    problemes = ecarts()
+    if problemes:
+        print(f"{len(problemes)} problème(s) sur les jetons de texte :\n")
+        for quoi, valeur, raison in problemes:
+            print(f"  • {quoi}" + (f" — {valeur}" if valeur else ""))
+            print(f"      {raison}\n")
+        print("Voir l'en-tête de ce script et le bloc « LES QUATRE JETONS DE TEXTE » "
+              "dans RunUp/DesignSystem/Colors.swift.")
+        return 1
+    print("Jetons de texte : opaques, dans la famille du fond, aucun contraste perdu.")
+    print(tableau())
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -816,6 +816,17 @@ jobs:
           cd ci_scripts && python3 test_contraste.py
           cd .. && python3 ci_scripts/check_contraste.py
 
+      # Les trois jetons de texte secondaires étaient des opacités de noir et de blanc, donc leur
+      # couleur était décidée par la surface posée derrière, et leurs rapports de contraste ne
+      # vivaient que dans un commentaire. Ce garde les lit dans `Colors.swift`, reconstruit ce que
+      # les opacités rendaient, et refuse toute valeur qui perdrait du contraste sur l'un des cinq
+      # fonds — les quatre surfaces littérales et une borne du fond teinté. Il imprime le tableau
+      # mesuré, qui n'est donc recopié nulle part.
+      - name: Vérifier les jetons de texte — opaques, en famille, aucun contraste perdu
+        run: |
+          cd ci_scripts && python3 test_jetons_de_texte.py
+          cd .. && python3 ci_scripts/check_jetons_de_texte.py
+
       # « Le contenu au milieu, le bouton en bas » centre joliment tant que le contenu est plus
       # court que l'écran. À deux fois la taille de texte — que l'app autorise — les `Spacer`
       # tombent à zéro et le bouton sort par le bas. En bas de `PlanRecapView`, c'est

@@ -115,19 +115,27 @@ final class ContinuiteDuPlanTests: XCTestCase {
 
     /// LE PLAFOND DE TEMPS EST CELUI DU JOUR OÙ LA SÉANCE ATTERRIT.
     ///
-    /// Elle a répondu « 45 minutes en semaine, 3 h le week-end ». Sa sortie longue du dimanche
-    /// déplacée au mardi gardait la durée calculée pour le dimanche : elle lisait une séance de
-    /// plus d'une heure un jour où elle venait de dire en avoir quarante-cinq minutes.
-    /// L'information était dans son profil ; le déplacement ne l'ouvrait jamais.
+    /// Elle a répondu « 30 minutes en semaine, 3 h le week-end ». Sa sortie longue du dimanche
+    /// déplacée au mardi gardait la durée calculée pour le dimanche : elle lisait une séance
+    /// bien plus longue un jour où elle venait de dire en avoir trente minutes. L'information
+    /// était dans son profil ; le déplacement ne l'ouvrait jamais.
+    ///
+    /// Le plafond de semaine est à 30 et non à 45, et c'est la première version de ce test qui
+    /// l'a appris : à 45, la précondition tombait sur « 45 n'est pas supérieur à 45 ». La sortie
+    /// longue de la semaine 1 d'un bloc de base, pour un semi au niveau intermédiaire, vaut
+    /// justement 45 minutes — le déplacement n'aurait donc rien eu à raboter, et le test aurait
+    /// passé sans rien mesurer. 30 est la plus basse des durées réellement proposées à
+    /// l'inscription (`TempsDisponible.enSemaine`).
     @MainActor
     func testLePlafondDeTempsSuitLeJourDarrivee() {
-        let p = profil(semaineMin: 45, weekEndMin: 180)
+        let plafondEnSemaine = 30
+        let p = profil(semaineMin: plafondEnSemaine, weekEndMin: 180)
         let longueAvant = seance(p, 6)?.durationMinutes ?? 0
-        XCTAssertGreaterThan(longueAvant, 45, "sans quoi le test ne mesure rien")
+        XCTAssertGreaterThan(longueAvant, plafondEnSemaine, "sans quoi le test ne mesure rien")
 
         XCTAssertTrue(AdaptivePlanEngine.enregistrerDeplacement(de: 6, vers: 1, profile: p))
-        XCTAssertLessThanOrEqual(seance(p, 1)?.durationMinutes ?? .max, 45,
-                                 "le mardi vaut 45 minutes, quelle que soit la séance qui y tombe")
+        XCTAssertLessThanOrEqual(seance(p, 1)?.durationMinutes ?? .max, plafondEnSemaine,
+                                 "le mardi vaut trente minutes, quelle que soit la séance qui y tombe")
     }
 
     /// LA NOTE DE PHASE EST CELLE DU JOUR OÙ LA SÉANCE ATTERRIT.

@@ -4641,3 +4641,82 @@ Les deux marqueurs `UserDefaults` sont devenus des constantes nommées, pour que
 **lisent** au lieu de les recopier : une clé recopiée qui dérive donne un test qui passe sur une
 réparation qui ne tourne plus. Et la suite partage `UserDefaults`, donc les cas les effacent avant et
 après — sans quoi le premier poserait le marqueur et les suivants passeraient en n'éprouvant rien.
+
+## 12 novembre 2026 — premier chantier esthétique : le texte entre dans la famille du fond
+
+Charlotte, après une journée de moteur et de gardes : « l'esthétique on a rien changé ». C'est
+vrai, et ce chantier ouvre la refonte par le système de design, comme la phase 3 le demande.
+
+### Le défaut, mesuré sur la capture et non déduit du source
+
+Les quatre fonds de l'app penchent tous vers le violet de l'accent — `#F4F3F8` porte le bleu
+4 points au-dessus du rouge, `#EDEBF4` 7 points, `#E7E5F0` 9 points. Le texte, lui, sortait en gris
+neutre pur.
+
+Sonde sur `raw/fr-FR/clair/1-accueil.png` de la campagne de captures du 12 novembre, avant
+changement. Les deux couleurs intermédiaires les plus présentes de l'écran :
+
+| Couleur | Part de l'image | bleu − rouge | Ce que c'est |
+| --- | --- | --- | --- |
+| `#616161` | 0,362 % | **0** | `text3` sur une carte blanche |
+| `#474747` | 0,059 % | **0** | `text2` sur une carte blanche |
+| `#5D5C5E` | 0,071 % | +1 | `text3` sur le fond de page |
+
+Et le commentaire de `RUColor.bg` énonce la règle cent cinquante lignes plus haut : « un gris pur à
+côté d'un rose vif prend l'air sale, un gris qui partage sa famille non ». Elle était appliquée aux
+fonds, et pas aux 835 emplois de texte posés dessus — `textPrimary` 265, `text2` 244, `text3` 318,
+`text4` 8.
+
+Défaut mineur du même coup : les trois jetons secondaires étaient des opacités, donc leur couleur
+était décidée par la surface derrière et non par le système de design. `text3` sortait à `#616161`
+sur une carte et `#5A595D` sur une sous-surface.
+
+### La teinte vient du brief, pas sa luminosité
+
+Le brief demande `#6B6473` en secondaire. Même signature de famille que nos fonds (bleu +8,
+vert −7), mais mesuré sur NOS surfaces il donne 4,56:1 sur `bg2` et 4,81 sur `card2` — au-dessus du
+seuil, et en dessous des 5,76 et 5,89 que `text3` rendait déjà. L'adopter tel quel aurait reculé la
+lisibilité pour gagner une teinte.
+
+On garde donc la direction — vert −6, bleu +8 en clair ; vert −5, bleu +8 en sombre — et on résout
+la luminosité sous une contrainte : **aucun fond ne perd de contraste.**
+
+### Avant / après
+
+| Jeton | Clair : avant → après | Sombre : avant → après |
+| --- | --- | --- |
+| `textPrimary` | `#15151C` — inchangé | blanc pur — inchangé |
+| `text2` | noir 72 % → `#443E4C` | blanc 68 % → `#BBB6C3` |
+| `text3` | noir 62 % → `#5B5563` | blanc 52 % → `#9893A0` |
+| `text4` | noir 22 % → `#B7B1BF` | blanc 20 % → `#514C59` |
+
+Le primaire n'a pas bougé, et c'est une mesure : `#15151C` porte déjà le bleu 7 points au-dessus du
+rouge, et le `#15121A` du brief donne 18,53:1 sur une carte blanche contre 18,17 pour le nôtre — un
+écart qu'aucun œil ne relève. En sombre il reste le blanc pur, hors famille et volontairement : le
+primaire sombre est le seul jeton dont on veut le maximum.
+
+### Fond par fond, et c'est ce qui m'a rattrapé
+
+Ma première résolution était calée sur le **minimum** des quatre surfaces. Elle tenait ce minimum,
+et perdait 0,17 de contraste sur `card2` en particulier, 0,18 sur le fond teinté. Le garde l'a
+refusée avant la CI ; le cas est dans les tests, nommément, parce que c'est l'erreur qu'on ne voit
+pas à l'œil et qu'une prochaine résolution refera.
+
+Les valeurs finales montent sur les cinq fonds dans les deux thèmes — par exemple `text3` clair
+passe de 6,02 / 5,76 / 6,19 / 5,89 à 6,50 / 5,77 / 7,18 / 6,08.
+
+### Ce qui le garde
+
+`ci_scripts/check_jetons_de_texte.py`, 16 cas dans `test_jetons_de_texte.py`. Il vérifie trois
+choses : aucun jeton de texte n'est une opacité ; chaque jeton secondaire est dans la famille du
+fond ; et sur chacun des cinq fonds, aucun ne rend un contraste plus faible que celui que son
+opacité d'origine rendait. **Le plancher est donc calculé, jamais recopié.**
+
+Et aucun chiffre de contraste n'est écrit dans un commentaire. Ils y vivaient jusqu'ici, et c'est
+exactement comme ça que la branche sombre de `text3` avait pu rester sous le seuil pendant qu'un
+commentaire d'à côté affirmait l'avoir corrigée. Le garde les calcule et imprime le tableau.
+
+La borne du fond teinté évite de rejouer la recherche dichotomique d'`AccentTheme` — ce serait
+écrire sa règle une deuxième fois. Mélanger 3,5 % de n'importe quelle couleur dans le neutre ne peut
+pas l'assombrir plus que 3,5 % de noir pur ; un cas le vérifie sur 4 096 teintes, pour les huit
+nuanciers d'un coup.

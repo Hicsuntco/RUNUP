@@ -31,7 +31,7 @@ struct PaywallView: View {
     /// Les conditions standard d'Apple. L'app n'a pas de CGU propres, et c'est exactement le cas
     /// que ce document couvre — la revue l'accepte, à condition que le lien soit là.
     private let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
-    private let privacyURL = URL(string: "https://hicsuntco.github.io/RUNUP/privacy.html")!
+    private let privacyURL = Liens.confidentialite
 
     /// Un type nommé plutôt qu'un tuple : Swift n'accepte pas de key path vers un élément de
     /// tuple, donc `ForEach(_, id: \.1)` ne compile pas — et l'erreur qu'il rend ne parle pas des

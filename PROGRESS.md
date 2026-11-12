@@ -4540,3 +4540,54 @@ fait pas sortir de l'index.
 Un cas dans `AdaptivePlanEngineSafetyTests` : **au plus une séance de stations par semaine**, sur
 toutes les semaines du plan, avec quatre jours de course — et le bloc spécifique garde bien une
 qualité à pied à côté de la famille. C'est la distribution qu'il éprouve, pas la liste.
+
+---
+
+## 12 novembre 2026 — #15 : neuf copies d'une adresse, et un renommage qui les a toutes cassées
+
+Le chantier était noté « le lien Assistance de la fiche ouvre la politique de confidentialité ». Il y
+avait deux défauts dans cette seule ligne, et le second est plus grave.
+
+### Le lien d'assistance était la politique de confidentialité
+
+`ci_scripts/asc.py` envoyait à Apple `"supportUrl": ".../privacy.html"`. Or `support.html` existe
+dans le dépôt **depuis le 8 novembre** : une vraie page d'assistance, avec une adresse à qui écrire.
+La fiche envoyait donc les gens lire ce que l'app collecte quand ils cherchaient à qui s'adresser.
+
+### Et cette adresse est morte
+
+Le dépôt a changé de propriétaire. GitHub Pages suit le propriétaire, pas le nom. Mesuré :
+
+| Adresse | Réponse |
+| --- | --- |
+| `hicsuntco.github.io/RUNUP/privacy.html` | **404** |
+| `hicsuntco.github.io/RUNUP/support.html` | **404** |
+| `hukaia.github.io/RUNUP/privacy.html` | 200 |
+| `hukaia.github.io/RUNUP/support.html` | 200 |
+
+L'ancienne adresse était écrite en dur à **neuf endroits** : la fiche App Store dans ses trois
+langues, le script qui l'envoie à Apple, la page d'assistance, la page de club, et
+`PaywallView.swift`. Aucune conséquence bruyante, et deux graves : la fiche annonçait une politique
+de confidentialité **introuvable**, ce qu'Apple exige de fournir ; et le lien du paywall, dans l'app
+livrée, ouvrait une page d'erreur au moment précis où quelqu'un s'apprête à payer.
+
+### Ce qui a changé
+
+Une déclaration par langage — `RunUp/Models/Liens.swift` et `ci_scripts/liens.py` — et tous les
+porteurs corrigés. Un renommage est maintenant **une ligne de chaque côté**.
+
+`asc.py push-metadata` **vérifie que les deux pages répondent** juste avant d'envoyer la fiche. Cette
+question-là appartient au réseau, et c'est le moment où elle compte : la commande passe déjà par le
+réseau, donc la vérifier là ne la rend pas plus fragile qu'elle n'est.
+
+### Ce qui le garde
+
+`ci_scripts/check_liens.py` et ses **neuf cas**, hors ligne : toute adresse visant une page de ce
+projet est l'une des deux déclarées, les deux déclarations s'accordent, et chaque page annoncée
+existe comme fichier. Les deux premiers cas sont l'ancienne adresse recopiée telle quelle.
+
+La première version du contrôle lisait **tout**, `node_modules` compris, et signalait **cinquante et
+un** liens de spécification des dépendances — « https://w3c.github.io/FileAPI/ » n'est pas une page
+de RUNUP mal adressée. Le motif vise maintenant le segment de projet, pris dans la déclaration : un
+renommage le suit, et aucune liste d'exceptions n'est à tenir. Les journaux — PROGRESS, AUDIT,
+PHASE2 — gardent leurs anciennes adresses, parce qu'ils racontent ce qui a été fait.

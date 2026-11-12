@@ -96,7 +96,7 @@ RUNUP fonctionne sans abonnement. RUNUP Plus débloque le programme et le coach,
 • Annuel — 39,99 € par an (soit 3,33 € par mois)
 Renouvellement automatique, résiliable à tout moment depuis les réglages de ton compte Apple.
 Conditions d'utilisation : https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
+Politique de confidentialité : https://hukaia.github.io/RUNUP/privacy.html
 ```
 
 ## Nouveautés de cette version (4000 caractères max — obligatoire pour une mise à jour)
@@ -222,7 +222,7 @@ RUNUP works without a subscription, with no time limit. RUNUP Plus unlocks the p
 • Yearly — €39.99 per year (€3.33 per month)
 Auto-renewing, cancellable at any time from your Apple account settings.
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
+Privacy Policy: https://hukaia.github.io/RUNUP/privacy.html
 ```
 
 ## What's New in This Version (4000 characters max — required for an update)
@@ -327,7 +327,7 @@ RUNUP funciona sin suscripción y sin límite de tiempo. RUNUP Plus desbloquea e
 • Anual — 39,99 € al año (3,33 € al mes)
 Renovación automática, cancelable cuando quieras desde los ajustes de tu cuenta de Apple.
 Términos de uso: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
+Política de privacidad: https://hukaia.github.io/RUNUP/privacy.html
 ```
 
 ## Novedades de esta versión (4000 caracteres máx. — obligatorio para una actualización)
@@ -538,7 +538,7 @@ Tout ce qui précède disparaît à la suppression du compte : `routes` et `rout
 
 ## URLs requises
 - **URL de support** : `mailto:charlottegrudep@gmail.com`
-- **URL de politique de confidentialité** : `https://hicsuntco.github.io/RUNUP/privacy.html`
+- **URL de politique de confidentialité** : `https://hukaia.github.io/RUNUP/privacy.html`
 - **URL marketing** (optionnelle) : —
 
 ## Copyright

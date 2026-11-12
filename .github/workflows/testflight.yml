@@ -713,6 +713,16 @@ jobs:
           cd ci_scripts && python3 test_entrees.py
           cd .. && python3 ci_scripts/check_entrees.py
 
+      # L'adresse de la politique de confidentialité était écrite en dur à NEUF endroits. Le dépôt
+      # a changé de propriétaire, GitHub Pages a suivi, et les neuf copies pointaient toujours vers
+      # l'ancien domaine — qui répond 404. Aucune conséquence bruyante, et deux graves : la fiche
+      # App Store annonçait une politique introuvable, ce qu'Apple exige de fournir, et le lien du
+      # paywall ouvrait une page d'erreur au moment où quelqu'un s'apprête à payer.
+      - name: Vérifier que les pages publiées sont annoncées avec la même adresse
+        run: |
+          cd ci_scripts && python3 test_liens.py
+          cd .. && python3 ci_scripts/check_liens.py
+
       # L'inscription décrit ses étapes à TROIS endroits : le switch qui choisit la vue, celui
       # qui la nomme pour les statistiques, et celui qui décide si on peut la quitter. Insérer
       # une étape au milieu oblige à décaler les trois ; en oublier un a suffi pour que l'écran

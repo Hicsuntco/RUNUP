@@ -33,6 +33,8 @@ import argparse, base64, datetime, hashlib, json, os, pathlib, re, subprocess, s
 import urllib.request, urllib.error
 import shutil
 
+import liens
+
 # LES BORNES D'APPLE SONT ÉCRITES UNE FOIS, DANS `apercu.py`. Les recopier ici, c'est accepter
 # qu'un jour l'un des deux fichiers dise quinze secondes et l'autre dix-huit.
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -612,7 +614,35 @@ def cmd_create_version(args):
         print(f"Aucune capture à élaguer ({', '.join(FORMATS_SANS_RAISON)} : rien de recopié).")
 
 
+def verifier_les_pages_publiees() -> None:
+    """Les pages annoncées à Apple répondent-elles ?
+
+    VÉRIFIÉ ICI, AU MOMENT OÙ ÇA COMPTE, et non dans un contrôle hors ligne. Une URL morte dans la
+    fiche App Store ne casse aucun build et ne fait échouer aucun test : elle fait juste qu'Apple,
+    et quiconque clique, tombe sur une page d'erreur. C'est arrivé — le dépôt a changé de
+    propriétaire, GitHub Pages a suivi, et l'adresse annoncée est restée l'ancienne pendant que
+    tout le reste passait au vert.
+
+    La fiche est de toute façon envoyée par le réseau : une vérification réseau juste avant ne
+    rend pas cette commande plus fragile qu'elle n'est, et elle échoue avec le nom de la page.
+    """
+    for url in (liens.CONFIDENTIALITE, liens.ASSISTANCE):
+        demande = urllib.request.Request(url, method="HEAD")
+        try:
+            with urllib.request.urlopen(demande, timeout=20) as reponse:
+                code = reponse.status
+        except urllib.error.HTTPError as e:
+            code = e.code
+        except Exception as e:  # réseau coupé, DNS, TLS
+            sys.exit(f"Impossible de vérifier {url} : {e}")
+        if code != 200:
+            sys.exit(f"{url} répond {code}. Apple exige une page qui répond, et la fiche "
+                     f"l'annonce. Corrige `ci_scripts/liens.py` et les pages du dépôt.")
+    print("  pages publiées : les deux répondent")
+
+
 def cmd_push_metadata(args):
+    verifier_les_pages_publiees()
     aid, _ = app_id()
     versions = call("GET", f"apps/{aid}/appStoreVersions?filter[versionString]={args.version}")["data"]
     if not versions:
@@ -628,7 +658,11 @@ def cmd_push_metadata(args):
         # ne peut pas être omis.
         attrs = {"description": fields["description"], "keywords": fields["keywords"],
                  "promotionalText": fields["promo"], "whatsNew": fields["whatsNew"],
-                 "supportUrl": "https://hicsuntco.github.io/RUNUP/privacy.html"}
+                 # L'URL D'ASSISTANCE EST LA PAGE D'ASSISTANCE, et c'était la politique de
+                 # confidentialité. `support.html` existait pourtant dans le dépôt depuis des
+                 # semaines : la fiche envoyait les gens lire ce que l'app collecte quand ils
+                 # cherchaient à qui écrire. Voir `ci_scripts/liens.py`.
+                 "supportUrl": liens.ASSISTANCE}
         if args.dry_run:
             print(f"\n── {locale} " + "─" * 50)
             for k, v in attrs.items():

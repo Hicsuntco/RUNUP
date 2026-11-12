@@ -322,19 +322,30 @@ enum HyroxDivision: String, Codable, CaseIterable, Identifiable {
 
     /// Les charges du règlement pour cette division, ou `nil` quand on ne les connaît pas.
     ///
-    /// MEN OPEN ET WOMEN PRO PARTAGENT LA MÊME COLONNE, et ce n'est pas un raccourci de code :
-    /// c'est ainsi que le tableau du règlement est écrit.
+    /// # DEUX DÉCOUPAGES QUI NE SE SUPERPOSENT PAS
+    ///
+    /// Les POIDS groupent Hommes avec Femmes Pro — c'est ainsi que le tableau du règlement est
+    /// écrit, ce n'est pas un raccourci de code. Mais la HAUTEUR DE CIBLE des wall balls groupe
+    /// autrement, Femmes avec Femmes Pro à 2,70 m et Hommes avec Hommes Pro à 3,00 m.
+    ///
+    /// Les quatre divisions ont donc quatre valeurs distinctes, et les deux colonnes de poids
+    /// identiques sont écrites deux fois exprès : les factoriser reviendrait à affirmer que ces
+    /// deux divisions s'entraînent pareil, ce qui est faux de trente centimètres, cent fois.
+    /// `ChargesHyroxTests` tient l'égalité des poids pour que la duplication ne dérive pas.
     var charges: ChargesHyrox? {
         switch self {
         case .femmes:
             return ChargesHyrox(sledPushKg: 102, sledPullKg: 78, kettlebellKg: 16,
-                                sandbagKg: 10, wallBallKg: 4)
-        case .hommes, .femmesPro:
+                                sandbagKg: 10, wallBallKg: 4, wallBallCibleM: 2.70)
+        case .femmesPro:
             return ChargesHyrox(sledPushKg: 152, sledPullKg: 103, kettlebellKg: 24,
-                                sandbagKg: 20, wallBallKg: 6)
+                                sandbagKg: 20, wallBallKg: 6, wallBallCibleM: 2.70)
+        case .hommes:
+            return ChargesHyrox(sledPushKg: 152, sledPullKg: 103, kettlebellKg: 24,
+                                sandbagKg: 20, wallBallKg: 6, wallBallCibleM: 3.00)
         case .hommesPro:
             return ChargesHyrox(sledPushKg: 202, sledPullKg: 153, kettlebellKg: 32,
-                                sandbagKg: 30, wallBallKg: 9)
+                                sandbagKg: 30, wallBallKg: 9, wallBallCibleM: 3.00)
         case .open, .pro:
             return nil
         }

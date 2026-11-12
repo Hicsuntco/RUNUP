@@ -4347,6 +4347,7 @@ charges, et **Men Open et Women Pro partagent exactement la même colonne**.
 | Farmers carry 200 m | 2 × 16 kg | 2 × 24 kg | 2 × 32 kg |
 | Sandbag lunges 100 m | 10 kg | 20 kg | 30 kg |
 | Wall balls | 100 × 4 kg | 6 kg | 9 kg |
+| Hauteur de cible | 2,70 m | **2,70 / 3,00 m** | 3,00 m |
 
 SkiErg et rameur font 1000 m, le burpee broad jump 80 m, dans les quatre divisions. Et une
 correction de ce que donnait la recherche web : **le sled fait quatre allers de 12,5 m, pas deux de
@@ -4377,6 +4378,20 @@ données de santé minimales est tenue : rien d'autre dans l'app ne lit cette va
 Le sous-titre des cartes annonce maintenant deux charges concrètes — « Sled 102 kg · wall balls
 4 kg » — au lieu de « le format le plus couru », qui était une affirmation sur la participation que
 rien ne sourçait.
+
+### Le piège du tableau : deux découpages qui ne se superposent pas
+
+Trouvé en relisant le règlement pour préparer l'étape 2, et corrigé avant la fin de la barrière. Les
+**poids** groupent « WOMEN », puis « WOMEN PRO / MEN », puis « MEN PRO ». La **hauteur de cible** des
+wall balls groupe autrement, deux pages plus loin : « WOMEN / WOMEN PRO 2.70M » et « MEN / MEN PRO
+3.00M ».
+
+Hommes et Femmes Pro portent donc exactement les mêmes kilos et **ne lancent pas à la même
+hauteur**. La première version de ce fichier leur donnait une seule valeur partagée, parce que leurs
+cinq charges sont identiques — ce qui faisait s'entraîner trente centimètres trop bas, cent fois de
+suite. Les quatre divisions ont maintenant quatre valeurs distinctes, et les deux colonnes de poids
+identiques sont écrites deux fois exprès ; le test tient leur égalité pour que la duplication ne
+dérive pas.
 
 ### Les profils déjà enregistrés
 

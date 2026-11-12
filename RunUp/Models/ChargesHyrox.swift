@@ -39,6 +39,19 @@ struct ChargesHyrox: Equatable, Sendable {
     let sandbagKg: Int
     /// Wall balls, 100 répétitions.
     let wallBallKg: Int
+    /// La hauteur de la cible des wall balls, en mètres.
+    ///
+    /// # ELLE NE SUIT PAS LE MÊME DÉCOUPAGE QUE LES CHARGES
+    ///
+    /// C'est le piège de ce tableau, et il est à deux pages d'écart dans le règlement. Les poids
+    /// groupent « WOMEN », puis « WOMEN PRO / MEN », puis « MEN PRO ». La hauteur groupe
+    /// autrement : « WOMEN / WOMEN PRO 2.70M » et « MEN / MEN PRO 3.00M ».
+    ///
+    /// Hommes et Femmes Pro portent donc exactement les mêmes kilos et ne lancent PAS à la même
+    /// hauteur. Déduire l'une de l'autre — ce que la première version de ce fichier faisait, en
+    /// leur donnant une seule valeur partagée — faisait s'entraîner trente centimètres trop haut
+    /// ou trop bas, cent fois de suite.
+    let wallBallCibleM: Double
 
     /// Les distances et répétitions, identiques dans les quatre divisions.
     ///

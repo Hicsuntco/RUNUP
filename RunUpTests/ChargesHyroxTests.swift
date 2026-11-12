@@ -25,6 +25,7 @@ final class ChargesHyroxTests: XCTestCase {
         XCTAssertEqual(c.kettlebellKg, 16)
         XCTAssertEqual(c.sandbagKg, 10)
         XCTAssertEqual(c.wallBallKg, 4)
+        XCTAssertEqual(c.wallBallCibleM, 2.70)
     }
 
     func testLesChargesHommesProSontCellesDuReglement() throws {
@@ -34,20 +35,39 @@ final class ChargesHyroxTests: XCTestCase {
         XCTAssertEqual(c.kettlebellKg, 32)
         XCTAssertEqual(c.sandbagKg, 30)
         XCTAssertEqual(c.wallBallKg, 9)
+        XCTAssertEqual(c.wallBallCibleM, 3.00)
     }
 
-    /// HOMMES OPEN ET FEMMES PRO PARTAGENT LA MÊME COLONNE, et ce n'est pas un raccourci de code :
-    /// c'est ainsi que le tableau du règlement est écrit. Les séparer « pour faire propre » serait
-    /// inventer une différence que l'épreuve n'a pas.
-    func testHommesEtFemmesProPartagentLaMemeColonne() throws {
+    /// HOMMES ET FEMMES PRO PARTAGENT LA COLONNE DES POIDS, ET PAS LA HAUTEUR DE CIBLE.
+    ///
+    /// Les deux découpages du règlement ne se superposent pas, et ils sont à deux pages d'écart.
+    /// Les poids groupent « WOMEN PRO / MEN » ; la hauteur groupe « WOMEN / WOMEN PRO » à 2,70 m
+    /// et « MEN / MEN PRO » à 3,00 m. Déduire l'un de l'autre — ce que la première version de ce
+    /// fichier faisait — faisait s'entraîner trente centimètres trop bas, cent fois de suite.
+    func testHommesEtFemmesProPartagentLesPoidsMaisPasLaCible() throws {
         let hommes = try XCTUnwrap(HyroxDivision.hommes.charges)
         let femmesPro = try XCTUnwrap(HyroxDivision.femmesPro.charges)
-        XCTAssertEqual(hommes, femmesPro)
+        XCTAssertEqual(hommes.sledPushKg, femmesPro.sledPushKg)
+        XCTAssertEqual(hommes.sledPullKg, femmesPro.sledPullKg)
+        XCTAssertEqual(hommes.kettlebellKg, femmesPro.kettlebellKg)
+        XCTAssertEqual(hommes.sandbagKg, femmesPro.sandbagKg)
+        XCTAssertEqual(hommes.wallBallKg, femmesPro.wallBallKg)
+        XCTAssertNotEqual(hommes.wallBallCibleM, femmesPro.wallBallCibleM,
+                          "la hauteur de cible ne suit pas la colonne des poids")
+
         XCTAssertEqual(hommes.sledPushKg, 152)
         XCTAssertEqual(hommes.sledPullKg, 103)
         XCTAssertEqual(hommes.kettlebellKg, 24)
         XCTAssertEqual(hommes.sandbagKg, 20)
         XCTAssertEqual(hommes.wallBallKg, 6)
+    }
+
+    /// Les deux hauteurs de cible, telles que le règlement les donne.
+    func testLesHauteursDeCibleSontCellesDuReglement() throws {
+        XCTAssertEqual(try XCTUnwrap(HyroxDivision.femmes.charges).wallBallCibleM, 2.70)
+        XCTAssertEqual(try XCTUnwrap(HyroxDivision.femmesPro.charges).wallBallCibleM, 2.70)
+        XCTAssertEqual(try XCTUnwrap(HyroxDivision.hommes.charges).wallBallCibleM, 3.00)
+        XCTAssertEqual(try XCTUnwrap(HyroxDivision.hommesPro.charges).wallBallCibleM, 3.00)
     }
 
     /// Les charges montent dans l'ordre des divisions, sur chacune des cinq stations chargées.

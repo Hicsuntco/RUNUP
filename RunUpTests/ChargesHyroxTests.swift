@@ -225,9 +225,18 @@ final class ChargesHyroxTests: XCTestCase {
         XCTAssertTrue(hommes.stations[Rang.wallBalls].prescription.contains("300"),
                       "mêmes kilos que Femmes Pro, cible trente centimètres plus haut")
 
-        // Les deux ergomètres font mille mètres dans toutes les divisions.
-        XCTAssertTrue(femmes.stations[Rang.skiErg].prescription.contains("1000"))
-        XCTAssertTrue(femmes.stations[Rang.rameur].prescription.contains("1000"))
+        // LES DEUX ERGOMÈTRES FONT MILLE MÈTRES, et il faut lire les CHIFFRES pour le vérifier.
+        //
+        // La première version cherchait « 1000 » dans la phrase, et la CI l'a refusée : un entier
+        // interpolé dans une chaîne localisée est groupé par la locale. La phrase dit donc
+        // « 1,000 m » en anglais et « 1 000 m » en français, et ne contient « 1000 » dans aucune
+        // des deux. L'affichage est juste — un séparateur de milliers est ce qu'on attend d'une
+        // distance — c'est l'assertion qui était naïve.
+        //
+        // Les autres nombres du tableau sont sous mille et ne sont donc pas groupés, ce qui
+        // explique que seules ces deux lignes soient tombées.
+        XCTAssertEqual(femmes.stations[Rang.skiErg].prescription.filter(\.isNumber), "1000")
+        XCTAssertEqual(femmes.stations[Rang.rameur].prescription.filter(\.isNumber), "1000")
     }
 
     /// La saison est affichée avec les charges : un nombre daté n'est pas de la fausse précision,

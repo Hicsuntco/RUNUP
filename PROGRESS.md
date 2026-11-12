@@ -4464,3 +4464,14 @@ lance les tests en anglais, où « Fentes sandbag » devient « Sandbag lunges �
 C'est le défaut qu'un cas de `PourquoiCetteSeance` a déjà commis dans ce dépôt, et je l'ai écrit une
 seconde fois. Les assertions portent maintenant sur le **rang** dans l'ordre de l'épreuve et sur les
 nombres — ce qui ne se traduit pas.
+
+Et la CI a refusé la version suivante, pour une raison plus intéressante : **un entier interpolé dans
+une chaîne localisée est groupé par la locale.** La prescription des ergomètres dit « 1,000 m » en
+anglais et « 1 000 m » en français, et ne contient « 1000 » dans aucune des deux. L'affichage est
+juste — un séparateur de milliers est ce qu'on attend d'une distance — c'est l'assertion qui était
+naïve. Elle lit maintenant les chiffres de la phrase, séparateur retiré. Les autres nombres du
+tableau sont sous mille et ne sont donc pas groupés, ce qui explique que seules ces deux lignes
+soient tombées.
+
+Deux pièges de langue en deux versions du même test. Le premier se voyait en relisant, le second
+non : il fallait que la machine le dise.

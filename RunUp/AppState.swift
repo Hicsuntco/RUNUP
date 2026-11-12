@@ -917,7 +917,11 @@ final class AppState {
         guard profile.lastSameDayAdjustmentCheckDay != today else { return }
         let sleepHours = profile.connectedSources.contains(.apple) ? await healthKit.lastNightSleepHours() : nil
         guard AdaptivePlanEngine.applySameDayAdjustmentIfNeeded(profile, sleepHours: sleepHours) else { return }
-        let reason = profile.todaySession.adjustment ?? String(localized: "récupération")
+        // La mention est lue sur l'allègement lui-même, et non sur `todaySession.adjustment` :
+        // c'est la source, le champ de la séance n'en est qu'une copie posée par le générateur.
+        // En course libre il n'y a pas de semaine régénérée, donc pas de copie — la notification
+        // retombait sur « récupération » alors que la raison était connue.
+        let reason = profile.allegementDuJour?.raison ?? String(localized: "récupération")
         // `displayTitle`, pas `title` : `title` reste le libellé français interne (voir
         // `WorkoutSession`) — l'afficher tel quel remettait du français dans une notification
         // par ailleurs traduite.
@@ -1124,35 +1128,29 @@ final class AppState {
 
     /// Déplace une séance d'un jour à l'autre de la semaine en cours.
     ///
-    /// Écrit directement dans `weekSessions`, qui EST la semaine en cours — il n'y a pas de couche
-    /// de surcharge à tenir, et donc rien qui puisse se désynchroniser du plan. Les semaines
-    /// suivantes ne sont pas concernées : elles sont régénérées à chaque affichage, un déplacement
-    /// y serait silencieusement perdu (voir `SessionMove`).
+    /// Le déplacement est ENREGISTRÉ comme entrée du générateur, puis la semaine est régénérée
+    /// autour de lui — il n'est plus écrit à la main dans `weekSessions`. Deux choses en
+    /// dépendent, et aucune des deux ne marchait avant :
+    ///
+    /// - il SURVIT. `applyProgramSettingsChange` reconstruit la semaine de zéro à chaque
+    ///   changement de réglage, et même sans qu'elle demande rien : l'allègement du coach expire
+    ///   tout seul au lancement et déclenche la régénération. Un déplacement posé mardi
+    ///   n'existait plus jeudi matin, sans un mot ;
+    /// - les règles du jour se calculent sur le jour d'ARRIVÉE. Sa sortie longue du dimanche
+    ///   déplacée au mardi gardait ses 95 minutes alors qu'elle avait répondu « 45 minutes en
+    ///   semaine », et une séance de qualité déplacée de quatre jours annonçait « phase lutéale
+    ///   estimée » un jour en phase menstruelle.
+    ///
+    /// Les semaines suivantes ne sont pas concernées : elles sont régénérées à chaque affichage,
+    /// et le déplacement porte son numéro de semaine pour ne pas s'y rejouer (voir
+    /// `DeplacementDeSeance`). Une semaine qui n'est pas encore arrivée se change par ses jours
+    /// de course, pas séance par séance.
     ///
     /// Rend `false` quand le déplacement est refusé, pour que l'appelant n'affiche pas une
     /// confirmation d'une chose qui n'a pas eu lieu.
     @discardableResult
     func moveSession(from: Int, to: Int) -> Bool {
-        guard let moved = SessionMove.apply(to: profile.weekSessions, from: from, to: to) else { return false }
-        profile.weekSessions = moved
-
-        // La bande de la semaine sur l'accueil lit `weekStrip`, pas `weekSessions`, et son état
-        // « repos » vient des jours de course du profil — pas des séances réellement posées. Sans
-        // ces deux lignes, l'accueil continuerait d'annoncer une séance le jour qu'on vient de
-        // libérer et de marquer repos celui où elle vient d'atterrir : deux représentations de la
-        // même semaine, dont une seule aurait bougé.
-        //
-        // `.done` n'est jamais touché : un jour déjà validé ne peut pas être l'un des deux (une
-        // séance faite ne se déplace pas), et l'écraser effacerait une séance qui a bien eu lieu.
-        let today = AdaptivePlanEngine.currentWeekdayIndex()
-        profile.weekStrip = profile.weekStrip.map { day in
-            guard day.weekday == from || day.weekday == to, day.state != .done else { return day }
-            var updated = day
-            let occupied = (moved.first { $0.weekday == day.weekday }?.session?.durationMinutes ?? 0) > 0
-            updated.state = !occupied ? .rest : (day.weekday == today ? .today : .upcoming)
-            return updated
-        }
-
+        guard AdaptivePlanEngine.enregistrerDeplacement(de: from, vers: to, profile: profile) else { return false }
         Haptics.success()
         toast(String(localized: "Séance déplacée"))
         Analytics.shared.track(.sessionMoved, ["from": .int(from), "to": .int(to)])

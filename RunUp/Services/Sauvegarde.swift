@@ -122,6 +122,9 @@ struct Sauvegarde: Codable, Equatable {
         "UserProfile.dailyGoalsBonusAwarded": "Objectifs du jour — remis à zéro chaque matin.",
         "UserProfile.lastDailyResetDay": "Repère interne de la remise à zéro quotidienne.",
         "UserProfile.lastSameDayAdjustmentCheckDay": "Repère interne du moteur d'adaptation.",
+        "UserProfile.allegementDuJour": """
+        L'allègement réactif d'UN jour civil — nuit courte, ou séance jugée trop dure la veille.         Son propre repère (`lastSameDayAdjustmentCheckDay`) n'est pas restauré non plus, donc le         contrôle se rejoue après une restauration et relit le vrai sommeil de la vraie nuit. Le         restaurer, c'est raccourcir la séance du jour au nom d'une nuit qui n'est pas celle-là.
+        """,
         "UserProfile.lastHealthRunImport": """
         Jusqu'où l'import Santé est allé. À nil, il repasse sur sa fenêtre et ne crée aucun \
         doublon (`healthWorkoutID` le garantit) — c'est même ce qu'on veut après une restauration.
@@ -220,6 +223,16 @@ extension Sauvegarde {
         var weekSessions: [PlannedDay]?
         var watchRunLayout: WatchRunLayout?
         var trainingEase: TrainingEase?
+        /// Les déplacements de séance de la semaine en cours.
+        ///
+        /// Sauvegardés parce que `weekSessions` l'est. Sans eux, une restauration ramènerait la
+        /// semaine telle qu'elle était — déplacements compris — puis les annulerait à la première
+        /// régénération, qui arrive au plus tard au prochain changement de réglage. La semaine
+        /// serait juste à la restauration et fausse une heure plus tard, ce qui est pire que de
+        /// ne rien restaurer. Ils portent leur semaine et leur forme, donc ils s'expirent seuls
+        /// si la restauration tombe sur une autre semaine du programme (voir
+        /// `DeplacementDeSeance`).
+        var deplacementsDeLaSemaine: [DeplacementDeSeance]?
         var runningDaysBeforeEase: [Int]?
         var longRunDayBeforeEase: Int?
         var weekTier: Int?
@@ -312,6 +325,7 @@ extension Sauvegarde {
             weekSessions = c.lireTableau(PlannedDay.self, .weekSessions)
             watchRunLayout = c.lire(WatchRunLayout.self, .watchRunLayout)
             trainingEase = c.lire(TrainingEase.self, .trainingEase)
+            deplacementsDeLaSemaine = c.lireTableau(DeplacementDeSeance.self, .deplacementsDeLaSemaine)
             runningDaysBeforeEase = c.lire([Int].self, .runningDaysBeforeEase)
             longRunDayBeforeEase = c.lire(Int.self, .longRunDayBeforeEase)
             weekTier = c.lire(Int.self, .weekTier)

@@ -701,6 +701,18 @@ jobs:
           cd ci_scripts && python3 test_decodage.py
           cd .. && python3 ci_scripts/check_decodage.py
 
+      # Le programme est REGÉNÉRÉ — au passage de semaine, à chaque changement de réglage, et
+      # même sans que personne ne demande rien : l'allègement du coach expire tout seul au
+      # lancement et déclenche la régénération. Tout ce qui est écrit à la main dans la semaine
+      # disparaît donc au passage suivant. Deux changements l'avaient oublié : le déplacement
+      # d'une séance et l'allègement du jour. Un déplacement posé mardi n'existait plus jeudi
+      # matin, et l'allègement pouvait rendre la séance PLUS DURE que la demande qui l'avait
+      # allégée. Aucun des deux n'avait de symptôme : la semaine restait pleine et juste.
+      - name: Vérifier que la semaine du plan ne s'écrit qu'à la génération
+        run: |
+          cd ci_scripts && python3 test_entrees.py
+          cd .. && python3 ci_scripts/check_entrees.py
+
       # L'inscription décrit ses étapes à TROIS endroits : le switch qui choisit la vue, celui
       # qui la nomme pour les statistiques, et celui qui décide si on peut la quitter. Insérer
       # une étape au milieu oblige à décaler les trois ; en oublier un a suffi pour que l'écran

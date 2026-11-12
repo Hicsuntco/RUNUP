@@ -42,6 +42,8 @@ final class DecodageTolerantTests: XCTestCase {
         _ = try decoder(TrainingEase.self, "{}")
         _ = try decoder(WatchRunLayout.self, "{}")
         _ = try decoder(RunRecord.RoutePoint.self, "{}")
+        _ = try decoder(DeplacementDeSeance.self, "{}")
+        _ = try decoder(AllegementDuJour.self, "{}")
     }
 
     // MARK: Les replis disent quelque chose de juste
@@ -112,6 +114,24 @@ final class DecodageTolerantTests: XCTestCase {
     func testUnAllegementSansEcheanceEstDejaExpire() throws {
         let ease = try decoder(TrainingEase.self, "{}")
         XCTAssertFalse(ease.isActive())
+    }
+
+    /// Un déplacement dont on ne sait plus quel jour il concernait n'est pas un déplacement vers
+    /// lundi : c'est un déplacement à jeter. Rejoué, il tirerait une séance vers une case hors
+    /// semaine, c'est-à-dire l'effacerait de la semaine sans que rien ne le dise.
+    func testUnDeplacementIllisibleNeConcerneAucuneSemaine() throws {
+        let d = try decoder(DeplacementDeSeance.self, "{}")
+        XCTAssertFalse(d.concerne(semaine: 1, joursDeCourse: [], jourSortieLongue: nil))
+        XCTAssertFalse(d.concerne(semaine: -1, joursDeCourse: [], jourSortieLongue: nil),
+                       "même en retombant sur le même repli de semaine")
+    }
+
+    /// Un allègement du jour dont on a perdu le jour est un allègement EXPIRÉ, pas un allègement
+    /// éternel — sans quoi toute séance se verrait raccourcie indéfiniment.
+    func testUnAllegementDuJourSansJourNeSappliquePlus() throws {
+        let a = try decoder(AllegementDuJour.self, "{}")
+        XCTAssertFalse(a.sApplique(a: .now))
+        XCTAssertFalse(a.raison.isEmpty, "une séance raccourcie sans explication est pire")
     }
 
     // MARK: Rien de tout cela n'a abîmé le cas normal

@@ -231,6 +231,18 @@ final class UserProfile {
     /// Relu à chaque génération de semaine, jamais recopié dans les séances : c'est ce qui lui
     /// permet de survivre au lundi suivant, contrairement à une séance qu'on aurait éditée.
     var trainingEase: TrainingEase? = nil
+    /// Les déplacements de séance qu'elle a demandés pour la semaine en cours.
+    ///
+    /// Une ENTRÉE du générateur, comme `trainingEase` et `injuryArea`, et pour la même raison :
+    /// `weekSessions` est reconstruit de zéro à chaque changement de réglage, donc une séance
+    /// déplacée à la main y disparaissait. Voir `DeplacementDeSeance`.
+    ///
+    /// Valeur par défaut obligatoire, comme toute propriété ajoutée à un `@Model` — voir
+    /// `ci_scripts/check_model_defaults.py`.
+    var deplacementsDeLaSemaine: [DeplacementDeSeance] = []
+    /// L'allègement réactif décidé pour aujourd'hui — nuit courte, ou séance jugée trop dure
+    /// hier. Une entrée du générateur pour la même raison. Voir `AllegementDuJour`.
+    var allegementDuJour: AllegementDuJour? = nil
     /// Les jours de course d'AVANT l'allègement, pour savoir quoi rendre.
     ///
     /// `set_running_days` écrase `runningDays` sans rien garder. Quand le coach réduit la semaine

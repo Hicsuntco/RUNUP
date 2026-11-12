@@ -192,6 +192,7 @@ enum SauvegardeService {
         if let v = p.weekSessions { profil.weekSessions = v }
         if let v = p.watchRunLayout { profil.watchRunLayout = v }
         if let v = p.trainingEase { profil.trainingEase = v }
+        if let v = p.deplacementsDeLaSemaine { profil.deplacementsDeLaSemaine = v }
         if let v = p.runningDaysBeforeEase { profil.runningDaysBeforeEase = v }
         if let v = p.longRunDayBeforeEase { profil.longRunDayBeforeEase = v }
         if let v = p.weekTier { profil.weekTier = v }
@@ -277,6 +278,7 @@ extension Sauvegarde.Profil {
         weekSessions = m.weekSessions
         watchRunLayout = m.watchRunLayout
         trainingEase = m.trainingEase
+        deplacementsDeLaSemaine = m.deplacementsDeLaSemaine
         runningDaysBeforeEase = m.runningDaysBeforeEase
         longRunDayBeforeEase = m.longRunDayBeforeEase
         weekTier = m.weekTier

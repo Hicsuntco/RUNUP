@@ -3987,3 +3987,101 @@ en français chez une anglophone jusqu'à la régénération du lundi suivant.
 décale plus rien ; chaque note qui correspond à la phase de son propre jour ; la sortie longue qui
 ne dépend plus de la phase ; une semaine hors règles identique à celle de quelqu'un qui ne suit pas
 son cycle ; la note de blessure qui survit.
+
+---
+
+## 12 novembre 2026 — la continuité d'un changement demandé
+
+Point soulevé par Charlotte : « il faut faire très attention à la dégradation de la continuité.
+TOUTES les informations doivent être prises en compte lorsqu'un utilisateur demande un changement ».
+Audit en lecture seule des six chemins par lesquels un changement entre dans le programme, puis
+correction.
+
+### Le jeu de référence
+
+`generateWeekSessions` applique neuf règles. **Trois dépendent du jour où la séance tombe** : le
+plafond de temps (`TempsDisponible.plafond`, le week-end commence au jour 5), la phase du cycle
+(lue par jour), et le jumelage de l'enchaînement d'ultra (le lendemain calendaire de la sortie
+longue).
+
+### Les cinq écarts mesurés
+
+1. **La régénération inversait la demande.** `applyProgramSettingsChange` reconstruit la semaine de
+   zéro et ne préservait que les jours faits. Nuit de cinq heures à 8 h : le fractionné du jour
+   passait de 60 à 42 minutes, en souple. Elle écrivait au coach à 10 h « j'ai mal au genou,
+   allège » : la semaine était régénérée, la séance revenait à 45 minutes **avec ses intervalles**.
+   Elle demandait moins et obtenait plus dur qu'une minute avant — sans recours, le garde du jour
+   étant déjà consommé. Le même effacement se produisait **sans qu'elle demande rien** : l'allègement
+   du coach expire tout seul au lancement et déclenche la régénération, donc un déplacement posé
+   mardi n'existait plus jeudi matin.
+2. **Le plafond de temps du jour d'arrivée n'était jamais relu.** Sa sortie longue du dimanche
+   déplacée au mardi gardait ses 95 minutes chez quelqu'un qui avait répondu « 45 minutes en
+   semaine ». L'information était dans son profil ; le chemin ne l'ouvrait pas.
+3. **La note de phase voyageait avec la séance.** Déplacée de quatre jours, une séance de qualité
+   annonçait « phase lutéale estimée » un jour en phase menstruelle. Pas une mention inutile : une
+   mention fausse.
+4. **Deux implémentations du déplacement.** `moveTodaySessionToTomorrow` ne passait pas par
+   `SessionMove` : ni l'avertissement sur les jours durs enchaînés, ni le refus d'écraser un jour
+   déjà fait. La même règle d'entraînement, appliquée dans un écran et pas dans l'autre.
+5. **Le contrôle du jour consommé sans donnée.** `lastSameDayAdjustmentCheckDay` est posé avant le
+   garde du signal : une ouverture avant que Santé ait écrit la nuit brûle le contrôle de la
+   journée. Le plus faible des cinq, laissé au chantier #17.
+
+Vérifié et **écarté** : `adaptationNote` et `adjustment` sont bien localisés à l'affichage
+(`Session.swift:549`, `ChipView.swift:70`) et les trois chaînes sont au catalogue. Pas de défaut de
+langue ici.
+
+### Ce qui a changé
+
+Le principe était déjà écrit dans le dépôt, en tête de `TrainingEase.swift` : « une séance éditée à
+la main serait effacée au passage suivant ; ce qui survit, ce sont les ENTRÉES du générateur ». Les
+deux changements qui ne le suivaient pas en sont devenus des entrées (`ChangementDemande.swift`) :
+
+- `DeplacementDeSeance` — un échange de deux jours, **rejoué** sur la semaine fraîchement générée.
+  Il porte son numéro de semaine et **la forme de semaine contre laquelle il a été demandé**, parce
+  que « déplace ma séance du jeudi » ne veut plus rien dire quand le jeudi n'est plus un jour de
+  course : rejoué quand même, l'échange reposerait une séance sur le jour qu'elle vient de déclarer
+  impossible.
+- `AllegementDuJour` — le jour et la mention. Le facteur et le passage en souple ne sont **pas**
+  stockés : ils se déduisent de la séance qui occupe vraiment ce jour-là, sans quoi un footing se
+  verrait raccourci de 30 % parce que la séance qui était là ce matin était un fractionné.
+
+`generateWeekSessions` se construit maintenant en **trois étapes** : quel archétype sur quel jour,
+sans aucune règle du jour ; les déplacements rejoués ; puis les règles du jour, calculées sur le
+jour **final**. C'est l'ordre qui est le fond du sujet — une seule étape rendait les écarts 2 et 3
+inévitables.
+
+La bande de jours de l'accueil se lit désormais sur **ce que la semaine porte** et non sur les jours
+de course : `moveSession` la rapiéçait de son côté, la même règle écrite deux fois dont la version
+du générateur reprenait le dessus à la régénération suivante.
+
+Deux conséquences que la modification elle-même a ouvertes, trouvées et fermées :
+
+- l'instantané d'annulation du coach ne capturait pas la liste des déplacements, donc « Annuler »
+  rendait la semaine d'avant en laissant le déplacement — que la régénération suivante rejouait.
+  L'annulation se défaisait toute seule ;
+- `deplacementsDeLaSemaine` devait entrer dans la sauvegarde, puisque `weekSessions` y est : sans
+  elle, une restauration ramenait la semaine déplacée puis l'annulait une heure plus tard.
+  `allegementDuJour` reste volontairement dehors, comme son propre repère — après une restauration
+  le contrôle se rejoue et relit la vraie nuit.
+
+### Ce qui le garde
+
+`ci_scripts/check_entrees.py` et ses **17 cas** : la semaine du plan ne s'écrit qu'à la génération.
+Les deux premiers cas sont les défauts réels recopiés tels quels — un garde qui ne les rattrape pas
+ne sert à rien, et c'est la seule façon de le savoir. Deux faux positifs sont tenus explicitement :
+lire la séance du jour dans un `guard let` n'est pas l'écrire, et une ligne commentée ne satisfait ni
+ne viole la règle. Une première version ne regardait que le **premier** `=` de la ligne et laissait
+donc passer `if let v = p.weekSessions { profil.weekSessions = v }` — précisément la forme du fichier
+de restauration, donc une forme qu'on recopie.
+
+`RunUpTests/ContinuiteDuPlanTests.swift`, **12 cas** : le rejeu en entiers (échange, jour vide,
+composition, réversibilité), le refus d'un déplacement portant sur une autre forme de semaine, le
+plafond de temps du jour d'arrivée, la note de phase du jour d'arrivée, la survie à une régénération,
+la non-inversion d'un allègement, l'oubli au passage de semaine, l'annulation du coach, et la bande
+de jours. Deux d'entre eux dépendaient du jour où la CI tourne — un test qui n'échoue que le vendredi
+n'est pas un test : ils choisissent désormais leurs jours à partir d'aujourd'hui.
+
+Deux cas ajoutés à `DecodageTolerantTests` : un déplacement illisible ne concerne aucune semaine
+(rejoué, il tirerait une séance vers une case hors semaine, c'est-à-dire l'effacerait), et un
+allègement sans jour est un allègement expiré.

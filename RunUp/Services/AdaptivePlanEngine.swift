@@ -340,31 +340,54 @@ enum AdaptivePlanEngine {
 
     /// Resets week-scoped state (strip, plan, RPE accumulator) and generates a fresh 7-day plan —
     /// shared by onboarding, week-boundary adaptation, and starting a new program.
+    /// La bande de jours de l'écran d'accueil, construite sur CE QUE LA SEMAINE PORTE VRAIMENT.
+    ///
+    /// Elle se lisait sur `runningDays`, et c'était équivalent tant que la séance d'un jour de
+    /// course se trouvait sur son jour de course. Un déplacement le défait : la séance du jeudi
+    /// posée un vendredi laissait un jeudi « à venir » vide et un vendredi marqué repos sous une
+    /// séance bien réelle. `AppState.moveSession` rapiéçait la bande de son côté — la même règle
+    /// écrite deux fois, dont la version du générateur reprenait le dessus à la régénération
+    /// suivante.
+    ///
+    /// `faits` est passé plutôt que relu : les jours déjà faits survivent à la reconstruction, et
+    /// seul l'appelant sait d'où il les tient (la bande précédente, ou rien pour une semaine qui
+    /// commence).
+    private static func bandeDesJours(_ semaine: [PlannedDay], faits: Set<Int> = []) -> [DayStatus] {
+        let today = currentWeekdayIndex()
+        let cal = mondayCalendar
+        let debutDeSemaine = cal.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
+        return (0..<7).map { i in
+            let occupe = (semaine.first { $0.weekday == i }?.session?.durationMinutes ?? 0) > 0
+            let state: DayStatus.State
+            if faits.contains(i) {
+                state = .done
+            } else if !occupe {
+                state = .rest
+            } else if i == today {
+                state = .today
+            // Un jour porteur déjà derrière nous cette semaine n'a jamais été « à venir » : la
+            // semaine peut être générée en cours de route, une inscription finie un jeudi.
+            } else if i < today {
+                state = .rest
+            } else {
+                state = .upcoming
+            }
+            let date = cal.date(byAdding: .day, value: i, to: debutDeSemaine) ?? .now
+            return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state, date: date)
+        }
+    }
+
     private static func beginWeek(weekNumber: Int, tier: Int, profile: UserProfile) {
         let today = currentWeekdayIndex()
         profile.weekNumber = weekNumber
         profile.weekRPESum = 0
         profile.weekRPECount = 0
-        let cal = mondayCalendar
-        let startOfThisWeek = cal.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
-        profile.weekStrip = (0..<7).map { i in
-            let state: DayStatus.State
-            if !profile.runningDays.contains(i) {
-                state = .rest
-            } else if i == today {
-                state = .today
-            } else if i < today {
-                // A running day that's already behind us this week (the plan is only being
-                // generated now, mid-week — e.g. onboarding finishing on a Thursday) was never
-                // "upcoming" to begin with.
-                state = .rest
-            } else {
-                state = .upcoming
-            }
-            let date = cal.date(byAdding: .day, value: i, to: startOfThisWeek) ?? .now
-            return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state, date: date)
-        }
+        // UNE SEMAINE QUI COMMENCE NE PORTE PLUS LES DÉPLACEMENTS DE LA PRÉCÉDENTE. « Je ne peux
+        // pas courir jeudi » parlait de CE jeudi-là. Le filtre par numéro de semaine le ferait
+        // déjà, mais garder des lignes mortes en base n'a aucun intérêt.
+        profile.deplacementsDeLaSemaine.removeAll()
         profile.weekSessions = generateWeekSessions(weekNumber: weekNumber, tier: tier, profile: profile)
+        profile.weekStrip = bandeDesJours(profile.weekSessions)
         profile.todaySession = profile.weekSessions.first(where: { $0.weekday == today })?.session ?? restSession
     }
 
@@ -1461,10 +1484,25 @@ enum AdaptivePlanEngine {
             a.kind.disciplines.contains { $0.wearsShoes }
         }
 
+        // LA SEMAINE SE CONSTRUIT EN TROIS ÉTAPES, ET L'ORDRE EST LE FOND DU SUJET.
+        //
+        // Elle n'en faisait qu'une : choisir l'archétype du jour et lui appliquer aussitôt les
+        // règles de ce jour-là. Tant que personne ne déplaçait rien, c'était équivalent. Un
+        // déplacement le rend faux — la durée et la note partaient avec la séance, calculées
+        // pour le jour d'où elle venait. Une sortie longue du dimanche déplacée au mardi gardait
+        // ses 95 minutes chez quelqu'un qui avait répondu « 45 minutes en semaine », et une
+        // séance de qualité déplacée de quatre jours annonçait « phase lutéale estimée » un jour
+        // en phase menstruelle. Pas une mention inutile : une mention fausse.
+        //
+        //   1. quel archétype sur quel jour — aucune règle du jour ici ;
+        //   2. les déplacements qu'elle a demandés, rejoués sur cette assignation ;
+        //   3. les règles du jour, calculées sur le jour FINAL.
+        //
+        // Après l'étape 2, un jour peut porter une séance sans être un jour de course, et un
+        // jour de course peut être vide. C'est exactement ce qu'un déplacement veut dire.
         var otherIndex = 0
-        return (0..<7).map { weekday in
-            guard sortedRunDays.contains(weekday) else { return PlannedDay(weekday: weekday, session: nil) }
-
+        var assignation: [Int: SessionArchetype] = [:]
+        for weekday in (0..<7) where sortedRunDays.contains(weekday) {
             var archetype: SessionArchetype
             if weekday == longRunDay, let longTemplate {
                 archetype = longTemplate
@@ -1483,6 +1521,32 @@ enum AdaptivePlanEngine {
             } else {
                 archetype = templates[0]
             }
+            assignation[weekday] = archetype
+        }
+
+        // ÉTAPE 2 — CE QU'ELLE A DEMANDÉ, relu à chaque génération et non écrit une fois dans
+        // la semaine. Voir `DeplacementDeSeance` pour ce que l'écriture directe coûtait.
+        //
+        // Filtré sur CETTE semaine : `PlanView` appelle cette fonction pour chacune des semaines
+        // du plan afin de les prévisualiser, et un déplacement posé en semaine 4 n'a rien à dire
+        // de la semaine 11.
+        assignation = DeplacementDeSeance.rejouer(
+            profile.deplacementsDeLaSemaine.filter {
+                $0.concerne(semaine: weekNumber,
+                            joursDeCourse: sortedRunDays,
+                            jourSortieLongue: profile.preferredLongRunDay)
+            },
+            sur: assignation
+        )
+
+        // ÉTAPE 3 — LES RÈGLES DU JOUR, sur le jour où la séance se trouve VRAIMENT.
+        return (0..<7).map { weekday in
+            guard var archetype = assignation[weekday] else { return PlannedDay(weekday: weekday, session: nil) }
+
+            // La date réelle de ce jour-là, calculée une fois : la phase du cycle et
+            // l'allègement du jour la lisent tous les deux.
+            let dateDuJour = lundiDeLaSemaine
+                .flatMap { calendrier.date(byAdding: .day, value: weekday, to: $0) }
 
             // La phase du cycle est lue POUR CE JOUR-LÀ. Elle arrive après le budget qualité :
             // une séance de vitesse remplacée par un footing n'est plus la séance dont
@@ -1491,10 +1555,37 @@ enum AdaptivePlanEngine {
                 archetype,
                 // Pas de date calculable, pas d'adaptation : mieux vaut ne rien annoncer
                 // qu'annoncer une phase posée sur un jour qu'on n'a pas su situer.
-                phase: lundiDeLaSemaine
-                    .flatMap { calendrier.date(byAdding: .day, value: weekday, to: $0) }
-                    .flatMap { profile.cyclePhase(on: $0) }
+                phase: dateDuJour.flatMap { profile.cyclePhase(on: $0) }
             )
+
+            // L'ALLÈGEMENT DU JOUR, relu ici plutôt qu'écrit dans la séance.
+            //
+            // Il écrasait la séance sur place, donc la régénération le jetait — et pouvait la
+            // RENDRE PLUS DURE qu'avant la demande : séance allégée à 42 minutes en souple le
+            // matin, régénérée à 45 minutes avec ses intervalles dès que le coach posait un
+            // allègement. Elle demandait moins et obtenait plus.
+            //
+            // Sa note et sa mention passent DEVANT celles du cycle et du coach, pour la même
+            // raison que la blessure passe devant le cycle : c'est la raison la plus forte et la
+            // plus immédiate de ce qu'elle a sous les yeux aujourd'hui.
+            let allegement = profile.allegementDuJour
+                .flatMap { a in dateDuJour.map { a.sApplique(a: $0) } == true ? a : nil }
+            // Le facteur se déduit de la séance qui se trouve là, et le test se pose AVANT de
+            // passer la zone en Z2 — sinon il ne se reconnaîtrait plus lui-même.
+            var facteurAllegement = 1.0
+            if allegement != nil {
+                let qualite = archetype.kind.isIntervalWorkout
+                    || archetype.zone.contains("3") || archetype.zone.contains("4")
+                // Forcer de la VMA sur cinq heures de sommeil n'est pas un entraînement, c'est un
+                // risque : la séance de qualité perd sa structure, elle ne fait pas la même en
+                // plus court. Une séance déjà souple est seulement raccourcie.
+                facteurAllegement = qualite ? 0.7 : 0.85
+                if qualite {
+                    archetype.zone = "Z2"
+                    archetype.intervals = nil
+                    archetype.adaptationNote = "séance allégée aujourd'hui — allure confort, écoute-toi"
+                }
+            }
 
             // Taper deliberately ignores `tier`. Tier is an accumulator built up over Base and
             // Spécifique, and letting it keep inflating durations here would add 20-30 min to
@@ -1538,8 +1629,17 @@ enum AdaptivePlanEngine {
             // l'étiquette promet une semaine plus chargée pendant que la durée dit l'inverse.
             // Quand l'allègement mord, c'est lui qui a le dernier mot sur l'étiquette — c'est la
             // seule chose qui explique ce que la coureuse a sous les yeux.
+            // L'ALLÈGEMENT DU JOUR MORD EN DERNIER, sur la durée réellement affichée — comme
+            // il le faisait du temps où il réécrivait la séance après coup. Les deux plafonds
+            // bornent un plan ; lui répond à une nuit précise, et il a le dernier mot.
+            if facteurAllegement < 1 {
+                duration = Int(Double(duration) * facteurAllegement)
+            }
+
             let adjustment: String?
-            if cappedByEase {
+            if let allegement {
+                adjustment = allegement.raison
+            } else if cappedByEase {
                 adjustment = profile.trainingEase?.reason
             // Même raison qu'au-dessus, et le même raisonnement : une séance raccourcie qui
             // s'annonce « Niveau 3 » est un écran qui se contredit. Quand c'est son propre temps
@@ -1880,7 +1980,7 @@ enum AdaptivePlanEngine {
 
         let weekday = currentWeekdayIndex()
         guard let idx = profile.weekSessions.firstIndex(where: { $0.weekday == weekday }),
-              var session = profile.weekSessions[idx].session,
+              let session = profile.weekSessions[idx].session,
               session.durationMinutes > 0, !profile.weekSessions[idx].completed
         else { return false }
 
@@ -1900,20 +2000,25 @@ enum AdaptivePlanEngine {
             reason = "Allégée · récupération"
         }
 
-        // Speed/threshold work eases the most (drops to easy effort entirely — forcing VMA on
-        // five hours of sleep isn't training, it's risk) rather than just running the same
-        // structure shorter.
-        if session.isIntervalSession || session.zone.contains("3") || session.zone.contains("4") {
-            session.adaptationNote = "séance allégée aujourd'hui — allure confort, écoute-toi"
-            session.zone = "Z2"
-            session.durationMinutes = Int(Double(session.durationMinutes) * 0.7)
-        } else {
-            session.durationMinutes = Int(Double(session.durationMinutes) * 0.85)
-        }
-        session.adjustment = reason
-
-        profile.weekSessions[idx].session = session
-        profile.todaySession = session
+        // L'ALLÈGEMENT EST POSÉ COMME ENTRÉE, IL N'EST PLUS ÉCRIT DANS LA SÉANCE.
+        //
+        // Il réécrivait `weekSessions[idx]` sur place. `applyProgramSettingsChange` reconstruit
+        // la semaine de zéro, donc le prochain changement de réglage l'effaçait — et pouvait
+        // rendre la séance PLUS DURE que la demande : allégée à 42 minutes en souple à 8 h,
+        // revenue à 45 minutes avec ses intervalles dès qu'elle écrivait au coach « j'ai mal au
+        // genou, allège ». Elle demandait moins et obtenait plus, sans recours : le garde du
+        // jour était déjà consommé.
+        //
+        // Ce qui descend ici, c'est donc le JOUR et la MENTION. Le facteur et le passage en
+        // souple se déduisent de la séance qui occupe vraiment ce jour-là, dans le générateur —
+        // voir `AllegementDuJour`.
+        profile.allegementDuJour = AllegementDuJour(le: today, raison: reason)
+        // En course libre il n'y a pas de semaine à régénérer : la séance du jour y est
+        // recalculée à chaque affichage par `CourseLibre.duJour`, qui ne lit pas cet allègement.
+        // Ce n'était déjà pas le cas avant — l'écriture sur place y était écrasée au premier
+        // rendu de l'accueil, et seule la notification partait. Comportement inchangé, défaut
+        // noté à part plutôt que corrigé en passant.
+        if profile.programPhase == .active { applyProgramSettingsChange(profile) }
         return true
     }
 
@@ -1939,64 +2044,56 @@ enum AdaptivePlanEngine {
         let today = currentWeekdayIndex()
         let doneDays = Set(profile.weekStrip.filter { $0.state == .done }.map(\.weekday))
         let completedDays = Set(profile.weekSessions.filter(\.completed).map(\.weekday))
-        let cal = mondayCalendar
-        let startOfThisWeek = cal.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
-        profile.weekStrip = (0..<7).map { i in
-            let state: DayStatus.State
-            if doneDays.contains(i) {
-                state = .done
-            } else if !profile.runningDays.contains(i) {
-                state = .rest
-            } else if i == today {
-                state = .today
-            } else if i < today {
-                state = .rest
-            } else {
-                state = .upcoming
-            }
-            let date = cal.date(byAdding: .day, value: i, to: startOfThisWeek) ?? .now
-            return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state, date: date)
-        }
+        // La semaine d'abord, la bande ensuite : elle se lit sur ce que la semaine porte, et
+        // après un déplacement ce n'est plus la liste des jours de course.
         profile.weekSessions = generateWeekSessions(weekNumber: profile.weekNumber, tier: profile.weekTier, profile: profile)
         for i in profile.weekSessions.indices where completedDays.contains(profile.weekSessions[i].weekday) {
             profile.weekSessions[i].completed = true
         }
+        profile.weekStrip = bandeDesJours(profile.weekSessions, faits: doneDays)
         profile.todaySession = profile.weekSessions.first(where: { $0.weekday == today })?.session ?? restSession
     }
 
-    /// Really swaps today's session with tomorrow's — "Déplacer à demain" used to set a purely
-    /// local flag in `SessionDetailSheet` and show a success message while the plan itself never
-    /// changed (Home kept showing the session today). Swapping (rather than pushing everything
-    /// back a day) keeps the rest of the week intact; today inherits whatever tomorrow had, which
-    /// is usually a rest day. Returns false when there's nothing to move (rest day, already done)
-    /// or no tomorrow inside this plan week (Sunday).
+    /// Enregistre un déplacement comme ENTRÉE du générateur, puis régénère la semaine autour.
+    ///
+    /// Le seul endroit où un déplacement s'écrit. Il y en avait deux — `AppState.moveSession` et
+    /// `moveTodaySessionToTomorrow` — qui échangeaient chacun les séances de leur côté, sans
+    /// passer par `SessionMove`. La seconde ne connaissait donc ni l'avertissement sur les jours
+    /// durs enchaînés, ni le refus d'écraser un jour déjà fait : la même règle d'entraînement,
+    /// appliquée dans un écran et pas dans l'autre.
+    ///
+    /// `SessionMove.apply` ne sert plus qu'à VALIDER ici : son résultat est jeté, parce que la
+    /// semaine n'est plus déplacée à la main mais régénérée autour du déplacement enregistré.
+    /// C'est ce qui fait que les règles du jour — le plafond de temps du jour, la phase du cycle
+    /// de ce jour-là — se calculent sur le jour d'ARRIVÉE et non sur celui de départ.
+    @discardableResult
+    static func enregistrerDeplacement(de: Int, vers: Int, profile: UserProfile) -> Bool {
+        // Déplacer n'a de sens que sur un programme en cours. En course libre la séance du jour
+        // est recalculée à chaque affichage (`CourseLibre.duJour`) : il n'y a pas de semaine
+        // posée à réarranger, et l'échange s'y perdait déjà silencieusement.
+        guard profile.programPhase == .active else { return false }
+        guard SessionMove.apply(to: profile.weekSessions, from: de, to: vers) != nil else { return false }
+        profile.deplacementsDeLaSemaine.append(
+            DeplacementDeSeance(de: de, vers: vers, semaine: profile.weekNumber,
+                                joursDeCourse: profile.runningDays.sorted(),
+                                jourSortieLongue: profile.preferredLongRunDay)
+        )
+        applyProgramSettingsChange(profile)
+        return true
+    }
+
+    /// Décale la séance du jour à demain — « Déplacer à demain », depuis l'écran de séance comme
+    /// depuis le coach.
+    ///
+    /// Les deux jours s'échangent plutôt que toute la semaine ne recule d'un cran : aujourd'hui
+    /// hérite de ce que demain portait, le plus souvent un jour de repos. Rend `false` quand il
+    /// n'y a rien à déplacer (repos, séance déjà faite) ou pas de lendemain dans la semaine de
+    /// plan — le dimanche, dont le lendemain appartient à une semaine qui n'est pas encore
+    /// écrite.
     static func moveTodaySessionToTomorrow(_ profile: UserProfile) -> Bool {
         let today = currentWeekdayIndex()
-        guard today < 6,
-              let todayIdx = profile.weekSessions.firstIndex(where: { $0.weekday == today }),
-              let tomorrowIdx = profile.weekSessions.firstIndex(where: { $0.weekday == today + 1 }),
-              let session = profile.weekSessions[todayIdx].session, session.durationMinutes > 0,
-              !profile.weekSessions[todayIdx].completed
-        else { return false }
-        profile.weekSessions[todayIdx].session = profile.weekSessions[tomorrowIdx].session
-        profile.weekSessions[tomorrowIdx].session = session
-        profile.todaySession = profile.weekSessions[todayIdx].session ?? restSession
-
-        // The strip's per-day `state` tracks scheduling, not just completion — without updating it
-        // here too, tomorrow's cell (`.rest`, since it wasn't a running day to begin with) could
-        // never become `.today` once tomorrow actually arrives: the day-rollover in
-        // `refreshProgramForCurrentDate` explicitly skips any cell already `.rest`/`.done`, so it
-        // stayed a plain rest day forever even after the swapped-in session was completed.
-        if let stripTodayIdx = profile.weekStrip.firstIndex(where: { $0.weekday == today }),
-           let stripTomorrowIdx = profile.weekStrip.firstIndex(where: { $0.weekday == today + 1 }) {
-            // Today now holds whatever tomorrow's content was — usually a rest day, so it drops
-            // the "today" highlight the same way a non-running today already does in `beginWeek`.
-            profile.weekStrip[stripTodayIdx].state = profile.weekSessions[todayIdx].session != nil ? .today : .rest
-            // Tomorrow now holds a real, not-yet-happened session — `.upcoming` so the rollover
-            // can promote it to `.today` once tomorrow actually arrives.
-            profile.weekStrip[stripTomorrowIdx].state = .upcoming
-        }
-        return true
+        guard today < 6 else { return false }
+        return enregistrerDeplacement(de: today, vers: today + 1, profile: profile)
     }
 
     // MARK: Program-end flow
@@ -2066,10 +2163,10 @@ enum AdaptivePlanEngine {
 
     /// L'état que `applyCoachAction` peut avoir modifié, capturé avant de le modifier.
     ///
-    /// Restaurer les ENTRÉES ne suffirait pas : « décaler la séance du jour » ne change aucune
-    /// entrée, il permute deux jours de `weekSessions`. On garde donc aussi la semaine produite,
-    /// ce qui rend l'annulation exacte pour les cinq actions au lieu de quatre — et évite d'avoir
-    /// à raisonner, à chaque nouvelle action, sur ce qu'il faudrait penser à ajouter ici.
+    /// On garde les ENTRÉES et la semaine PRODUITE. Les entrées seules ne suffiraient pas — un
+    /// allègement du coach peut expirer entre la pose et l'annulation — et la semaine produite
+    /// seule ne suffirait pas davantage : elle serait régénérée depuis des entrées non défaites
+    /// à la première occasion, et l'annulation s'annulerait d'elle-même.
     struct CoachActionSnapshot {
         var trainingEase: TrainingEase?
         var injuryArea: String?
@@ -2079,6 +2176,11 @@ enum AdaptivePlanEngine {
         // modifier doit figurer ici, sinon « Annuler » rend un état à moitié défait.
         var runningDaysBeforeEase: [Int]?
         var longRunDayBeforeEase: Int?
+        // Touché par `.moveTodaysSession`, qui enregistre un déplacement au lieu de permuter la
+        // semaine à la main. Sans cette ligne, « Annuler » rendait la semaine d'avant en
+        // laissant le déplacement dans la liste : la régénération suivante le rejouait, et
+        // l'annulation se défaisait toute seule sans que rien ne le dise.
+        var deplacementsDeLaSemaine: [DeplacementDeSeance]
         var weekSessions: [PlannedDay]
         var weekStrip: [DayStatus]
         var todaySession: WorkoutSession
@@ -2092,6 +2194,7 @@ enum AdaptivePlanEngine {
             preferredLongRunDay: profile.preferredLongRunDay,
             runningDaysBeforeEase: profile.runningDaysBeforeEase,
             longRunDayBeforeEase: profile.longRunDayBeforeEase,
+            deplacementsDeLaSemaine: profile.deplacementsDeLaSemaine,
             weekSessions: profile.weekSessions,
             weekStrip: profile.weekStrip,
             todaySession: profile.todaySession
@@ -2105,6 +2208,7 @@ enum AdaptivePlanEngine {
         profile.preferredLongRunDay = snapshot.preferredLongRunDay
         profile.runningDaysBeforeEase = snapshot.runningDaysBeforeEase
         profile.longRunDayBeforeEase = snapshot.longRunDayBeforeEase
+        profile.deplacementsDeLaSemaine = snapshot.deplacementsDeLaSemaine
         profile.weekSessions = snapshot.weekSessions
         profile.weekStrip = snapshot.weekStrip
         profile.todaySession = snapshot.todaySession

@@ -4755,3 +4755,140 @@ pas.
 Ce qu'il fait : il retire une valeur que le système de design ne décidait pas, il fait monter le
 contraste sur les cinq fonds dans les deux thèmes, et il pose la règle de famille avec sa
 barrière. C'est du système, pas de la surface. Les chantiers visibles sont les suivants.
+
+## 12 novembre 2026 — deuxième chantier esthétique : le fond devient du papier
+
+Charlotte, après le premier chantier : « Go ». Le levier qu'elle avait laissé ouvert avec D2 — le
+`#FBF9F7` chaud du brief, non imposé — est celui qui change tous les écrans d'un coup.
+
+### Le raisonnement qu'il a fallu reprendre
+
+Le fond clair penchait vers le violet de l'accent, et `Colors.swift` en donnait la raison : « un
+gris pur à côté d'un rose vif prend l'air sale, un gris qui partage sa famille non ».
+
+**L'argument est bon et il ne tient pas, parce qu'il suppose UN accent.** L'app en propose huit
+(décision D1), dont le cyan, le lime et le bleu. Un fond lavande ne partageait la famille que de
+deux nuanciers sur huit, et se trouvait en désaccord avec les six autres. Le fond prend donc la
+position du papier — un blanc cassé chaud sur lequel n'importe quelle encre se pose.
+
+### La teinte du brief, pas sa luminosité — pour la deuxième fois
+
+| | Séparation page / carte |
+| --- | --- |
+| Froid actuel `#F4F3F8` | 1,104:1 |
+| **Le brief `#FBF9F7`** | **1,050:1** |
+| Retenu `#F5F4F1` | 1,100:1 |
+
+`#FBF9F7` est presque blanc : la page ne reculerait plus que de moitié sous la carte, et ce recul
+est exactement ce qui empêche une carte à image pleine de se lire comme un trou — c'est écrit en
+tête de `bg` depuis des semaines. La valeur retenue garde la luminance de l'ancienne et retourne
+sa famille.
+
+### Ce qui a bougé
+
+| Jeton | Avant (froid) | Après (chaud) |
+| --- | --- | --- |
+| neutre de `bg` | `#F4F3F8` | `#F5F4F1` |
+| `card2` | `#EDEBF4` | `#EEECE7` |
+| `bg2` | `#E7E5F0` | `#E8E6DF` |
+| `textPrimary` clair | `#15151C` | `#181511` |
+| `text2` clair | `#443E4C` | `#443F3A` |
+| `text3` clair | `#5B5563` | `#5B5651` |
+| `text4` clair | `#B7B1BF` | `#B7B2AD` |
+
+`card` reste le blanc pur : c'est la surface la plus claire, elle n'a pas de famille à porter. Le
+thème sombre ne bouge pas — ses fonds sont froids, donc ses jetons de texte le restent.
+
+**Les trois surfaces devaient bouger ensemble.** Une page chaude sous des sous-surfaces lavande,
+c'est un écran qui se contredit.
+
+### La règle a passé son épreuve, et elle m'a corrigé
+
+Le garde du premier chantier exigeait « bleu au-dessus du rouge ». C'était la famille du moment,
+pas la règle. Il lit maintenant les fonds du thème et exige du texte le même penchant, sans nommer
+aucune couleur.
+
+Résultat à la première exécution : **il a refusé `textPrimary`.** J'avais écrit la veille « le
+primaire n'a pas bougé, il est déjà dans la famille », ce qui était vrai des fonds lavande et
+devenu faux sans que rien ne l'écrive. Le primaire clair était resté seul, froid, sur cinq fonds
+chauds. `#181511` garde sa luminance — 18,19:1 sur une carte contre 18,17.
+
+C'est la meilleure preuve que la règle est la bonne : **elle a survécu au retournement de ce
+qu'elle décrivait, et elle a attrapé ce que son auteur avait oublié.**
+
+### Une quatrième copie du fond, trouvée en cherchant
+
+`ci_scripts/montage.py` portait `--fond` à `0xF4F3F8` en dur : les planches de la fiche App Store
+auraient continué à composer sur l'ancien gris-lavande pendant que l'app passait au chaud — une
+fiche qui ne montre plus l'app qu'elle vend. Le défaut lit maintenant `couleurs.fond_neutre`.
+
+Les gardes lisent eux aussi les fonds dans la source au lieu d'en porter une copie.
+
+### Deux cas qui ne testaient plus rien
+
+`test_design.py` remplaçait `#5B5563` par une valeur fausse pour vérifier que le garde l'attrape.
+La valeur du dépôt est devenue `#5B5651` quelques heures plus tard : la substitution est devenue
+sans effet, et **le cas a continué d'afficher « ok » en ne vérifiant plus rien.** Toutes les
+substitutions de ce fichier passent maintenant par `_fausse()`, qui refuse de continuer si le
+texte cherché n'est plus là.
+
+Même nature dans `test_jetons_de_texte.py` : un cas cherchait une phrase de `Colors.swift` à la
+lettre, et mon remaniement l'avait repliée sur deux lignes. La prose est cherchée après
+normalisation.
+
+### Les couleurs sémantiques, vérifiées et inchangées
+
+Elles avaient été réglées contre un fond froid. Mesuré sur les nouveaux fonds : elles perdent au
+plus 0,02 — le fond chaud a la même luminance. Sur `card`, où `Colors.swift` situe son affirmation,
+tout tient : ember 5,47 — azure 5,83 — grape 6,72 — lime 3,22 — cyan 3,41 — amber 4,12.
+
+### L'encre de la page, et une copie de formule qui traînait
+
+Le fond n'était pas seul à porter la famille. `cardShadow` et `cardBorder` étaient teintés de
+`#1A162E`, et le commentaire de `cardBorder` citait nommément le raisonnement qu'on venait de
+renverser : « le gris de la page poussé vers le violet de l'accent — le même raisonnement que
+`bg`, qui penche déjà de ce côté ». `bg` ne penchait plus de ce côté.
+
+La valeur est devenue `RUColor.encreDeLaPage`, un jeton nommé, chaud (`#20180C`) et de même
+luminance — 17,54:1 sur une carte blanche contre 17,53. Un noir PUR reste exclu, et c'est le vrai
+sujet : sur une page teintée il se lit comme un trait tracé par-dessus le dessin, là où la même
+valeur dans l'encre de la page se lit comme son bord.
+
+**Et `SettingsView` recopiait la formule de l'ombre** — encre, accent et part de mélange — pour
+son aperçu des habillages, avec sa propre opacité. C'est exactement ce que `fond(pour:)` raconte
+avoir déjà coûté une fois : « l'aperçu recopiait la formule, et la copie a fait ce que font les
+copies ». La formule devient `RUColor.ombreDeCarte(_:)`, une fonction qui prend l'opacité ; il
+reste zéro occurrence de l'encre hors du système de design.
+
+### Deux encres recopiées hors du système, et restées froides
+
+Trouvées en cherchant l'ancienne valeur dans tout le dépôt après coup — c'est-à-dire par chance,
+et c'est bien le problème.
+
+**`DailyGoalsWidget.textPrimary`** portait sa propre copie, `#15151C`. La cible du widget ne
+compile pas `RunUp/DesignSystem` — frontière de processus, la raison est en tête de
+`WidgetAccentPalette` — donc la copie est inévitable. Ce qui ne l'était pas : rien ne la tenait
+d'accord avec l'originale. **Le widget aurait porté l'ancienne encre violette sur l'écran d'accueil
+du téléphone, à côté d'une app chaude.**
+
+**`RUColor.onAccent`** écrivait la même valeur en dur, et ne peut pas lire `textPrimary` non plus :
+ce jeton suit le thème, alors que l'encre sur un aplat d'accent dépend de l'aplat et de rien
+d'autre — un bouton rose vif porte la même encre dans les deux apparences.
+
+`check_encres.py` et ses 8 cas tiennent maintenant les deux. Il n'interdit pas la copie, ce qui
+serait faux : il refuse une copie **sans correspondance déclarée**, chaque entrée disant quelle
+valeur locale doit égaler quel jeton et pourquoi elle ne peut pas l'appeler. Un cas vérifie aussi
+qu'une correspondance qui ne trouve plus sa valeur CRIE au lieu de dormir.
+
+### Ce qui garde légitimement l'ancienne famille
+
+Balayage de tous les jetons à valeur littérale, branche claire. Six restent froids, et chacun a sa
+raison :
+
+| Jeton | Pourquoi il ne se réchauffe pas |
+| --- | --- |
+| `azure`, `cyan`, `grape` | Couleurs sémantiques : leur teinte EST leur sens. Un bleu réchauffé cesse de dire « fonctionnel ». |
+| `seanceSurface`, `seanceFond` | Surfaces SOMBRES. Une famille suit la clarté de la surface, pas le thème choisi. |
+| `traceBackground` | Le fond d'une image, sombre lui aussi. |
+
+`card` reste le blanc pur : c'est la surface la plus claire, elle n'a pas de famille à porter.

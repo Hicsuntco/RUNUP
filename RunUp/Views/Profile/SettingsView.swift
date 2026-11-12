@@ -365,7 +365,7 @@ struct SettingsView: View {
                     .frame(width: 28, height: 16)
                     .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous)
                         .stroke(h == .teinte ? .clear : RUColor.cardBorder, lineWidth: RUSpacing.hairline))
-                    .shadow(color: h == .teinte ? RUColor.melange(RUColor.rose, sur: Color(hex: 0x1A162E), part: 0.35).opacity(0.3) : .clear,
+                    .shadow(color: h == .teinte ? RUColor.ombreDeCarte(0.3) : .clear,
                             radius: 4, x: 0, y: 2)
             )
             .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous)

@@ -146,10 +146,10 @@ Quatre jetons, **opaques et dans la famille du fond**. Voir § 3 pour la règle,
 
 | Jeton | Clair | Sombre | Emplois |
 | --- | --- | --- | --- |
-| `textPrimary` | `#15151C` | blanc pur | 265 |
-| `text2` | `#443E4C` | `#BBB6C3` | 244 |
-| `text3` | `#5B5563` | `#9893A0` | 318 |
-| `text4` | `#B7B1BF` | `#514C59` | 8 |
+| `textPrimary` | `#181511` | blanc pur | 265 |
+| `text2` | `#443F3A` | `#BBB6C3` | 244 |
+| `text3` | `#5B5651` | `#9893A0` | 318 |
+| `text4` | `#B7B2AD` | `#514C59` | 8 |
 
 `text4` **ne colore pas du texte à lire** : points médians, filets, pastilles inertes. Ses 1,7:1
 sont voulus, et `check_contraste.py` tient la liste fermée de ses emplois avec une raison par
@@ -158,26 +158,44 @@ entrée.
 Le primaire sombre est le blanc pur, délibérément hors famille : c'est le seul jeton dont on veut
 le maximum de lisibilité.
 
+Le primaire CLAIR, lui, a bougé le 12 novembre avec le fond, et c'est le garde qui l'a vu. Il était
+resté `#15151C` au premier chantier, à juste titre — il portait le bleu 7 points au-dessus du
+rouge, donc il était déjà dans la famille des fonds lavande. Quand les fonds sont passés au chaud,
+cette raison est devenue fausse sans que rien ne l'écrive, et `check_jetons_de_texte.py` l'a refusé
+à la première exécution. `#181511` garde sa luminance — 18,19:1 sur une carte contre 18,17.
+
 ### 2.5 Les surfaces
 
 | Jeton | Clair | Sombre | Rôle |
 | --- | --- | --- | --- |
 | `card` | `#FFFFFF` | `#16161F` | la carte |
-| `card2` | `#EDEBF4` | `#201F2A` | une sous-surface DANS une carte |
-| `bg2` | `#E7E5F0` | `#121118` | le second fond |
+| `card2` | `#EEECE7` | `#201F2A` | une sous-surface DANS une carte |
+| `bg2` | `#E8E6DF` | `#121118` | le second fond |
 | `traceBackground` | `#14131E` | les deux | le fond d'un tracé de sortie |
 
-Le fond de page, `RUColor.bg`, n'est pas une constante : il vaut `#F4F3F8` en clair et `#08070D`
-en sombre, et l'habillage « teinté » y mélange **3,5 % de l'accent en clair, 10 % en sombre**. Une
-trace, pas un aplat : au-delà, le fond cesse d'être un fond et concurrence les cartes posées
-dessus. La valeur claire a été à 7 % — sept pour cent du rose sur le neutre donne `#F4E3EF`, une
-page rose, et les cartes blanches censées flotter dessus se lisaient comme des trous.
+Le fond de page, `RUColor.bg`, n'est pas une constante : c'est un neutre — `#F5F4F1` en clair,
+`#08070D` en sombre — sur lequel l'habillage « teinté » mélange **3,5 % de l'accent en clair, 10 %
+en sombre**. Une trace, pas un aplat : au-delà, le fond cesse d'être un fond et concurrence les
+cartes posées dessus. La valeur claire a été à 7 % — sept pour cent du rose sur le neutre donne une
+page franchement rose, et les cartes blanches censées flotter dessus se lisaient comme des trous.
 
-**Le fond est teinté et pas neutre, et c'est un aller-retour assumé.** Deux choses l'ont décidé :
-l'app a gagné des images, et une carte blanche portant un rectangle sombre à ras bord sur une page
-blanche ne se lit pas comme une surface mais comme un trou — il faut que la page recule pour que
-la carte existe. Et le filet à 13 % dessinait chaque carte au trait, ce qui donne une grille de
-rectangles cerclés sur un écran qui en empile quatre.
+**Le neutre clair est chaud depuis le 12 novembre, et il a été froid.** Il penchait vers le violet
+de l'accent, avec cette raison : « un gris pur à côté d'un rose vif prend l'air sale, un gris qui
+partage sa famille non ». L'argument est bon et il ne tient pas, parce qu'il suppose UN accent :
+l'app en propose huit (D1), dont le cyan, le lime et le bleu. Un fond lavande ne partageait la
+famille que de deux nuanciers sur huit.
+
+Le fond prend donc la position du **papier** — un blanc cassé chaud sur lequel n'importe quelle
+encre se pose — plutôt que celle d'un écho de l'accent.
+
+**La teinte du brief, pas sa luminosité**, comme pour les jetons de texte. `#FBF9F7` est presque
+blanc : sous une carte blanche il ne recule que de 1,050:1, contre 1,104 pour l'ancien froid. C'est
+la moitié de la séparation, et ce recul est précisément ce qui empêche une carte à image pleine de
+se lire comme un trou. `#F5F4F1` garde la luminance de l'ancien et retourne sa famille : 1,100:1.
+
+**Les trois surfaces claires ont bougé ensemble**, et c'était obligatoire : une page chaude sous
+des sous-surfaces lavande, c'est un écran qui se contredit. `card` reste le blanc pur — c'est la
+surface la plus claire, et elle n'a pas de famille à porter.
 
 ### 2.6 Les deux surfaces de l'écran de séance
 
@@ -189,6 +207,13 @@ rectangles cerclés sur un écran qui en empile quatre.
 **Fixes dans les deux thèmes, et ce n'est pas un oubli.** L'écran de course reste sombre même en
 apparence claire : on le regarde dehors, en mouvement, à bout de bras, et un fond blanc y perdrait
 le contraste que les chiffres demandent.
+
+**Elles gardent la famille FROIDE quand le reste du clair est passé au chaud**, et c'est cohérent :
+une famille suit la clarté de la surface, pas le thème choisi. Ces deux-là sont sombres, donc elles
+appartiennent à la famille sombre. Même chose pour `traceBackground`, qui est le fond d'une image.
+
+Les couleurs sémantiques — `azure`, `cyan`, `grape` — ne suivent aucune famille non plus : leur
+teinte EST leur sens. Un bleu qui se réchaufferait cesserait de dire « fonctionnel ».
 
 ---
 
@@ -203,11 +228,16 @@ Trois règles, dans cet ordre.
 `RUColor`. Une couleur écrite dans un fichier de vue est un défaut, même juste : personne ne la
 trouve en ouvrant le système.
 
-**Le texte est opaque, et dans la famille du fond.** Les quatre fonds penchent vers le violet de
-l'accent — `#F4F3F8` porte le bleu 4 points au-dessus du rouge, `#EDEBF4` 7, `#E7E5F0` 9. Un gris
-pur à côté d'un rose vif prend l'air sale ; un gris qui partage sa famille non. La règle est donc
-**bleu au-dessus du rouge, vert au plus égal**, et une opacité est refusée : elle se mélange à ce
-qui passe dessous, donc sa couleur serait décidée par la surface et non par le système.
+**Le texte est opaque, et dans la famille du fond — QUELLE QU'ELLE SOIT.** La règle ne nomme aucune
+couleur. `check_jetons_de_texte.py` lit les fonds du thème, prend le signe de leur penchant, et
+exige du texte le même signe. Une opacité est refusée : elle se mélange à ce qui passe dessous,
+donc sa couleur serait décidée par la surface et non par le système.
+
+Cette règle a été éprouvée le jour même où elle a été posée. Elle a été écrite quand les fonds
+clairs étaient lavande, et elle exigeait alors du texte violet ; le fond clair est passé au chaud
+quelques heures plus tard, et elle a exigé du texte chaud **sans qu'une ligne du garde change**.
+Elle a même attrapé le jeton que j'avais oublié de faire suivre. Les jetons sombres, eux, restent
+froids : leurs fonds le sont.
 
 **Aucun fond ne perd de contraste.** Un gris violet se détache MOINS d'un fond lavande qu'un gris
 neutre. Une valeur se règle donc sur le pire des fonds et pas sur le plus fréquent — calée sur la

@@ -17,6 +17,7 @@ import sys
 import tempfile
 
 import check_jetons_de_texte as ck
+import couleurs
 
 cas = []
 
@@ -44,13 +45,14 @@ def _ecarts_sur(declarations: str, nom_du_jeton: str, theme: str) -> list:
     problemes = []
     if not isinstance(valeur, int):
         return ["pas opaque"]
-    r, v, b = (valeur >> 16) & 255, (valeur >> 8) & 255, valeur & 255
-    if (nom_du_jeton, theme) not in ck.HORS_FAMILLE and not (b > r and v <= r):
-        problemes.append("hors famille")
+    if (nom_du_jeton, theme) not in ck.HORS_FAMILLE:
+        penchant_du_fond = sum(couleurs.famille(f)[0] for f in couleurs.fonds(theme).values())
+        if penchant_du_fond * couleurs.famille(valeur)[0] <= 0:
+            problemes.append("hors famille")
     if nom_du_jeton != "textPrimary":
         base = 0x000000 if theme == "clair" else 0xFFFFFF
         alpha = ck.OPACITES[theme][nom_du_jeton]
-        for ou, fond in ck.fonds(theme).items():
+        for ou, fond in couleurs.fonds(theme).items():
             avant = ck.contraste(ck.melange(base, fond, alpha), fond)
             if ck.contraste(valeur, fond) + 0.005 < avant:
                 problemes.append(f"perd sur {ou}")
@@ -71,6 +73,23 @@ def _():
     assert "hors famille" in _ecarts_sur(src, "text3", "clair")
 
 
+@cas_test("un texte de L'AUTRE famille est refusé, dans les deux sens")
+def _():
+    """La règle n'est ni « violet » ni « chaud » : c'est « la famille du fond ».
+
+    Les fonds clairs sont chauds, les fonds sombres froids. Un jeton violet en clair et un jeton
+    chaud en sombre doivent donc être refusés tous les deux — c'est le seul cas qui distingue une
+    règle relative d'une règle qui aurait simplement changé de camp le 12 novembre.
+    """
+    froid, chaud = 0x5B5563, 0x5B5651
+    assert "hors famille" in _ecarts_sur(
+        f"static var text3: Color {{ isLight ? Color(hex: 0x{froid:06X}) : Color(hex: 0x9893A0) }}",
+        "text3", "clair")
+    assert "hors famille" in _ecarts_sur(
+        f"static var text3: Color {{ isLight ? Color(hex: 0x5B5651) : Color(hex: 0x{chaud:06X}) }}",
+        "text3", "sombre")
+
+
 @cas_test("ma première résolution sombre de text4 est refusée : elle perdait sur card2 seul")
 def _():
     src = "static var text4: Color { isLight ? Color(hex: 0xB7B1BF) : Color(hex: 0x4A4552) }"
@@ -78,7 +97,7 @@ def _():
     assert any("card2" in p for p in problemes), problemes
     # Et la preuve que le minimum global, lui, était respecté — donc qu'un garde calé sur le
     # minimum aurait laissé passer la régression.
-    sols = ck.fonds("sombre")
+    sols = couleurs.fonds("sombre")
     planchers = [ck.contraste(ck.melange(0xFFFFFF, f, 0.20), f) for f in sols.values()]
     mesures = [ck.contraste(0x4A4552, f) for f in sols.values()]
     assert min(mesures) >= min(planchers) - 0.005, (min(mesures), min(planchers))
@@ -123,10 +142,12 @@ def _():
     qui englobe largement les huit nuanciers et ce que la recherche dichotomique peut en faire.
     """
     for theme in ("clair", "sombre"):
-        neutre = ck.FONDS[theme]["bg"]
-        part = ck.PART_TEINTE[theme]
-        borne = ck.fonds(theme)["bg teinté (borne)"]
-        texte = 0x5B5563 if theme == "clair" else 0x9893A0
+        neutre = couleurs.fond_neutre(theme)
+        part = couleurs.PART_TEINTE[theme]
+        borne = couleurs.fonds(theme)["bg teinté (borne)"]
+        # Le jeton réel du thème, lu dans la source : ce cas doit survivre au jour où
+        # la valeur change, et elle a changé deux fois en une journée.
+        texte = couleurs.declarations()["text3"][theme]
         pire = ck.contraste(texte, borne)
         for r in range(0, 256, 17):
             for v in range(0, 256, 17):
@@ -182,13 +203,15 @@ def _():
 
 # ── 5. les quatre jetons du dépôt, dans les deux thèmes ──────────────────────────────────────
 
-@cas_test("chaque jeton secondaire est dans la famille du fond")
+@cas_test("chaque jeton secondaire penche du même côté que ses fonds")
 def _():
-    source = ck.sans_commentaires(ck.COULEURS.read_text(encoding="utf-8"))
-    for nom in ("text2", "text3", "text4"):
-        for theme, valeur in ck.jetons(source)[nom].items():
-            r, v, b = (valeur >> 16) & 255, (valeur >> 8) & 255, valeur & 255
-            assert b > r and v <= r, (nom, theme, hex(valeur))
+    for nom in ("textPrimary", "text2", "text3", "text4"):
+        for theme in ("clair", "sombre"):
+            if (nom, theme) in ck.HORS_FAMILLE:
+                continue
+            valeur = couleurs.declarations()[nom][theme]
+            fond = sum(couleurs.famille(f)[0] for f in couleurs.fonds(theme).values())
+            assert fond * couleurs.famille(valeur)[0] > 0, (nom, theme, hex(valeur), fond)
 
 
 @cas_test("textPrimary reste le blanc pur en sombre, et c'est écrit")
@@ -196,8 +219,12 @@ def _():
     source = ck.sans_commentaires(ck.COULEURS.read_text(encoding="utf-8"))
     assert ck.jetons(source)["textPrimary"]["sombre"] == 0xFFFFFF
     assert ("textPrimary", "sombre") in ck.HORS_FAMILLE
+    # La prose est cherchée APRÈS normalisation : une raison écrite se replie sur deux lignes au
+    # premier remaniement du commentaire, et un cas qui lit le fichier brut casserait alors sans
+    # qu'aucune raison n'ait disparu. C'est arrivé le 12 novembre.
     brut = ck.COULEURS.read_text(encoding="utf-8")
-    assert "le primaire sombre est le seul jeton dont on veut le maximum" in brut
+    prose = " ".join(brut.replace("///", " ").replace("//", " ").split())
+    assert "le primaire sombre est le seul jeton dont on veut le maximum" in prose
 
 
 @cas_test("aucun jeton de texte n'est resté une opacité")

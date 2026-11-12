@@ -25,6 +25,9 @@ from swift import sans_commentaires, sans_commentaires_seuls  # noqa: E402,F401
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 COULEURS = RACINE / "RunUp/DesignSystem/Colors.swift"
 
+# `melange(rose, sur: neutre, part:)` dans `RUColor.fond(pour:)` — une trace, pas un aplat.
+PART_TEINTE = {"clair": 0.035, "sombre": 0.10}
+
 
 # ── LA SOURCE ────────────────────────────────────────────────────────────────────────────────
 
@@ -73,6 +76,41 @@ def declarations(source: str = None) -> dict:
     for nom, hexa in _LET.findall(source):
         trouves[nom] = {"clair": int(hexa, 16), "sombre": int(hexa, 16)}
     return trouves
+
+
+def fond_neutre(theme: str) -> int:
+    """Le neutre de `RUColor.fond(pour:)`, lu dans la source.
+
+    `bg` n'est pas une constante : c'est ce neutre, sur lequel l'habillage « teinté » mélange une
+    part de l'accent. Trois gardes et un script de montage en portaient chacun une copie en dur,
+    et le jour où le fond clair est passé du froid au chaud, les quatre auraient continué à
+    décrire l'ancien.
+    """
+    src = sans_commentaires(COULEURS.read_text(encoding="utf-8"))
+    m = re.search(r"let neutre = isLight \? Color\(hex: (0x[0-9A-Fa-f]{6})\) : "
+                  r"Color\(hex: (0x[0-9A-Fa-f]{6})\)", src)
+    if not m:
+        raise SystemExit("couleurs.fond_neutre : `fond(pour:)` ne se lit plus dans Colors.swift.")
+    return int(m.group(1 if theme == "clair" else 2), 16)
+
+
+def fonds(theme: str) -> dict:
+    """Les cinq fonds d'un thème : les quatre surfaces, plus une borne du fond teinté.
+
+    La borne évite de rejouer la recherche dichotomique d'`AccentTheme` — ce serait écrire sa
+    règle une deuxième fois. Mélanger une part de n'importe quelle couleur dans le neutre ne peut
+    pas l'assombrir plus que la même part de NOIR PUR, et c'est le pire cas pour du texte sombre ;
+    en sombre, du BLANC PUR donne le fond le plus clair, donc le pire cas pour du texte clair.
+    """
+    jetons = declarations()
+    sortie = {"bg": fond_neutre(theme)}
+    for nom in ("bg2", "card", "card2"):
+        valeur = jetons[nom][theme]
+        if isinstance(valeur, int):
+            sortie[nom] = valeur
+    pire = 0x000000 if theme == "clair" else 0xFFFFFF
+    sortie["bg teinté (borne)"] = melange(pire, sortie["bg"], PART_TEINTE[theme])
+    return sortie
 
 
 def accents(chemin: pathlib.Path = None) -> dict:

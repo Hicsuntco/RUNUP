@@ -51,7 +51,7 @@ import sys
 # L'arithmétique du contraste et la lecture de `Colors.swift` vivent dans `couleurs.py`, que
 # `check_design.py` lit aussi. Deux copies pourraient diverger sur ce qu'un garde VOIT, et un
 # garde qui se trompe sur ce qu'il lit est pire qu'aucun garde.
-from couleurs import contraste, melange, sans_commentaires  # noqa: F401
+from couleurs import contraste, famille, fonds, melange, sans_commentaires  # noqa: F401
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 COULEURS = RACINE / "RunUp/DesignSystem/Colors.swift"
@@ -64,27 +64,11 @@ OPACITES = {
     "sombre": {"text2": 0.68, "text3": 0.52, "text4": 0.20},
 }
 
-# Les fonds littéraux de `Colors.swift`. Le neutre de `fond(pour:)` d'abord, puis les trois
-# surfaces. Le cinquième est la borne du fond teinté, construite plus bas.
-FONDS = {
-    "clair": {"bg": 0xF4F3F8, "bg2": 0xE7E5F0, "card": 0xFFFFFF, "card2": 0xEDEBF4},
-    "sombre": {"bg": 0x08070D, "bg2": 0x121118, "card": 0x16161F, "card2": 0x201F2A},
-}
-# `melange(rose, sur: neutre, part:)` dans `RUColor.fond(pour:)`.
-PART_TEINTE = {"clair": 0.035, "sombre": 0.10}
 
 # `textPrimary` ne suit pas la règle de famille, et les deux raisons sont écrites dans
 # `Colors.swift` juste au-dessus de sa déclaration : en clair `#15151C` y est DÉJÀ (bleu +7), en
 # sombre c'est le blanc pur, volontairement hors famille parce qu'on veut son maximum de lisibilité.
 HORS_FAMILLE = {("textPrimary", "sombre")}
-
-
-def fonds(theme: str) -> dict:
-    """Les fonds du thème, borne du fond teinté comprise."""
-    sortie = dict(FONDS[theme])
-    pire = 0x000000 if theme == "clair" else 0xFFFFFF
-    sortie["bg teinté (borne)"] = melange(pire, FONDS[theme]["bg"], PART_TEINTE[theme])
-    return sortie
 
 
 DECLARATION = re.compile(
@@ -140,16 +124,24 @@ def ecarts() -> list:
                                   "serait décidée par la surface et non par le système de design."))
                 continue
 
-            # 2 — dans la famille du fond.
-            r, v, b = (valeur >> 16) & 255, (valeur >> 8) & 255, valeur & 255
+            # 2 — dans la famille du fond, QUELLE QU'ELLE SOIT.
+            #
+            # Le garde ne nomme aucune couleur : il lit les fonds et prend le signe de leur
+            # penchant. Quand les fonds clairs étaient lavande, il exigeait du texte violet ;
+            # depuis qu'ils sont chauds, il exige du texte chaud, sans qu'une ligne change ici.
+            # C'était l'épreuve de la règle, et elle l'a passée.
             if (nom, theme) not in HORS_FAMILLE:
-                if not (b > r and v <= r):
+                penchant_du_fond = sum(famille(f)[0] for f in fonds(theme).values())
+                penchant_du_texte = famille(valeur)[0]
+                if penchant_du_fond * penchant_du_texte <= 0:
+                    sens = "chaud (bleu SOUS le rouge)" if penchant_du_fond < 0 else \
+                           "froid (bleu AU-DESSUS du rouge)"
                     problemes.append((
                         f"{nom} ({theme})", f"#{valeur:06X}",
-                        f"Hors de la famille du fond : bleu {b}, rouge {r}, vert {v}. Les quatre "
-                        "fonds penchent vers le violet de l'accent ; un gris neutre posé dessus "
-                        "prend l'air sale. Il faut le bleu au-dessus du rouge, et le vert au plus "
-                        "égal — `textPrimary` clair tient la borne basse avec vert = rouge."))
+                        f"Hors de la famille du fond. Les fonds de ce thème sont {sens} ; ce "
+                        f"jeton penche de {penchant_du_texte:+d}. Un gris neutre, ou pire un gris "
+                        "de l'autre famille, prend l'air sale sur eux — et une couleur de texte "
+                        "doit être décidée par le système de design, pas subie."))
 
             # 3 — aucun fond ne perd de contraste.
             if nom == "textPrimary":

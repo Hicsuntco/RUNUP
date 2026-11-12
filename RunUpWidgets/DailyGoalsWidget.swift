@@ -200,7 +200,13 @@ struct DailyGoalsWidgetView: View {
     /// fixe, et dans l'ordre où `DailyGoalsBarsView.fillColors` les rend en interne.
     private var colors: [Color] { WidgetAccentPalette.ringColors(themeID: snapshot.accentThemeID, isLight: isLight) }
     private var bg: Color { isLight ? .white : .black }
-    private var textPrimary: Color { isLight ? Color(hex: 0x15151C) : .white }
+    /// L'encre de l'app, RECOPIÉE et pas lue : la cible du widget ne compile pas
+    /// `RunUp/DesignSystem`, pour la raison écrite en tête de `WidgetAccentPalette`. La copie est
+    /// donc inévitable ; ce qui ne l'était pas, c'est qu'aucune barrière ne la tienne d'accord
+    /// avec l'originale. Elle est restée à `#15151C` quand l'app est passée au chaud le
+    /// 12 novembre, et le widget aurait porté l'ancienne encre sur l'écran d'accueil du téléphone.
+    /// `check_encres.py` compare les deux à chaque construction.
+    private var textPrimary: Color { isLight ? Color(hex: 0x181511) : .white }
     private var text2: Color { isLight ? .black.opacity(0.45) : .white.opacity(0.42) }
     private var flameColor: Color { snapshot.streak > 0 ? Color(hex: 0xFFB03D) : text2 }
 

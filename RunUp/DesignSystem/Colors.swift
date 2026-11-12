@@ -44,8 +44,26 @@ enum RUColor {
     /// ne plus avoir. Le fond teinté sépare mécaniquement, donc le filet peut redescendre à une
     /// finition qu'on ne remarque pas, et l'ombre s'élargir et s'adoucir.
     ///
-    /// La teinte penche très légèrement vers le violet de l'accent plutôt que vers un gris neutre :
-    /// un gris pur à côté d'un rose vif prend l'air sale, un gris qui partage sa famille non.
+    /// # LE NEUTRE EST CHAUD, ET IL A ÉTÉ FROID
+    ///
+    /// Il a longtemps penché vers le violet de l'accent, avec cette raison : « un gris pur à côté
+    /// d'un rose vif prend l'air sale, un gris qui partage sa famille non ». L'argument est bon et
+    /// il ne tient pas, parce qu'il suppose UN accent. L'app en propose huit (décision D1), dont
+    /// le cyan, le lime et le bleu : un fond violet ne partageait la famille que du rose et du
+    /// violet, et se retrouvait en désaccord avec les six autres.
+    ///
+    /// Le fond prend donc la position du PAPIER — un blanc cassé chaud, sur lequel n'importe
+    /// quelle encre se pose — plutôt que celle d'un écho de l'accent. C'est la direction que le
+    /// brief demandait depuis le début (`#FBF9F7`), et Charlotte l'a ouverte le 12 novembre.
+    ///
+    /// LA TEINTE DU BRIEF, PAS SA LUMINOSITÉ, comme pour les jetons de texte. `#FBF9F7` est
+    /// presque blanc : sous une carte blanche il ne recule que de 1,050:1, contre 1,104 pour
+    /// l'ancien froid — la moitié de la séparation, et c'est précisément ce recul qui empêche une
+    /// carte à image pleine de se lire comme un trou. La valeur retenue garde la luminance de
+    /// l'ancienne et retourne sa famille : 1,100:1, l'écart est tenu.
+    ///
+    /// Les trois surfaces claires ont bougé ensemble, et c'était obligatoire : une page chaude
+    /// sous des sous-surfaces lavande, c'est un écran qui se contredit.
     static var bg: Color { fond(pour: habillage) }
 
     /// LE FOND D'UN HABILLAGE DONNÉ, et pas seulement de celui qui est actif.
@@ -57,7 +75,7 @@ enum RUColor {
     /// 7 % à 3,5 % ici, et l'aperçu a continué d'en montrer 7. Le réglage mentait sur ce qu'il
     /// allait produire.
     static func fond(pour habillage: Habillage) -> Color {
-        let neutre = isLight ? Color(hex: 0xF4F3F8) : Color(hex: 0x08070D)
+        let neutre = isLight ? Color(hex: 0xF5F4F1) : Color(hex: 0x08070D)
         guard habillage == .teinte else { return neutre }
         // LE SOL PREND LA COULEUR. Voir `Habillage`.
         //
@@ -100,19 +118,42 @@ enum RUColor {
                      blue: Double(b1 * p + b2 * (1 - p)))
     }
 
+    /// L'ENCRE DE LA PAGE — le presque-noir de ce qui appartient au sol plutôt qu'à la carte :
+    /// l'ombre qui la pose, le filet qui la borde.
+    ///
+    /// Elle partage la famille du fond, et elle a changé de camp avec lui le 12 novembre. Elle
+    /// valait `#1A162E`, soit le bleu 20 points au-dessus du rouge, avec cette raison écrite :
+    /// « le gris de la page poussé vers le violet de l'accent — le même raisonnement que `bg` ».
+    /// `bg` ne penche plus de ce côté, donc cette phrase était devenue fausse. `#20180C` garde sa
+    /// luminance — 17,54:1 sur une carte blanche contre 17,53.
+    ///
+    /// Un noir PUR ne ferait pas l'affaire, et c'est le vrai sujet : sur une page teintée il se
+    /// lit comme un trait tracé par-dessus le dessin, là où la même valeur dans l'encre de la page
+    /// se lit comme son bord.
+    static let encreDeLaPage = Color(hex: 0x20180C)
+
+    /// L'OMBRE D'UNE CARTE, à l'opacité qu'on lui demande.
+    ///
+    /// Une fonction et non une constante parce que l'aperçu des réglages en veut une plus marquée
+    /// (0,3) que les cartes de l'app (0,16) — et parce qu'il RECOPIAIT la formule, encre et part
+    /// comprises. `fond(pour:)` raconte dix lignes plus haut ce que la dernière copie de ce genre
+    /// a coûté : l'aperçu a continué d'annoncer 7 % quand la valeur était passée à 3,5.
+    ///
+    /// Teintée de l'accent plutôt que grise : une ombre grise sur un sol coloré pose du sale
+    /// dessus. Celle-ci partage sa famille avec le sol qu'elle assombrit.
+    static func ombreDeCarte(_ opacite: Double) -> Color {
+        melange(rose, sur: encreDeLaPage, part: 0.35).opacity(opacite)
+    }
+
     /// L'ombre des cartes, et elle n'existe QUE dans l'habillage teinté.
     ///
     /// En `classique`, ce qui sépare une carte de la page est son filet : l'ombre portée a été
     /// retirée du système de design, et le filet est monté en même temps (voir `CardBackground`).
     /// Les deux changements n'ont de sens qu'ensemble, et c'est toujours vrai — en `trace` c'est
     /// l'inverse qui s'applique, le filet tombe et l'ombre revient.
-    ///
-    /// Teintée de l'accent plutôt que grise : une ombre grise sur un sol coloré pose du sale
-    /// dessus. Celle-ci partage sa famille avec le sol qu'elle assombrit.
     static var cardShadow: Color {
         guard habillage == .teinte else { return .clear }
-        return isLight ? melange(rose, sur: Color(hex: 0x1A162E), part: 0.35).opacity(0.16)
-                       : Color.black.opacity(0.45)
+        return isLight ? ombreDeCarte(0.16) : Color.black.opacity(0.45)
     }
 
     /// Le fond de PAGE, à poser à la racine d'un écran — un dégradé en clair, une couleur en
@@ -137,7 +178,7 @@ enum RUColor {
     /// Un cran plus ENFONCÉ que `bg` en clair, un cran plus haut en sombre — dans les deux cas
     /// « la rainure dans laquelle une pastille `card` vient se poser » (rail des sélecteurs
     /// segmentés). C'est la relation qui compte, pas la direction.
-    static var bg2: Color { isLight ? Color(hex: 0xE7E5F0) : Color(hex: 0x121118) }
+    static var bg2: Color { isLight ? Color(hex: 0xE8E6DF) : Color(hex: 0x121118) }
 
     // Theme-aware — follow the user's chosen accent (Profil → Apparence → Couleur de l'app, see
     // `AccentTheme`/`ThemeStore`).
@@ -171,7 +212,12 @@ enum RUColor {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         UIColor(accent).getRed(&r, green: &g, blue: &b, alpha: &a)
         let luminance = 0.299 * r + 0.587 * g + 0.114 * b
-        return luminance > 0.6 ? Color(hex: 0x15151C) : .white
+        // La même encre que `textPrimary` en clair, et c'est une SECONDE écriture de cette
+        // valeur. Elle ne peut pas lire le jeton : `textPrimary` suit le thème, alors que l'encre
+        // sur un aplat d'accent dépend de l'aplat et de rien d'autre — un bouton rose vif porte la
+        // même encre que l'app soit en clair ou en sombre. Les deux ont basculé ensemble le
+        // 12 novembre ; `check_encres.py` les tient maintenant d'accord.
+        return luminance > 0.6 ? Color(hex: 0x181511) : .white
     }
 
     /// Le cas courant : l'encre sur un aplat de `rose`, l'accent principal.
@@ -211,12 +257,16 @@ enum RUColor {
     // négligeable à l'œil, mais c'est une couleur du système de design que le système de design
     // ne décide pas.
     //
-    // Le second, celui qui se voit : les quatre fonds penchent tous vers le violet de l'accent
-    // (#F4F3F8, #EDEBF4, #E7E5F0 portent le bleu 4 à 9 points au-dessus du rouge), et le texte
-    // sortait en GRIS NEUTRE PUR. C'est exactement ce que le commentaire de `bg` interdit, cent
-    // cinquante lignes plus haut : « un gris pur à côté d'un rose vif prend l'air sale, un gris
-    // qui partage sa famille non ». La règle était écrite, appliquée aux fonds, et pas aux 835
+    // Le second, celui qui se voit : les fonds ont une famille, et le texte sortait en GRIS
+    // NEUTRE PUR. La règle était écrite au-dessus de `bg`, appliquée aux fonds, et pas aux 835
     // emplois de texte qui se posent dessus.
+    //
+    // LA RÈGLE EST « LA FAMILLE DU FOND », PAS « VIOLET ». Elle a été posée quand les fonds
+    // clairs penchaient vers le violet, et les jetons clairs étaient donc violets. Le 12 novembre
+    // le fond clair est passé au chaud — voir `bg` — et les jetons clairs ont suivi le même jour.
+    // C'est la preuve que la règle est la bonne : elle a survécu au retournement de ce qu'elle
+    // décrivait, et `check_jetons_de_texte.py` la vérifie en LISANT les fonds, sans jamais
+    // nommer une famille.
     //
     // LA TEINTE EST CELLE DU BRIEF, PAS SA LUMINOSITÉ. Le brief demande #6B6473 en secondaire :
     // même signature de famille que nos fonds (bleu +8, vert −7), mais mesuré sur NOS surfaces il
@@ -239,16 +289,24 @@ enum RUColor {
     // de ses emplois. Ses 1,7:1 sont voulus, et il suit la famille pour la même raison que les
     // autres : un point médian gris neutre entre deux liens se voit, lui aussi.
 
-    /// LE PRIMAIRE N'A PAS BOUGÉ, et c'est une mesure, pas un oubli. `#15151C` porte déjà le bleu
-    /// 7 points au-dessus du rouge : il est dans la famille depuis le début. Le brief demande
-    /// `#15121A`, soit 18,53:1 sur une carte blanche contre 18,17 pour le nôtre — un écart qu'aucun
-    /// œil ne relève. Le changer n'aurait rien donné à voir, et aurait coûté une valeur de plus à
-    /// tenir.
+    /// LE PRIMAIRE A BOUGÉ AU DEUXIÈME CHANTIER, ET C'EST LE GARDE QUI L'A VU.
     ///
-    /// En sombre il reste le BLANC PUR, hors famille. Un blanc légèrement violacé serait plus
-    /// cohérent et moins lisible : le primaire sombre est le seul jeton dont on veut le maximum.
-    static var textPrimary: Color { isLight ? Color(hex: 0x15151C) : Color.white }
-    static var text2: Color { isLight ? Color(hex: 0x443E4C) : Color(hex: 0xBBB6C3) }
+    /// Au premier, il n'avait pas bougé, et la raison écrite ici était juste : `#15151C` portait
+    /// le bleu 7 points au-dessus du rouge, donc il était déjà dans la famille des fonds lavande.
+    /// Quand les fonds sont passés au chaud, cette phrase est devenue fausse sans que rien ne
+    /// l'écrive — le primaire se retrouvait seul, froid, sur cinq fonds chauds.
+    ///
+    /// `check_jetons_de_texte.py` l'a refusé à la première exécution. Il ne nomme aucune couleur :
+    /// il lit les fonds et compare les penchants. C'est exactement ce qu'on lui demande, et c'est
+    /// pour ça que la règle est « la famille du fond » et jamais « violet » ni « chaud ».
+    ///
+    /// `#181511` garde la luminance de l'ancien — 18,19:1 sur une carte contre 18,17 — et
+    /// retourne sa famille.
+    ///
+    /// En sombre il reste le BLANC PUR, hors famille et volontairement : le primaire sombre est
+    /// le seul jeton dont on veut le maximum de lisibilité.
+    static var textPrimary: Color { isLight ? Color(hex: 0x181511) : Color.white }
+    static var text2: Color { isLight ? Color(hex: 0x443F3A) : Color(hex: 0xBBB6C3) }
     /// `text3` échouait au contraste dans LES DEUX thèmes — et le sombre, qui était alors le thème
     /// par défaut, était le pire des deux : 2,85:1 sur le fond de page contre 3,90 en clair, pour
     /// un seuil de 4,5. Le sombre passait même sous le seuil « gros texte » de 3:1.
@@ -259,8 +317,8 @@ enum RUColor {
     ///
     /// Le passage à l'opaque conserve cette correction et l'améliore sur chacun des cinq fonds,
     /// dans les deux thèmes. `check_jetons_de_texte.py` le vérifie et imprime les valeurs.
-    static var text3: Color { isLight ? Color(hex: 0x5B5563) : Color(hex: 0x9893A0) }
-    static var text4: Color { isLight ? Color(hex: 0xB7B1BF) : Color(hex: 0x514C59) }
+    static var text3: Color { isLight ? Color(hex: 0x5B5651) : Color(hex: 0x9893A0) }
+    static var text4: Color { isLight ? Color(hex: 0xB7B2AD) : Color(hex: 0x514C59) }
 
     /// A near-invisible opacity-on-white (was 0.035) reads as almost no card at all — dark mode's
     /// 0.045-on-near-black works because that background is already dark enough for a faint white
@@ -277,7 +335,7 @@ enum RUColor {
     /// Assombri à `#EFEEF6` : sur une page blanche c'est LUI qui porte la profondeur, puisque la
     /// carte ne peut plus le faire. 1,15:1 contre le blanc — faible dans l'absolu, mais c'est le
     /// maximum tolérable avant que la sous-surface ne devienne une carte à son tour.
-    static var card2: Color { isLight ? Color(hex: 0xEDEBF4) : Color(hex: 0x201F2A) }
+    static var card2: Color { isLight ? Color(hex: 0xEEECE7) : Color(hex: 0x201F2A) }
 
     // ── LES DEUX SURFACES DE L'ÉCRAN DE SÉANCE ──────────────────────────────────────────────
     //
@@ -335,15 +393,15 @@ enum RUColor {
     /// pur sur une page teintée se lit comme un trait tracé par-dessus le dessin ; la même valeur
     /// dans l'encre de la page se lit comme son bord. C'est le changement, pas le pourcentage.
     ///
-    /// `#1A162E` est le gris de la page poussé vers le violet de l'accent — le même raisonnement
-    /// que `bg`, qui penche déjà de ce côté plutôt que vers un gris neutre.
+    /// L'encre est celle de la page — voir `encreDeLaPage`, qui porte la valeur et son histoire.
+    /// Elle penche du même côté que le fond, et elle a changé de camp avec lui.
     static var cardBorder: Color {
         // En habillage teinté, le filet TOMBE : c'est l'ombre colorée qui sépare (voir
         // `cardShadow`). Garder les deux donnerait une carte cernée ET flottante, soit deux
         // réponses à la même question — exactement ce que la suppression de l'ombre avait
         // corrigé dans l'autre sens.
         guard habillage != .teinte else { return .clear }
-        return isLight ? Color(hex: 0x1A162E, opacity: 0.10) : Color.clear
+        return isLight ? encreDeLaPage.opacity(0.10) : Color.clear
     }
 
     /// Mélange opaque de `color` dans `base`, exactement `color-mix(in srgb, color N%, base)` en CSS.

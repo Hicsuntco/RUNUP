@@ -838,6 +838,16 @@ jobs:
           cd ci_scripts && python3 test_design.py
           cd .. && python3 ci_scripts/check_design.py
 
+      # Deux encres de l'app sont RECOPIÉES hors du système de design, et ne peuvent pas ne pas
+      # l'être : celle du widget traverse une frontière de cible, celle de `onAccent` répond à une
+      # question que `textPrimary` ne pose pas. Le 12 novembre, le fond clair est passé au chaud et
+      # les deux sont restées froides — le widget aurait porté l'ancienne encre sur l'écran
+      # d'accueil du téléphone. Une copie est tolérée ; une copie sans correspondance déclarée non.
+      - name: Vérifier que les encres recopiées suivent le système de design
+        run: |
+          cd ci_scripts && python3 test_encres.py
+          cd .. && python3 ci_scripts/check_encres.py
+
       # « Le contenu au milieu, le bouton en bas » centre joliment tant que le contenu est plus
       # court que l'écran. À deux fois la taille de texte — que l'app autorise — les `Spacer`
       # tombent à zéro et le bouton sort par le bas. En bas de `PlanRecapView`, c'est

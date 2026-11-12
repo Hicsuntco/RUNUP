@@ -46,6 +46,21 @@ def _vrai_document() -> str:
     return (couleurs.RACINE / "DESIGN.md").read_text(encoding="utf-8")
 
 
+def _fausse(avant: str, apres: str) -> str:
+    """Le document avec une substitution qui a VRAIMENT eu lieu.
+
+    Un cas de ce fichier a déjà passé en ne testant rien : il remplaçait `#5B5563` par une valeur
+    fausse, la valeur du dépôt est devenue `#5B5651` quelques heures plus tard, la substitution
+    est devenue sans effet, et le cas a continué d'afficher « ok » en ne vérifiant plus rien. Un
+    test qui ne teste plus rien est pire qu'un test absent : il rassure.
+    """
+    document = _vrai_document()
+    assert avant in document, (
+        f"« {avant} » n'est plus dans DESIGN.md — ce cas ne teste plus rien. "
+        "Reprenez-le sur la valeur actuelle au lieu de le laisser passer.")
+    return document.replace(avant, apres)
+
+
 # ── 1. les défauts réels ─────────────────────────────────────────────────────────────────────
 
 @cas_test("un garde cité qui n'existe pas est refusé (le défaut du 12 novembre)")
@@ -84,39 +99,42 @@ def _():
 
 @cas_test("un jeton de couleur faux est attrapé")
 def _():
-    doc = _vrai_document().replace("| `text3` | `#5B5563` |", "| `text3` | `#616161` |")
+    actuel = couleurs.declarations()["text3"]["clair"]
+    doc = _fausse(f"| `text3` | `#{actuel:06X}` |", "| `text3` | `#616161` |")
     assert any("text3" in quoi for _, quoi, _ in _sur(doc))
 
 
 @cas_test("une valeur de nuancier fausse est attrapée")
 def _():
-    doc = _vrai_document().replace("| Rose | `#FF0A78` |", "| Rose | `#F0225F` |")
+    primaire = couleurs.accents()["rose"][0]
+    doc = _fausse(f"| Rose | `#{primaire:06X}` |", "| Rose | `#F0225F` |")
     assert any("Rose" in quoi for _, quoi, _ in _sur(doc))
 
 
 @cas_test("une teinte de famille fausse est attrapée")
 def _():
-    doc = _vrai_document().replace("| Fractionné | `ember` |", "| Fractionné | `azure` |")
+    doc = _fausse("| Fractionné | `ember` |", "| Fractionné | `azure` |")
     problemes = _sur(doc)
     assert any("Fractionné" in quoi for _, quoi, _ in problemes), problemes
 
 
 @cas_test("un cran de typographie faux est attrapé")
 def _():
-    doc = _vrai_document().replace("| `figure` | 28 |", "| `figure` | 30 |")
+    doc = _fausse(f"| `figure` | {ck.echelle('RUDisplaySize')['figure']:g} |",
+                  "| `figure` | 30 |")
     assert any("figure" in quoi for _, quoi, _ in _sur(doc))
 
 
 @cas_test("une durée de mouvement fausse est attrapée")
 def _():
-    doc = _vrai_document().replace("| `draw` | 1 450 ms |", "| `draw` | 1 200 ms |")
+    doc = _fausse("| `draw` | 1 450 ms |", "| `draw` | 1 200 ms |")
     problemes = _sur(doc)
     assert any("draw" in quoi for _, quoi, _ in problemes), problemes
 
 
 @cas_test("une des trois questions retirée est attrapée")
 def _():
-    doc = _vrai_document().replace("s'y sent à sa place", "s'y sent bien")
+    doc = _fausse("s'y sent à sa place", "s'y sent bien")
     problemes = _sur(doc)
     assert any("s'y sent à sa place" in quoi for _, quoi, _ in problemes), problemes
 

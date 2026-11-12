@@ -4325,3 +4325,73 @@ distinctes**, et que les confondre est précisément ce qui a produit les faux p
 Chacune est désormais répondue **une fois**, à un endroit nommé, avec un renvoi vers ses deux
 voisines. C'est l'absence de ces renvois qui avait laissé une sous-chaîne de titre tenir le rôle de
 garde de sécurité.
+
+---
+
+## 12 novembre 2026 — HYROX, étape 1 : les quatre divisions et leurs charges
+
+Premier des deux temps du programme HYROX demandé par Charlotte. Celui-ci pose la fondation ; les
+séances qui s'en serviront viennent ensuite.
+
+### Ce que le règlement dit, et que l'app ignorait
+
+Le PDF officiel a été lu — `pdftotext` sur le règlement Single 26/27, section 4.1 — et il est
+explicite : **« HYROX offers four divisions. The divisions differ in gender and/or weight. »** Les
+quatre sont WOMEN, WOMEN PRO, MEN, MEN PRO. C'est le genre autant que le niveau qui décide des
+charges, et **Men Open et Women Pro partagent exactement la même colonne**.
+
+| Épreuve | Femmes | Hommes / Femmes Pro | Hommes Pro |
+| --- | --- | --- | --- |
+| Sled push 4 × 12,5 m | 102 kg | 152 kg | 202 kg |
+| Sled pull 4 × 12,5 m | 78 kg | 103 kg | 153 kg |
+| Farmers carry 200 m | 2 × 16 kg | 2 × 24 kg | 2 × 32 kg |
+| Sandbag lunges 100 m | 10 kg | 20 kg | 30 kg |
+| Wall balls | 100 × 4 kg | 6 kg | 9 kg |
+
+SkiErg et rameur font 1000 m, le burpee broad jump 80 m, dans les quatre divisions. Et une
+correction de ce que donnait la recherche web : **le sled fait quatre allers de 12,5 m, pas deux de
+25**.
+
+L'app ne proposait qu'Open et Pro, et ne stockait aucun genre. Elle ne pouvait donc pas savoir si
+une coureuse affrontait 102 ou 202 kg — c'est pour ça, et c'était juste, qu'elle ne nommait aucun
+kilo.
+
+### La décision d'avant était bonne ; sa prémisse a changé
+
+L'ancien commentaire de `HyroxDivision` disait : « this app has no verified current-season rulebook
+weights to assert as fact, and a wrong "real" number would be exactly the kind of fake precision
+this codebase has been fixing everywhere else ». La première moitié n'est plus vraie. **La seconde
+l'est toujours** : les charges changent de saison.
+
+Elles sont donc **datées** — `ChargesHyrox.saison` s'affiche avec elles, et l'écran de division dit
+« Charges du règlement 26/27 » — et elles vivent à **un seul endroit**, pour qu'une mise à jour soit
+une édition et pas une chasse. Un nombre sourcé et daté n'est pas de la fausse précision ; un nombre
+sans date en serait.
+
+### Ce que la question demande, et ce qu'elle ne demande pas
+
+Elle ne demande pas un genre comme donnée de santé. Elle demande dans quelle **catégorie** on s'est
+inscrit — ce que l'écran demandait déjà — et une seule réponse remplace deux questions. La règle des
+données de santé minimales est tenue : rien d'autre dans l'app ne lit cette valeur.
+
+Le sous-titre des cartes annonce maintenant deux charges concrètes — « Sled 102 kg · wall balls
+4 kg » — au lieu de « le format le plus couru », qui était une affirmation sur la participation que
+rien ne sourçait.
+
+### Les profils déjà enregistrés
+
+`open` et `pro` restent décodables mais ne sont plus proposées, et elles ne portent **aucune
+charge** : « Open » ne dit pas si elle pousse 102 ou 152 kg, et l'inventer ferait prescrire une
+charge fausse à quelqu'un qui s'entraîne dessus. Le plan se tait sur les kilos jusqu'à ce que la
+division soit rechoisie. `estPro` remplace un `== .pro` qui ne pouvait pas survivre au passage à
+quatre divisions.
+
+### Ce qui le garde
+
+`RunUpTests/ChargesHyroxTests.swift`, onze cas. Ils **recopient le tableau**, et c'est leur intérêt :
+ce sont des charges qu'une coureuse va pousser et soulever cent fois, et une faute de frappe — 120
+au lieu de 102 — ne casserait rien et ne se verrait pas à l'écran. Les nombres sont écrits à deux
+endroits qu'on ne modifie pas d'un même geste, ce qui force à rouvrir la source le jour où le
+règlement change. Plus les cas qui tiennent la colonne partagée, la montée monotone des cinq charges
+(une transposition de deux colonnes ne se verrait sur aucun nombre isolé), l'absence de charges sur
+les divisions héritées, et leur décodage.

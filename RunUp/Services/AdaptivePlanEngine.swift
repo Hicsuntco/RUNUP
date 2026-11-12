@@ -757,9 +757,14 @@ enum AdaptivePlanEngine {
     /// HYROX-specific archetypes: real running still anchors pace/effort (via `PaceModel`, same as
     /// every other goal), but the week is built around the format's actual demand — running under
     /// accumulated fatigue from functional stations, not a continuous road-race build. Deliberately
-    /// never states a precise competition kg figure (see `HyroxDivision`) — sessions describe
-    /// structure/technique/effort, which stays true across seasons and skill levels instead of
-    /// risking a stale or wrong "real" number.
+    /// LES CHARGES NE SONT PAS ENCORE NOMMÉES ICI, et la raison a changé.
+    ///
+    /// C'était « cette app n'a aucune charge de règlement vérifiée à affirmer comme un fait ».
+    /// Elle en a maintenant : le règlement de la saison en cours a été lu, et `ChargesHyrox` porte
+    /// son tableau avec sa date. Ce qui reste à faire est d'écrire les séances qui s'en servent —
+    /// nommer les huit stations, leurs distances et la charge de SA division. Les sous-titres
+    /// ci-dessous décrivent encore la structure et l'effort sans un kilo, ce qui reste vrai mais
+    /// pauvre pour qui prépare un sled de 202 kg.
     /// Le temps d'effort de la course visée, en secondes. Zéro quand on ne prépare pas d'ultra.
     ///
     /// Interne et non privé : l'écran du jour J en a besoin pour ramener les fourchettes de
@@ -967,20 +972,22 @@ enum AdaptivePlanEngine {
 
     private static func hyroxArchetypes(for block: TrainingBlock, profile: UserProfile) -> [SessionArchetype] {
         let zones = PaceModel.zones(for: profile)
+        // `?? .open` veut dire « division inconnue » : voir `HyroxDivision`, où les deux valeurs
+        // héritées existent précisément pour ce cas et ne portent aucune charge.
         let division = profile.hyroxDivision.flatMap { HyroxDivision(rawValue: $0) } ?? .open
-        let loadNote = division == .pro ? "charge renforcée" : "charge standard"
+        let loadNote = division.estPro ? "charge renforcée" : "charge standard"
 
         let base: [SessionArchetype]
         switch block {
         case .base:
             base = [
                 SessionArchetype(role: .easy, title: "Footing base HYROX", subtitle: "endurance de fond — construit le volume de course du format", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .hyroxBaseFooting),
-                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Technique", subtitle: "SkiErg, rameur, farmers carry, wall balls — travaille le geste, \(loadNote) légère", pace: "—", zone: "Technique", baseDuration: 35, kind: division == .pro ? .hyroxTechniquePro : .hyroxTechnique),
+                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Technique", subtitle: "SkiErg, rameur, farmers carry, wall balls — travaille le geste, \(loadNote) légère", pace: "—", zone: "Technique", baseDuration: 35, kind: division.estPro ? .hyroxTechniquePro : .hyroxTechnique),
                 SessionArchetype(role: .longRun, title: "Course compromise 3 × 1 km", subtitle: "course + bloc fonctionnel entre chaque km — apprivoise la fatigue du format", pace: zones.easy, zone: "Z2-3", baseDuration: 40, kind: .hyroxCompromisedRun3, intervals: IntervalStructure(reps: 3, repMeters: 1000, recoveryMeters: nil))
             ]
         case .specifique:
             base = [
-                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Circuit intense", subtitle: "stations enchaînées à intensité course, sous fatigue, \(loadNote)", pace: "—", zone: "Z3-4", baseDuration: 40, kind: division == .pro ? .hyroxIntenseCircuitPro : .hyroxIntenseCircuit),
+                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Circuit intense", subtitle: "stations enchaînées à intensité course, sous fatigue, \(loadNote)", pace: "—", zone: "Z3-4", baseDuration: 40, kind: division.estPro ? .hyroxIntenseCircuitPro : .hyroxIntenseCircuit),
                 // LE SEUL BLOC DU MOTEUR QUI N'AVAIT AUCUNE SÉANCE FACILE, ET CE QUE ÇA COÛTAIT.
                 //
                 // Le plafond de deux séances de qualité par semaine s'applique en REMPLAÇANT la

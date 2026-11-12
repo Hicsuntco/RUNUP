@@ -7079,6 +7079,23 @@
         }
       }
     },
+    "Charges du règlement %@. Plan écrit pour le format individuel : Doubles et Relay se préparent autrement.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loads from the %@ rulebook. Plan written for the individual format: Doubles and Relay train differently."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargas del reglamento %@. Plan creado para el formato individual: Doubles y Relay se preparan de otra forma."
+          }
+        }
+      }
+    },
     "Charges renforcées — pour un niveau confirmé": {
       "extractionState": "manual",
       "localizations": {
@@ -9539,6 +9556,23 @@
         }
       }
     },
+    "Division d'une version précédente — à rechoisir": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Division from an earlier version — please pick again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "División de una versión anterior: vuelve a elegirla"
+          }
+        }
+      }
+    },
     "Donner mon avis": {
       "localizations": {
         "en": {
@@ -11330,6 +11364,40 @@
         }
       }
     },
+    "Femmes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Women"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mujeres"
+          }
+        }
+      }
+    },
+    "Femmes Pro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Women Pro"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mujeres Pro"
+          }
+        }
+      }
+    },
     "Fermer": {
       "localizations": {
         "en": {
@@ -11931,6 +11999,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hombre"
+          }
+        }
+      }
+    },
+    "Hommes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Men"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hombres"
+          }
+        }
+      }
+    },
+    "Hommes Pro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Men Pro"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hombres Pro"
           }
         }
       }
@@ -23766,6 +23868,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sitio oficial"
+          }
+        }
+      }
+    },
+    "Sled %lld kg · wall balls %lld kg": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sled %lld kg · wall balls %lld kg"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trineo %lld kg · wall balls %lld kg"
           }
         }
       }

@@ -19,7 +19,9 @@ struct HyroxDetailsStepView: View {
                 EyebrowLabel(text: "Division", color: RUColor.text3)
                     .padding(.top, 18).padding(.bottom, 10)
                 VStack(spacing: 8) {
-                    ForEach(HyroxDivision.allCases) { d in
+                    // `proposees` et non `allCases` : les deux divisions héritées d'avant les
+                    // quatre officielles se relisent mais ne se proposent plus.
+                    ForEach(HyroxDivision.proposees) { d in
                         SelectableCard(selected: vm.hyroxDivision == d, title: d.title, subtitle: d.subtitle) {
                             vm.hyroxDivision = d
                         }
@@ -36,7 +38,7 @@ struct HyroxDetailsStepView: View {
                 //
                 // On le DIT au lieu de l'élargir : écrire un plan de Doubles demande une source
                 // par format, pas une case de plus dans une énumération.
-                Text("Plan écrit pour le format individuel. Doubles et Relay se préparent autrement.")
+                Text("Charges du règlement \(ChargesHyrox.saison). Plan écrit pour le format individuel : Doubles et Relay se préparent autrement.")
                     .font(RUFont.sans(.small))
                     .foregroundColor(RUColor.text3)
                     .fixedSize(horizontal: false, vertical: true)

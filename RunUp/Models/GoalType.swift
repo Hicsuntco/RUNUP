@@ -256,27 +256,101 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-/// HYROX division — Open uses lighter prescribed loads than Pro. Deliberately no kg figures
-/// anywhere in the app for either division (see `AdaptivePlanEngine.hyroxArchetypes`) — this app
-/// has no verified current-season rulebook weights to assert as fact, and a wrong "real" number
-/// would be exactly the kind of fake precision this codebase has been fixing everywhere else.
+/// La division HYROX dans laquelle on court.
+///
+/// # QUATRE, PAS DEUX, ET C'EST LE RÈGLEMENT QUI LE DIT
+///
+/// L'app en proposait deux, Open et Pro. Le règlement officiel est explicite : « HYROX offers four
+/// divisions. The divisions differ in gender and/or weight. » Les quatre sont WOMEN, WOMEN PRO, MEN
+/// et MEN PRO — et c'est le genre, autant que le niveau, qui décide des charges. Men Open et Women
+/// Pro portent d'ailleurs exactement les mêmes.
+///
+/// Deux cartes au lieu de quatre n'était donc pas une simplification : c'était l'impossibilité de
+/// savoir quelles charges une coureuse allait affronter. Le plan ne pouvait prescrire ni un sled de
+/// 102 kg ni un sled de 202 kg, donc il ne prescrivait rien — il disait « charge standard ».
+///
+/// # CE QUE CETTE QUESTION N'EST PAS
+///
+/// Elle ne demande pas un genre comme donnée de santé. Elle demande dans quelle CATÉGORIE on s'est
+/// inscrit, ce que l'écran demandait déjà — et une seule réponse remplace deux questions. Rien
+/// d'autre dans l'app ne lit cette valeur, et elle ne sert qu'à nommer les charges du règlement.
+///
+/// Source : HYROX Single Rulebook, saison 26/27, section 4.1. Voir `ChargesHyrox`, qui porte le
+/// tableau et sa date.
 enum HyroxDivision: String, Codable, CaseIterable, Identifiable {
-    case open, pro
+    case femmes = "women"
+    case femmesPro = "women_pro"
+    case hommes = "men"
+    case hommesPro = "men_pro"
+
+    // LES DEUX DIVISIONS D'AVANT, GARDÉES POUR POUVOIR RELIRE UN PROFIL DÉJÀ ENREGISTRÉ.
+    //
+    // Elles ne sont pas proposées (voir `proposees`) et elles n'ont pas de charges : « Open » ne
+    // dit pas si la coureuse affronte 102 ou 152 kg, et l'inventer serait pire que se taire. Un
+    // profil qui les porte garde donc le plan qu'il avait, sans kilos annoncés, jusqu'à ce que sa
+    // division soit rechoisie.
+    case open
+    case pro
 
     var id: String { rawValue }
 
+    /// Les divisions proposées à l'inscription : les quatre du règlement, et pas les héritées.
+    static let proposees: [HyroxDivision] = [.femmes, .femmesPro, .hommes, .hommesPro]
+
     var title: String {
         switch self {
+        case .femmes: return String(localized: "Femmes")
+        case .femmesPro: return String(localized: "Femmes Pro")
+        case .hommes: return String(localized: "Hommes")
+        case .hommesPro: return String(localized: "Hommes Pro")
         case .open: return "Open"
         case .pro: return "Pro"
         }
     }
 
-    var subtitle: String {
+    /// Les charges sont-elles celles d'une division Pro ?
+    ///
+    /// Le moteur testait `division == .pro`, ce qui ne pouvait pas survivre au passage à quatre
+    /// divisions : `.femmesPro` et `.hommesPro` sont Pro toutes les deux, et aucune n'est `.pro`.
+    /// La question se pose donc ici une fois, au lieu d'un test d'égalité recopié.
+    var estPro: Bool {
         switch self {
-        case .open: return String(localized: "Charges standard — le format le plus couru")
-        case .pro: return String(localized: "Charges renforcées — pour un niveau confirmé")
+        case .femmesPro, .hommesPro, .pro: return true
+        case .femmes, .hommes, .open: return false
         }
+    }
+
+    /// Les charges du règlement pour cette division, ou `nil` quand on ne les connaît pas.
+    ///
+    /// MEN OPEN ET WOMEN PRO PARTAGENT LA MÊME COLONNE, et ce n'est pas un raccourci de code :
+    /// c'est ainsi que le tableau du règlement est écrit.
+    var charges: ChargesHyrox? {
+        switch self {
+        case .femmes:
+            return ChargesHyrox(sledPushKg: 102, sledPullKg: 78, kettlebellKg: 16,
+                                sandbagKg: 10, wallBallKg: 4)
+        case .hommes, .femmesPro:
+            return ChargesHyrox(sledPushKg: 152, sledPullKg: 103, kettlebellKg: 24,
+                                sandbagKg: 20, wallBallKg: 6)
+        case .hommesPro:
+            return ChargesHyrox(sledPushKg: 202, sledPullKg: 153, kettlebellKg: 32,
+                                sandbagKg: 30, wallBallKg: 9)
+        case .open, .pro:
+            return nil
+        }
+    }
+
+    /// Ce que la carte annonce sous le nom de la division : deux charges concrètes.
+    ///
+    /// Le sled et les wall balls plutôt qu'une phrase : ce sont la charge la plus lourde de
+    /// l'épreuve et celle qu'on soulève cent fois, et deux nombres distinguent les quatre
+    /// divisions mieux que « pour un niveau confirmé ». L'ancien sous-titre d'Open disait « le
+    /// format le plus couru », une affirmation sur la participation que rien ne sourçait.
+    var subtitle: String {
+        guard let c = charges else {
+            return String(localized: "Division d'une version précédente — à rechoisir")
+        }
+        return String(localized: "Sled \(c.sledPushKg) kg · wall balls \(c.wallBallKg) kg")
     }
 }
 

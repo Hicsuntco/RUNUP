@@ -827,6 +827,17 @@ jobs:
           cd ci_scripts && python3 test_jetons_de_texte.py
           cd .. && python3 ci_scripts/check_jetons_de_texte.py
 
+      # DESIGN.md porte la direction artistique pour qu'elle ne dépende plus d'une conversation.
+      # Un tel document dérive sans bruit : quelqu'un règle une valeur, le document continue
+      # d'annoncer l'ancienne, et on le lit en croyant savoir. Il CITE donc le code — palette,
+      # nuanciers, teintes de famille, échelles, durées — et ce garde vérifie la citation. Il
+      # refuse aussi un garde cité qui n'existe pas : le document promettrait une barrière que
+      # personne ne tient, ce qu'il faisait à trois endroits le jour où il a été écrit.
+      - name: Vérifier que DESIGN.md décrit l'app telle qu'elle est
+        run: |
+          cd ci_scripts && python3 test_design.py
+          cd .. && python3 ci_scripts/check_design.py
+
       # « Le contenu au milieu, le bouton en bas » centre joliment tant que le contenu est plus
       # court que l'écran. À deux fois la taille de texte — que l'app autorise — les `Spacer`
       # tombent à zéro et le bouton sort par le bas. En bas de `PlanRecapView`, c'est

@@ -48,6 +48,11 @@ import pathlib
 import re
 import sys
 
+# L'arithmétique du contraste et la lecture de `Colors.swift` vivent dans `couleurs.py`, que
+# `check_design.py` lit aussi. Deux copies pourraient diverger sur ce qu'un garde VOIT, et un
+# garde qui se trompe sur ce qu'il lit est pire qu'aucun garde.
+from couleurs import contraste, melange, sans_commentaires  # noqa: F401
+
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 COULEURS = RACINE / "RunUp/DesignSystem/Colors.swift"
 
@@ -74,62 +79,12 @@ PART_TEINTE = {"clair": 0.035, "sombre": 0.10}
 HORS_FAMILLE = {("textPrimary", "sombre")}
 
 
-def _srgb(c: int) -> float:
-    v = c / 255.0
-    return v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
-
-
-def luminance(couleur: int) -> float:
-    r, v, b = (couleur >> 16) & 255, (couleur >> 8) & 255, couleur & 255
-    return 0.2126 * _srgb(r) + 0.7152 * _srgb(v) + 0.0722 * _srgb(b)
-
-
-def contraste(a: int, b: int) -> float:
-    la, lb = luminance(a), luminance(b)
-    haut, bas = max(la, lb), min(la, lb)
-    return (haut + 0.05) / (bas + 0.05)
-
-
-def melange(couleur: int, sur: int, part: float) -> int:
-    """`part` de `couleur` sur `sur`, par les composantes — la formule de `RUColor.melange`."""
-    sortie = 0
-    for decalage in (16, 8, 0):
-        a, b = (couleur >> decalage) & 255, (sur >> decalage) & 255
-        sortie |= round(a * part + b * (1 - part)) << decalage
-    return sortie
-
-
 def fonds(theme: str) -> dict:
     """Les fonds du thème, borne du fond teinté comprise."""
     sortie = dict(FONDS[theme])
     pire = 0x000000 if theme == "clair" else 0xFFFFFF
     sortie["bg teinté (borne)"] = melange(pire, FONDS[theme]["bg"], PART_TEINTE[theme])
     return sortie
-
-
-def sans_commentaires(source: str) -> str:
-    """Retire les `//` et les `/* */` — les tableaux de mesure en commentaire citent des hex."""
-    sortie, i, n, bloc = [], 0, len(source), 0
-    while i < n:
-        if bloc:
-            if source.startswith("/*", i):
-                bloc += 1
-                i += 2
-            elif source.startswith("*/", i):
-                bloc -= 1
-                i += 2
-            else:
-                i += 1
-        elif source.startswith("/*", i):
-            bloc = 1
-            i += 2
-        elif source.startswith("//", i):
-            while i < n and source[i] != "\n":
-                i += 1
-        else:
-            sortie.append(source[i])
-            i += 1
-    return "".join(sortie)
 
 
 DECLARATION = re.compile(

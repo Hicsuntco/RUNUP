@@ -4720,3 +4720,38 @@ La borne du fond teinté évite de rejouer la recherche dichotomique d'`AccentTh
 écrire sa règle une deuxième fois. Mélanger 3,5 % de n'importe quelle couleur dans le neutre ne peut
 pas l'assombrir plus que 3,5 % de noir pur ; un cas le vérifie sur 4 096 teintes, pour les huit
 nuanciers d'un coup.
+
+### La barrière, franchie — et ce que les images disent vraiment
+
+**Construction** : run 538, job `success`, build 1538 parti sur TestFlight.
+**Tests** : 874, zéro échec. Le compte ne monte pas — les 16 nouveaux cas sont des gardes Python.
+**Avertissements** : le seul `warning:` du journal entier est celui d'Apple,
+`Metadata extraction skipped. No AppIntents.framework dependency found.` Zéro du compilateur Swift.
+
+**Captures** : campagne 179, trois langues, deux thèmes, 36 écrans comparés à la campagne 178.
+
+En clair, 18 écrans sur 18 : `#616161` passe de 0,362 % de l'image à **0,000 %**, `#5B5563` le
+remplace. En sombre, quatre écrans gardaient une trace de `#8F8F93` — et c'est là que le
+pourcentage ne suffisait plus.
+
+| Écran Coach, thème sombre | Pixels `#8F8F93` | Plus grosse composante connexe |
+| --- | --- | --- |
+| Avant | 840 | **282 px** — un corps de glyphe |
+| Après | 172 | **1 px**, et 100 % des composantes font un pixel |
+
+Ce qui reste est de l'anticrénelage : des pixels isolés où un bord de glyphe passe par cette
+valeur exacte. Aucun glyphe ne subsiste. Les 36 écrans sont donc conformes, et c'est le critère de
+comparaison qui était faux, pas le changement qui était incomplet — `comparer.py` mesure maintenant
+la plus grosse composante connexe et non un pourcentage.
+
+### Et la chose honnête à écrire : ça ne se voit pas
+
+J'ai regardé les planches avant/après à l'échelle 1:1, en clair et en sombre. **L'écart n'est pas
+perceptible à l'œil.** « mar. 10 nov. », « km », « prochain palier : 30 jours », « Face à la
+semaine passée » : identiques. C'était prévisible — six points sur une seule voie — mais il faut
+l'écrire, parce que ce chantier répondait à « l'esthétique on a rien changé » et qu'il n'y répond
+pas.
+
+Ce qu'il fait : il retire une valeur que le système de design ne décidait pas, il fait monter le
+contraste sur les cinq fonds dans les deux thèmes, et il pose la règle de famille avec sa
+barrière. C'est du système, pas de la surface. Les chantiers visibles sont les suivants.

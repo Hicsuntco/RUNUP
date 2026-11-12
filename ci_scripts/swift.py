@@ -43,3 +43,41 @@ def sans_commentaires(source: str) -> str:
             out.append(c)
             i += 1
     return "".join(out)
+
+
+def sans_commentaires_seuls(source: str) -> str:
+    """Le code ET les chaînes, sans les commentaires.
+
+    `sans_commentaires` efface le contenu des chaînes, et c'est ce qu'il faut à un contrôle qui
+    cherche un `LinearGradient` : un nom de type cité dans un message d'erreur n'est pas un
+    emploi. Mais certaines déclarations PORTENT leur identité dans une chaîne —
+    `AccentTheme(id: "rose", …)` — et les effacer revient à ne plus savoir de quel nuancier on
+    parle. `couleurs.accents()` a besoin de celle-ci.
+
+    Les commentaires partent dans les deux cas, pour la même raison : ce dépôt nomme dans ses
+    commentaires ce que ses contrôles refusent.
+    """
+    out, i, n = [], 0, len(source)
+    while i < n:
+        c = source[i]
+        if c == "/" and i + 1 < n and source[i + 1] == "/":
+            while i < n and source[i] != "\n":
+                i += 1
+        elif c == "/" and i + 1 < n and source[i + 1] == "*":
+            i += 2
+            while i + 1 < n and not (source[i] == "*" and source[i + 1] == "/"):
+                i += 1
+            i += 2
+        elif c == '"':
+            out.append(c)
+            i += 1
+            while i < n and source[i] != '"':
+                if source[i] == "\\" and i + 1 < n:
+                    out.append(source[i]); i += 1
+                out.append(source[i]); i += 1
+            out.append('"')
+            i += 1
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)

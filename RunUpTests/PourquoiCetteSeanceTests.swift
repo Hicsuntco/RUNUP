@@ -59,10 +59,20 @@ final class PourquoiCetteSeanceTests: XCTestCase {
 
     // MARK: Ce qui doit parler, et avec un nombre de CE plan
 
-    func testLaDechargeDitLaRegleDuMoteurEtLeNumeroDeSemaine() throws {
+    /// UN TEST N'AFFIRME RIEN SUR UNE TRADUCTION, ET CELUI-CI L'A APPRIS EN ÉCHOUANT.
+    ///
+    /// Sa première version vérifiait que la phrase contient « quatre », pour garder la règle
+    /// « une semaine sur quatre ». La machine d'intégration lance les tests en ANGLAIS : elle a
+    /// reçu « one week in four », et le cas est tombé. Il n'éprouvait pas le moteur, il éprouvait
+    /// la langue du simulateur.
+    ///
+    /// Ce qui se vérifie sans dépendre d'une langue, c'est le NOMBRE — il est le même dans les
+    /// trois. Que la phrase dise quelque chose de spécifique au bloc est tenu par
+    /// `testLesQuatreBlocsDisentQuatreChosesDifferentes`, et qu'elle dépende du plan par
+    /// `testLaPhraseChangeAvecLaSemaine`. La formulation, elle, se relit ; elle ne s'assert pas.
+    func testLaDechargeDitLeNumeroDeSemaine() throws {
         let p = try XCTUnwrap(PourquoiCetteSeance.phrase(contexte(bloc: .deload, semaine: 8)))
         XCTAssertTrue(p.contains("8"), p)
-        XCTAssertTrue(p.contains("quatre"), "la règle « une semaine sur quatre » a disparu : \(p)")
     }
 
     func testLAffutageDitLesJoursQuiRestent() throws {

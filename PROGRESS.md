@@ -410,6 +410,31 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 47 — un test qui affirmait sur une traduction
+
+Le cas `testLaDechargeDitLaRegleDuMoteur` du chantier 45 vérifiait que la phrase contient
+« quatre », pour garder la règle « une semaine sur quatre ». **La machine d'intégration lance les
+tests en anglais.** Elle a reçu « one week in four », et le cas est tombé — à juste titre : il
+n'éprouvait pas le moteur, il éprouvait la langue du simulateur.
+
+Ce qui se vérifie sans dépendre d'une langue, c'est le **nombre** : il est le même dans les trois.
+Que la phrase dise quelque chose de spécifique au bloc est tenu par
+`testLesQuatreBlocsDisentQuatreChosesDifferentes` ; qu'elle dépende du plan, par
+`testLaPhraseChangeAvecLaSemaine`. La formulation se relit, elle ne s'assert pas.
+
+C'est le premier test du dépôt à avoir affirmé sur une traduction, et le défaut est doublement
+instructif : l'app a passé des mois à parler français à tout le monde, et j'ai écrit un test qui
+supposait que tout le monde lit le français.
+
+### Et deux échecs qui n'étaient pas des défauts
+
+**Les captures ont échoué sur `Failed to CreateArtifact`** — le service d'artefacts de GitHub a
+répondu du HTML au lieu du JSON, cinq tentatives. Les captures avaient été prises et tous les
+contrôles étaient passés ; seul l'envoi a cédé. Rien à corriger.
+
+**Et la montre, elle, est verte du premier coup** : « Executed 3 tests, with 0 failures ». La
+cible watchOS fonctionne, l'app se lance, et les assertions anglaise et espagnole passent.
+
 ## Chantier 46 — la montre est enfin pilotée, pas seulement photographiée (C2)
 
 ### Ce qui manquait

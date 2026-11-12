@@ -975,19 +975,28 @@ enum AdaptivePlanEngine {
         // `?? .open` veut dire « division inconnue » : voir `HyroxDivision`, où les deux valeurs
         // héritées existent précisément pour ce cas et ne portent aucune charge.
         let division = profile.hyroxDivision.flatMap { HyroxDivision(rawValue: $0) } ?? .open
-        let loadNote = division.estPro ? "charge renforcée" : "charge standard"
+        // `loadNote` A ÉTÉ RETIRÉ : IL N'A JAMAIS ATTEINT UN ÉCRAN.
+        //
+        // Les deux sous-titres ci-dessous interpolaient « charge standard » ou « charge
+        // renforcée ». Mais `WorkoutSession.displaySubtitle` lit `kind.subtitleKey`, une clé
+        // STATIQUE du catalogue, et jette le sous-titre composé ici dès que la séance porte un
+        // `kind` — ce qui est le cas de toutes. C'est le défaut exact que l'en-tête de
+        // `adaptationNote` raconte pour les notes d'adaptation, reconduit pour la charge.
+        //
+        // Les charges s'affichent donc là où elles peuvent : la fiche détail, qui a le profil
+        // donc la division, et qui les nomme station par station (voir `ChargesHyrox.stations`).
 
         let base: [SessionArchetype]
         switch block {
         case .base:
             base = [
                 SessionArchetype(role: .easy, title: "Footing base HYROX", subtitle: "endurance de fond — construit le volume de course du format", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .hyroxBaseFooting),
-                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Technique", subtitle: "SkiErg, rameur, farmers carry, wall balls — travaille le geste, \(loadNote) légère", pace: "—", zone: "Technique", baseDuration: 35, kind: division.estPro ? .hyroxTechniquePro : .hyroxTechnique),
+                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Technique", subtitle: "SkiErg, rameur, farmers carry, wall balls — travaille le geste", pace: "—", zone: "Technique", baseDuration: 35, kind: division.estPro ? .hyroxTechniquePro : .hyroxTechnique),
                 SessionArchetype(role: .longRun, title: "Course compromise 3 × 1 km", subtitle: "course + bloc fonctionnel entre chaque km — apprivoise la fatigue du format", pace: zones.easy, zone: "Z2-3", baseDuration: 40, kind: .hyroxCompromisedRun3, intervals: IntervalStructure(reps: 3, repMeters: 1000, recoveryMeters: nil))
             ]
         case .specifique:
             base = [
-                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Circuit intense", subtitle: "stations enchaînées à intensité course, sous fatigue, \(loadNote)", pace: "—", zone: "Z3-4", baseDuration: 40, kind: division.estPro ? .hyroxIntenseCircuitPro : .hyroxIntenseCircuit),
+                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Circuit intense", subtitle: "stations enchaînées à intensité course, sous fatigue", pace: "—", zone: "Z3-4", baseDuration: 40, kind: division.estPro ? .hyroxIntenseCircuitPro : .hyroxIntenseCircuit),
                 // LE SEUL BLOC DU MOTEUR QUI N'AVAIT AUCUNE SÉANCE FACILE, ET CE QUE ÇA COÛTAIT.
                 //
                 // Le plafond de deux séances de qualité par semaine s'applique en REMPLAÇANT la

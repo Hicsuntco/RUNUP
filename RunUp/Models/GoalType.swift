@@ -336,16 +336,16 @@ enum HyroxDivision: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .femmes:
             return ChargesHyrox(sledPushKg: 102, sledPullKg: 78, kettlebellKg: 16,
-                                sandbagKg: 10, wallBallKg: 4, wallBallCibleM: 2.70)
+                                sandbagKg: 10, wallBallKg: 4, wallBallCibleCm: 270)
         case .femmesPro:
             return ChargesHyrox(sledPushKg: 152, sledPullKg: 103, kettlebellKg: 24,
-                                sandbagKg: 20, wallBallKg: 6, wallBallCibleM: 2.70)
+                                sandbagKg: 20, wallBallKg: 6, wallBallCibleCm: 270)
         case .hommes:
             return ChargesHyrox(sledPushKg: 152, sledPullKg: 103, kettlebellKg: 24,
-                                sandbagKg: 20, wallBallKg: 6, wallBallCibleM: 3.00)
+                                sandbagKg: 20, wallBallKg: 6, wallBallCibleCm: 300)
         case .hommesPro:
             return ChargesHyrox(sledPushKg: 202, sledPullKg: 153, kettlebellKg: 32,
-                                sandbagKg: 30, wallBallKg: 9, wallBallCibleM: 3.00)
+                                sandbagKg: 30, wallBallKg: 9, wallBallCibleCm: 300)
         case .open, .pro:
             return nil
         }

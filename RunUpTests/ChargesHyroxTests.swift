@@ -25,7 +25,7 @@ final class ChargesHyroxTests: XCTestCase {
         XCTAssertEqual(c.kettlebellKg, 16)
         XCTAssertEqual(c.sandbagKg, 10)
         XCTAssertEqual(c.wallBallKg, 4)
-        XCTAssertEqual(c.wallBallCibleM, 2.70)
+        XCTAssertEqual(c.wallBallCibleCm, 270)
     }
 
     func testLesChargesHommesProSontCellesDuReglement() throws {
@@ -35,7 +35,7 @@ final class ChargesHyroxTests: XCTestCase {
         XCTAssertEqual(c.kettlebellKg, 32)
         XCTAssertEqual(c.sandbagKg, 30)
         XCTAssertEqual(c.wallBallKg, 9)
-        XCTAssertEqual(c.wallBallCibleM, 3.00)
+        XCTAssertEqual(c.wallBallCibleCm, 300)
     }
 
     /// HOMMES ET FEMMES PRO PARTAGENT LA COLONNE DES POIDS, ET PAS LA HAUTEUR DE CIBLE.
@@ -52,7 +52,7 @@ final class ChargesHyroxTests: XCTestCase {
         XCTAssertEqual(hommes.kettlebellKg, femmesPro.kettlebellKg)
         XCTAssertEqual(hommes.sandbagKg, femmesPro.sandbagKg)
         XCTAssertEqual(hommes.wallBallKg, femmesPro.wallBallKg)
-        XCTAssertNotEqual(hommes.wallBallCibleM, femmesPro.wallBallCibleM,
+        XCTAssertNotEqual(hommes.wallBallCibleCm, femmesPro.wallBallCibleCm,
                           "la hauteur de cible ne suit pas la colonne des poids")
 
         XCTAssertEqual(hommes.sledPushKg, 152)
@@ -64,10 +64,10 @@ final class ChargesHyroxTests: XCTestCase {
 
     /// Les deux hauteurs de cible, telles que le règlement les donne.
     func testLesHauteursDeCibleSontCellesDuReglement() throws {
-        XCTAssertEqual(try XCTUnwrap(HyroxDivision.femmes.charges).wallBallCibleM, 2.70)
-        XCTAssertEqual(try XCTUnwrap(HyroxDivision.femmesPro.charges).wallBallCibleM, 2.70)
-        XCTAssertEqual(try XCTUnwrap(HyroxDivision.hommes.charges).wallBallCibleM, 3.00)
-        XCTAssertEqual(try XCTUnwrap(HyroxDivision.hommesPro.charges).wallBallCibleM, 3.00)
+        XCTAssertEqual(try XCTUnwrap(HyroxDivision.femmes.charges).wallBallCibleCm, 270)
+        XCTAssertEqual(try XCTUnwrap(HyroxDivision.femmesPro.charges).wallBallCibleCm, 270)
+        XCTAssertEqual(try XCTUnwrap(HyroxDivision.hommes.charges).wallBallCibleCm, 300)
+        XCTAssertEqual(try XCTUnwrap(HyroxDivision.hommesPro.charges).wallBallCibleCm, 300)
     }
 
     /// Les charges montent dans l'ordre des divisions, sur chacune des cinq stations chargées.
@@ -148,12 +148,86 @@ final class ChargesHyroxTests: XCTestCase {
         )
         // Le sled fait quatre allers de 12,5 m, et non deux de 25 : c'est le règlement qui le dit,
         // contre un résumé de moteur de recherche qui disait l'inverse.
-        XCTAssertEqual(ChargesHyrox.Format.sledPushAllers, 4)
-        XCTAssertEqual(ChargesHyrox.Format.sledPushM, 12.5)
+        XCTAssertEqual(ChargesHyrox.Format.sledAllers, 4)
+        XCTAssertEqual(ChargesHyrox.Format.sledTotalM, 50)
         XCTAssertEqual(ChargesHyrox.Format.wallBallsReps, 100)
         XCTAssertEqual(ChargesHyrox.Format.burpeeBroadJumpM, 80)
         XCTAssertEqual(ChargesHyrox.Format.farmersCarryM, 200)
         XCTAssertEqual(ChargesHyrox.Format.fentesM, 100)
+    }
+
+    // MARK: Les huit stations
+
+    /// LES HUIT STATIONS SONT NOMMÉES, ET DANS L'ORDRE DE LA COURSE.
+    ///
+    /// Six sur huit l'étaient quelque part dans l'app ; `burpee`, `sandbag` et `lunge`
+    /// apparaissaient ZÉRO fois dans tout le dépôt. Les deux absentes sont les deux schémas de
+    /// mouvement qu'une coureuse n'a aucune autre raison de travailler.
+    ///
+    /// # LES ASSERTIONS PORTENT SUR LE RANG ET SUR LES NOMBRES, JAMAIS SUR UN NOM
+    ///
+    /// Les noms de station sont traduits, et l'intégration continue lance les tests EN ANGLAIS :
+    /// « Fentes sandbag » y devient « Sandbag lunges ». Une première version de ces cas cherchait
+    /// les noms français et serait tombée — c'est exactement le défaut qu'un cas de
+    /// `PourquoiCetteSeance` a déjà commis dans ce dépôt. Ce qui ne se traduit pas, c'est le RANG
+    /// dans l'ordre de l'épreuve, et les kilos.
+    private enum Rang {
+        static let skiErg = 0, sledPush = 1, sledPull = 2, burpee = 3
+        static let rameur = 4, farmersCarry = 5, fentes = 6, wallBalls = 7
+    }
+
+    func testLesHuitStationsSontNommeesDansLordreDeLaCourse() throws {
+        let c = try XCTUnwrap(HyroxDivision.femmes.charges)
+        XCTAssertEqual(c.stations.count, 8)
+        let noms = c.stations.map(\.nom)
+        XCTAssertTrue(noms.allSatisfy { !$0.isEmpty }, "une station sans nom")
+        XCTAssertEqual(Set(noms).count, 8, "aucune station nommée deux fois")
+    }
+
+    /// Chaque prescription porte un nombre : une station nommée sans sa dose ne prépare rien.
+    func testChaqueStationPorteUneDose() throws {
+        for division in HyroxDivision.proposees {
+            let c = try XCTUnwrap(division.charges)
+            for (rang, station) in c.stations.enumerated() {
+                XCTAssertTrue(station.prescription.contains(where: \.isNumber),
+                              "\(division.rawValue) · station \(rang) : aucune dose")
+            }
+        }
+    }
+
+    /// Les charges annoncées station par station sont celles de SA division.
+    ///
+    /// Une transposition — afficher les 202 kg des Hommes Pro à quelqu'une qui en pousse 102 — ne
+    /// se verrait sur aucun nombre pris isolément.
+    func testLesPrescriptionsPortentLesChargesDeLaDivision() throws {
+        let femmes = try XCTUnwrap(HyroxDivision.femmes.charges)
+        XCTAssertTrue(femmes.stations[Rang.sledPush].prescription.contains("102"),
+                      femmes.stations[Rang.sledPush].prescription)
+        XCTAssertFalse(femmes.stations[Rang.sledPush].prescription.contains("202"),
+                       "la charge d'une autre division")
+        XCTAssertTrue(femmes.stations[Rang.sledPull].prescription.contains("78"))
+        XCTAssertTrue(femmes.stations[Rang.farmersCarry].prescription.contains("16"))
+        XCTAssertTrue(femmes.stations[Rang.fentes].prescription.contains("10"))
+
+        let hommesPro = try XCTUnwrap(HyroxDivision.hommesPro.charges)
+        XCTAssertTrue(hommesPro.stations[Rang.sledPush].prescription.contains("202"),
+                      hommesPro.stations[Rang.sledPush].prescription)
+
+        // Les deux stations qui n'existaient nulle part portent bien leur dose du règlement.
+        XCTAssertTrue(femmes.stations[Rang.burpee].prescription.contains("80"),
+                      "le burpee broad jump fait 80 m")
+
+        // Et la cible des wall balls suit son propre découpage, pas celui des poids.
+        let femmesPro = try XCTUnwrap(HyroxDivision.femmesPro.charges)
+        XCTAssertTrue(femmesPro.stations[Rang.wallBalls].prescription.contains("270"),
+                      femmesPro.stations[Rang.wallBalls].prescription)
+        let hommes = try XCTUnwrap(HyroxDivision.hommes.charges)
+        XCTAssertTrue(hommes.stations[Rang.wallBalls].prescription.contains("300"),
+                      "mêmes kilos que Femmes Pro, cible trente centimètres plus haut")
+
+        // Les deux ergomètres font mille mètres dans toutes les divisions.
+        XCTAssertTrue(femmes.stations[Rang.skiErg].prescription.contains("1000"))
+        XCTAssertTrue(femmes.stations[Rang.rameur].prescription.contains("1000"))
     }
 
     /// La saison est affichée avec les charges : un nombre daté n'est pas de la fausse précision,

@@ -27,7 +27,7 @@ struct SessionDetailSheet: View {
         // so this branches before the running-only logic below ever gets a chance to mislabel it
         // as a generic "Course continue".
         if appState.profile.goalId == .hyrox {
-            return hyroxSteps(title: title, warmup: warmup, cooldown: cooldown)
+            return hyroxSteps(kind: session.kind, warmup: warmup, cooldown: cooldown)
         }
 
         // Les séances d'ultra, de même, ne sont pas des séances de route : une côte où l'on MARCHE
@@ -61,35 +61,90 @@ struct SessionDetailSheet: View {
         return [(String(localized: "Course continue"), "\(session.durationMinutes)′ · \(session.pace) /km · \(session.zone)", RUColor.rose)]
     }
 
-    /// HYROX-specific breakdown — "Course compromise" alternates running with functional work
-    /// (real structure, no fixed kg since this app has no verified current-season loads to state
-    /// as fact — see `HyroxDivision`), "Fonctionnel"/"technique" sessions are one circuit block,
-    /// and a full "Simulation" mirrors the actual 8×1km + 8-station race shape.
-    private func hyroxSteps(title: String, warmup: (String, String, Color), cooldown: (String, String, Color)) -> [(String, String, Color)] {
-        if title.contains("compromise") {
+    /// Le découpage des séances HYROX, par `kind`.
+    ///
+    /// # DEUX CHOSES QUE CETTE FONCTION FAISAIT MAL
+    ///
+    /// Elle aiguillait sur des SOUS-CHAÎNES DE TITRE — « compromise », « simulation », « tempo » —
+    /// alors que son voisin `ultraSteps` lit le `kind`, et que le commentaire de l'appelant disait
+    /// déjà pourquoi : « Classer par sous-chaîne française quand un champ dédié existe, c'est
+    /// reconduire une faiblesse qu'on n'est plus obligé de porter. »
+    ///
+    /// Et cette faiblesse avait une conséquence vivante : un FOOTING HYROX ne contient aucun des
+    /// trois mots cherchés. Il tombait donc dans le repli et s'affichait « Circuit fonctionnel ·
+    /// stations enchaînées, technique avant charge » — la description d'un circuit de musculation
+    /// sur une sortie en endurance. Rien ne plantait, et l'écran disait le contraire de la séance.
+    ///
+    /// # LES CHARGES SONT CELLES DE SA DIVISION
+    ///
+    /// Elles s'affichent ICI et pas dans le sous-titre de la séance, pour une raison mécanique :
+    /// `displaySubtitle` lit `kind.subtitleKey`, une clé STATIQUE du catalogue, et jette le
+    /// sous-titre composé par l'archétype. Les archétypes HYROX interpolaient pourtant
+    /// « charge standard » / « charge renforcée » dans le leur depuis le début — du texte qui
+    /// n'a jamais atteint un écran. Cet écran-ci a le profil, donc la division, donc les kilos.
+    ///
+    /// Division inconnue — un profil d'avant les quatre divisions officielles — et les stations
+    /// sont nommées sans charge. On ne devine pas si elle pousse 102 ou 202 kg.
+    private func hyroxSteps(kind: SessionKind?, warmup: (String, String, Color),
+                            cooldown: (String, String, Color)) -> [(String, String, Color)] {
+        let charges = appState.profile.hyroxDivision
+            .flatMap { HyroxDivision(rawValue: $0) }?.charges
+
+        /// Les huit stations dans l'ordre de la course, avec leur charge quand on la connaît.
+        func stations() -> [(String, String, Color)] {
+            guard let charges else {
+                return [(String(localized: "Les huit stations"),
+                         String(localized: "choisis ta division pour voir tes charges"),
+                         RUColor.text3)]
+            }
+            return charges.stations.map { ($0.nom, $0.prescription, RUColor.rose2) }
+        }
+
+        switch kind {
+        case .hyroxCompromisedRun3, .hyroxCompromisedRun6, .hyroxCompromisedRunLight2:
             return [
                 warmup,
-                (String(localized: "\(intervalDescription) + fonctionnel"), String(localized: "\(session.pace) /km entre les blocs · \(session.zone) · enchaîne course et mouvement, sans repos complet"), RUColor.rose),
+                (String(localized: "\(intervalDescription) + fonctionnel"),
+                 String(localized: "\(session.pace) /km entre les blocs · \(session.zone) · enchaîne course et mouvement, sans repos complet"),
+                 RUColor.rose),
                 cooldown
             ]
-        }
-        if title.contains("simulation") {
+
+        case .hyroxLightSimulation:
+            return [warmup,
+                    (String(localized: "\(ChargesHyrox.Format.segmentsDeCourse) × \(ChargesHyrox.Format.courseParSegmentM) m + \(ChargesHyrox.Format.segmentsDeCourse) stations"),
+                     String(localized: "format complet HYROX · \(session.zone) · gère l'effort sur l'ensemble, pas juste la course"),
+                     RUColor.rose)]
+                + stations() + [cooldown]
+
+        case .hyroxTempoSled:
+            let sled = charges.map {
+                String(localized: "sled push \($0.sledPushKg) kg, sled pull \($0.sledPullKg) kg")
+            } ?? String(localized: "sled push et sled pull")
             return [
                 warmup,
-                (String(localized: "8 × 1 km + 8 stations"), String(localized: "format complet HYROX · \(session.zone) · gère l'effort sur l'ensemble, pas juste la course"), RUColor.rose),
+                (String(localized: "Tempo + sled"),
+                 String(localized: "\(max(10, session.durationMinutes - 20))′ · \(session.pace) /km · \(session.zone) · allure seuil entrecoupée de \(sled)"),
+                 RUColor.rose),
                 cooldown
             ]
+
+        // LES FOOTINGS SONT DES COURSES, et c'est ce que l'écran doit dire. Ils tombaient dans le
+        // repli « circuit fonctionnel » faute d'être reconnus.
+        case .hyroxBaseFooting, .hyroxMaintenanceFooting, .hyroxRecoveryFooting:
+            return [(String(localized: "Course continue"),
+                     String(localized: "\(session.durationMinutes)′ · \(session.pace) /km · \(session.zone)"),
+                     RUColor.rose)]
+
+        // Les circuits et les rappels techniques : la séance EST les huit stations. Un échauffement
+        // et un retour au calme de coureuse n'ont pas de sens dessus — la préparation du mouvement
+        // fait partie du circuit.
+        default:
+            return [(String(localized: "Circuit fonctionnel"),
+                     String(localized: "\(session.durationMinutes)′ · \(session.zone) · stations enchaînées, technique avant charge"),
+                     RUColor.rose)]
+                + stations()
         }
-        if title.contains("tempo") {
-            return [
-                warmup,
-                (String(localized: "Tempo + sled"), String(localized: "\(max(10, session.durationMinutes - 20))′ · \(session.pace) /km · \(session.zone) · allure seuil entrecoupée de sled push/pull"), RUColor.rose),
-                cooldown
-            ]
-        }
-        // "Fonctionnel HYROX" / "Rappel technique stations" — a standalone circuit, no running
-        // warmup/cooldown shape fits (the circuit itself includes the movement prep).
-        return [(String(localized: "Circuit fonctionnel"), String(localized: "\(session.durationMinutes)′ · \(session.zone) · stations enchaînées, technique avant charge"), RUColor.rose)]
     }
 
     /// Le découpage des séances d'ultra, par `kind`.

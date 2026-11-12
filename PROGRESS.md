@@ -4410,3 +4410,57 @@ endroits qu'on ne modifie pas d'un même geste, ce qui force à rouvrir la sourc
 règlement change. Plus les cas qui tiennent la colonne partagée, la montée monotone des cinq charges
 (une transposition de deux colonnes ne se verrait sur aucun nombre isolé), l'absence de charges sur
 les divisions héritées, et leur décodage.
+
+---
+
+## 12 novembre 2026 — HYROX, étape 2a : les huit stations, et leurs charges à l'écran
+
+Décision de Charlotte : nommer la vraie station et sa vraie charge, plutôt que de demander le
+matériel ou de proposer des équivalences. Le coût est dit plutôt que caché — sans sled, une séance
+par semaine devient inapplicable telle quelle, et l'app ne proposera pas de remplaçante, parce
+qu'« un sac à dos vaut un sandbag de 20 kg » est une affirmation d'entraînement que rien ne source.
+
+### Le sous-titre d'une séance ne pouvait pas porter la charge
+
+`WorkoutSession.displaySubtitle` lit `kind.subtitleKey`, une clé **statique** du catalogue, et jette
+le sous-titre composé par l'archétype. Les archétypes HYROX interpolaient pourtant « charge
+standard » / « charge renforcée » dans le leur **depuis le début** — du texte qui n'a jamais atteint
+un écran. C'est le défaut exact que l'en-tête d'`adaptationNote` raconte pour les notes
+d'adaptation, reconduit pour la charge. Le code mort est retiré.
+
+Les charges s'affichent donc dans la **fiche détail**, seul écran qui a le profil, donc la division,
+donc les kilos : les huit stations dans l'ordre de l'épreuve, avec leur distance, leur charge et —
+pour les deux qui n'existaient nulle part — leur standard de mouvement.
+
+### Deux défauts trouvés dans la foulée
+
+**`hyroxSteps` aiguillait sur des sous-chaînes de titre** — « compromise », « simulation »,
+« tempo » — alors que son voisin `ultraSteps` lit le `kind`, et que le commentaire de l'appelant
+disait déjà pourquoi : « Classer par sous-chaîne française quand un champ dédié existe, c'est
+reconduire une faiblesse qu'on n'est plus obligé de porter. »
+
+Cette faiblesse avait une conséquence vivante : **un footing HYROX ne contient aucun des trois mots
+cherchés.** Il tombait dans le repli et s'affichait « Circuit fonctionnel · stations enchaînées,
+technique avant charge » — la description d'un circuit de musculation sur une sortie en endurance.
+Rien ne plantait, et l'écran disait le contraire de la séance. L'aiguillage se fait maintenant sur
+le `kind`, et les footings sont décrits comme des courses.
+
+### La hauteur de cible passe en centimètres
+
+Le règlement écrit « 2.70M ». Un nombre à virgule doit se formater avec la locale sous peine
+d'afficher un point à quelqu'un qui attend une virgule — `ci_scripts/check_decimales.py` le tient.
+270 cm dit le même fait sans machinerie, et se lit mieux pour une hauteur de cible. Le sled est
+donné en « 50 m en 4 allers » pour la même raison, ce qui est aussi la formulation du règlement :
+« 50 METERS [4 X 12.5M] ».
+
+### Ce qui le garde, et un défaut que j'ai failli réexpédier
+
+Trois cas de plus dans `ChargesHyroxTests` : les huit stations existent, aucune n'est nommée deux
+fois, chacune porte une dose, et les prescriptions portent les charges de SA division — y compris
+la cible des wall balls, qui distingue Hommes de Femmes Pro à kilos égaux.
+
+La première version de ces cas cherchait les **noms français** des stations. L'intégration continue
+lance les tests en anglais, où « Fentes sandbag » devient « Sandbag lunges » : ils seraient tombés.
+C'est le défaut qu'un cas de `PourquoiCetteSeance` a déjà commis dans ce dépôt, et je l'ai écrit une
+seconde fois. Les assertions portent maintenant sur le **rang** dans l'ordre de l'épreuve et sur les
+nombres — ce qui ne se traduit pas.

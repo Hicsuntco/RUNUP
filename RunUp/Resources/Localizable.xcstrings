@@ -1424,6 +1424,23 @@
         }
       }
     },
+    "%lld m en %lld allers · %lld kg": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m in %lld lengths · %lld kg"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m en %lld tramos · %lld kg"
+          }
+        }
+      }
+    },
     "%lld m le jour J, contre %lld m aujourd'hui. Le plan montera progressivement, et la natation sera la discipline qui prend le plus de place dans ta semaine.": {
       "extractionState": "manual",
       "localizations": {
@@ -1437,6 +1454,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld m el día de la carrera, frente a %2$lld m hoy. El plan subirá progresivamente, y la natación será la disciplina que más espacio ocupe en tu semana."
+          }
+        }
+      }
+    },
+    "%lld m · %lld kg dans chaque main": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m · %lld kg in each hand"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m · %lld kg en cada mano"
+          }
+        }
+      }
+    },
+    "%lld m · %lld kg · genou arrière au sol": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m · %lld kg · trailing knee to the ground"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m · %lld kg · rodilla trasera al suelo"
+          }
+        }
+      }
+    },
+    "%lld m · poitrine au sol, les deux pieds ensemble": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m · chest to the ground, both feet together"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m · pecho al suelo, los dos pies juntos"
           }
         }
       }
@@ -1839,6 +1907,23 @@
         }
       }
     },
+    "%lld reps · %lld kg · cible à %lld cm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld reps · %lld kg · target at %lld cm"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld reps · %lld kg · objetivo a %lld cm"
+          }
+        }
+      }
+    },
     "%lld semaines en 3 phases, calées sur ta date de course. Le plan s'ajuste chaque semaine selon ta forme — pas séance par séance.": {
       "extractionState": "manual",
       "localizations": {
@@ -2136,6 +2221,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld salidas de %lld previstas"
+          }
+        }
+      }
+    },
+    "%lld × %lld m + %lld stations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld × %lld m + %lld stations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld × %lld m + %lld estaciones"
           }
         }
       }
@@ -5587,6 +5689,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "¡Bravo, %@!"
+          }
+        }
+      }
+    },
+    "Burpee broad jumps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Burpee broad jumps"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Burpees con salto"
           }
         }
       }
@@ -11316,6 +11435,23 @@
         }
       }
     },
+    "Farmers carry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farmers carry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farmers carry"
+          }
+        }
+      }
+    },
     "Fatigue accumulée aujourd'hui (%lld/100).": {
       "localizations": {
         "en": {
@@ -11394,6 +11530,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mujeres Pro"
+          }
+        }
+      }
+    },
+    "Fentes sandbag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbag lunges"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zancadas con saco"
           }
         }
       }
@@ -15514,6 +15667,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se han podido cargar los planes."
+          }
+        }
+      }
+    },
+    "Les huit stations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The eight stations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las ocho estaciones"
           }
         }
       }
@@ -21482,6 +21652,23 @@
         }
       }
     },
+    "Rameur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rowing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remo"
+          }
+        }
+      }
+    },
     "Rang club": {
       "localizations": {
         "en": {
@@ -23872,6 +24059,23 @@
         }
       }
     },
+    "SkiErg": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkiErg"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkiErg"
+          }
+        }
+      }
+    },
     "Sled %lld kg · wall balls %lld kg": {
       "extractionState": "manual",
       "localizations": {
@@ -23885,6 +24089,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trineo %lld kg · wall balls %lld kg"
+          }
+        }
+      }
+    },
+    "Sled pull": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sled pull"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrastre de trineo"
+          }
+        }
+      }
+    },
+    "Sled push": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sled push"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empuje de trineo"
           }
         }
       }
@@ -29305,6 +29543,23 @@
         }
       }
     },
+    "Wall balls": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wall balls"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wall balls"
+          }
+        }
+      }
+    },
     "XP": {
       "extractionState": "manual",
       "localizations": {
@@ -29885,6 +30140,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "busca a alguien"
+          }
+        }
+      }
+    },
+    "choisis ta division pour voir tes charges": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pick your division to see your loads"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "elige tu división para ver tus cargas"
           }
         }
       }
@@ -33691,6 +33963,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Series VO2máx 6 × 800 m"
+          }
+        }
+      }
+    },
+    "sled push %lld kg, sled pull %lld kg": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sled push %lld kg, sled pull %lld kg"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "empuje de trineo %lld kg, arrastre %lld kg"
+          }
+        }
+      }
+    },
+    "sled push et sled pull": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sled push and sled pull"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "empuje y arrastre de trineo"
           }
         }
       }

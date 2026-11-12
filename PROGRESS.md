@@ -4085,3 +4085,41 @@ n'est pas un test : ils choisissent désormais leurs jours à partir d'aujourd'h
 Deux cas ajoutés à `DecodageTolerantTests` : un déplacement illisible ne concerne aucune semaine
 (rejoué, il tirerait une séance vers une case hors semaine, c'est-à-dire l'effacerait), et un
 allègement sans jour est un allègement expiré.
+
+---
+
+## 12 novembre 2026 — un `nil` qui disait deux choses à la fois
+
+Cinquième écart de l'audit de continuité, traité à part parce qu'il change une sémantique et non
+une structure.
+
+`applySameDayAdjustmentIfNeeded` posait son repère de journée (`lastSameDayAdjustmentCheckDay`)
+**juste après le garde de date, avant de regarder le signal**. Et il recevait le sommeil sous la
+forme d'un `Double?`, dont le vide voulait dire deux choses opposées : « aucune source de sommeil
+connectée » — une réponse définitive, il n'y a rien à attendre — et « une source est connectée mais
+la nuit n'y est pas encore écrite » — une absence provisoire.
+
+Conséquence : quelqu'un qui ouvrait l'app à 6 h 30, avant que sa montre ait versé la nuit dans
+Santé, brûlait le contrôle de la journée sans qu'il ait rien lu. À 9 h la donnée était là, et le
+garde refusait. L'information existait, elle est arrivée dix minutes trop tard.
+
+### Ce qui a changé
+
+Un type à trois cas, `AdaptivePlanEngine.SommeilDeLaNuit` — `lu(Double)`, `pasEncoreEcrit`,
+`aucuneSource` — qualifié par l'appelant, qui est le seul à savoir lequel. Le repère ne se pose plus
+que lorsqu'il y a de quoi conclure : le sommeil a été lu, il n'y a aucune source à attendre, ou le
+ressenti d'hier suffit à lui seul.
+
+**Ce que ce choix coûte, dit ici plutôt que passé sous silence.** Une séance jugée trop dure hier,
+sur une ouverture où la nuit n'est pas encore versée, s'allège sur ce seul motif et clôt la journée :
+la mention composée « nuit courte + séance dure » est alors perdue. L'autre conduite serait
+d'attendre le tableau complet, c'est-à-dire de laisser une séance intacte sous les yeux de quelqu'un
+qui part courir à 6 h 30, et d'envoyer deux notifications pour la même séance si on repassait
+ensuite. Un allègement sur un motif juste mais incomplet vaut mieux que ces deux-là.
+
+### Ce qui le garde
+
+Trois cas dans `RunUpTests/ContinuiteDuPlanTests.swift` : une nuit pas encore écrite ne consomme pas
+la journée et la décision se prend bien une fois la donnée versée ; une bonne nuit n'allège rien mais
+clôt la journée ; aucune source de sommeil clôt la journée tout de suite, pour que ce contrôle ne se
+relance pas à chaque ouverture chez quelqu'un qui n'a jamais connecté Apple Santé.

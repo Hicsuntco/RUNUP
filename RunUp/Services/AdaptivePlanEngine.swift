@@ -1963,20 +1963,57 @@ enum AdaptivePlanEngine {
 
     // MARK: Same-day adjustment
 
+    /// Ce que l'app sait du sommeil de la nuit dernière, au moment où elle le demande.
+    ///
+    /// # UN `nil` QUI DISAIT DEUX CHOSES À LA FOIS
+    ///
+    /// L'allègement du jour recevait un `Double?`. Vide, il voulait dire soit « elle n'a pas
+    /// connecté Apple Santé », soit « la nuit n'y est pas encore écrite » — et ces deux-là
+    /// n'appellent pas la même conduite. Le premier est une réponse définitive : il n'y a rien à
+    /// attendre, la décision peut se prendre. Le second est une absence provisoire.
+    ///
+    /// Le contrôle ne tourne qu'une fois par jour civil, et il posait son repère AVANT de
+    /// regarder le signal. Quelqu'un qui ouvrait l'app à 6 h 30, avant que sa montre ait versé la
+    /// nuit, brûlait donc le contrôle de la journée : à 9 h la donnée était là, et plus personne
+    /// ne la lisait. L'information existait, elle est arrivée dix minutes trop tard.
+    enum SommeilDeLaNuit {
+        /// Lu, en heures.
+        case lu(Double)
+        /// Une source est connectée, mais la nuit n'y est pas encore. Il faudra redemander.
+        case pasEncoreEcrit
+        /// Aucune source de sommeil connectée. Il n'y a rien à attendre.
+        case aucuneSource
+
+        var heures: Double? {
+            if case .lu(let h) = self { return h }
+            return nil
+        }
+
+        /// Peut-on conclure la journée là-dessus ?
+        var definitif: Bool {
+            if case .pasEncoreEcrit = self { return false }
+            return true
+        }
+    }
+
     /// Same-day reactive lightening — everywhere else, the plan only ever changes at a WEEK
     /// boundary (see `refreshProgramForCurrentDate`/`tierDelta`), so a short night before a hard
     /// session, or a genuinely brutal RPE just yesterday, only ever showed up in *next* week's
-    /// plan — never on the one day it would actually have helped. Runs at most once per calendar
-    /// day (`lastSameDayAdjustmentCheckDay`), touches only TODAY's session (never the rest of the
-    /// week), and only ever eases — a good night's sleep simply isn't flagged, pushing harder
-    /// isn't this mechanism's job. Returns whether it actually changed anything, so the caller
-    /// (`AppState`) knows whether to say something about it.
+    /// plan — never on the one day it would actually have helped. Touches only TODAY's session
+    /// (never the rest of the week), and only ever eases — a good night's sleep simply isn't
+    /// flagged, pushing harder isn't this mechanism's job. Returns whether it actually changed
+    /// anything, so the caller (`AppState`) knows whether to say something about it.
+    ///
+    /// Il ne CONCLUT qu'une fois par jour civil (`lastSameDayAdjustmentCheckDay`), et le repère
+    /// se pose après avoir regardé le signal, pas avant : voir `SommeilDeLaNuit`. Il pose
+    /// `allegementDuJour`, une entrée du générateur, et non la séance elle-même — voir
+    /// `AllegementDuJour` pour ce que l'écriture sur place coûtait.
     @discardableResult
-    static func applySameDayAdjustmentIfNeeded(_ profile: UserProfile, sleepHours: Double?) -> Bool {
+    static func applySameDayAdjustmentIfNeeded(_ profile: UserProfile,
+                                               sommeil: SommeilDeLaNuit) -> Bool {
         guard profile.programPhase == .active || profile.programPhase == .freerun else { return false }
         let today = Calendar.current.startOfDay(for: .now)
         guard profile.lastSameDayAdjustmentCheckDay != today else { return false }
-        profile.lastSameDayAdjustmentCheckDay = today
 
         let weekday = currentWeekdayIndex()
         guard let idx = profile.weekSessions.firstIndex(where: { $0.weekday == weekday }),
@@ -1988,7 +2025,25 @@ enum AdaptivePlanEngine {
         // the two can compound (short night AFTER a brutal session is exactly when easing off
         // matters most).
         let feltTooHardYesterday = profile.recentRPESeverities.last == 3 && debriefedYesterday(profile)
-        let shortNight = sleepHours.map { $0 < 5.5 } ?? false
+        let shortNight = sommeil.heures.map { $0 < 5.5 } ?? false
+
+        // LE REPÈRE DU JOUR SE POSE APRÈS AVOIR REGARDÉ, PAS AVANT.
+        //
+        // Il se posait juste après le garde de date, donc une ouverture où le sommeil n'était pas
+        // encore écrit consommait la journée sans avoir rien lu. Il ne se pose maintenant que
+        // lorsqu'il y a de quoi conclure : le sommeil a été lu, ou il n'y a aucune source à
+        // attendre, ou le ressenti d'hier suffit à lui seul.
+        //
+        // CE QUE CE CHOIX COÛTE, et pourquoi il reste le bon. Une séance jugée trop dure hier,
+        // sur une ouverture où la nuit n'est pas encore versée, s'allège sur ce seul motif et
+        // ferme la journée — la mention composée « nuit courte + séance dure » est alors perdue.
+        // Attendre le tableau complet voudrait dire laisser une séance intacte sous les yeux de
+        // quelqu'un qui part courir à 6 h 30, et deux notifications pour la même séance si on
+        // repassait ensuite. Un allègement sur un motif juste mais incomplet vaut mieux que les
+        // deux.
+        guard sommeil.definitif || feltTooHardYesterday else { return false }
+        profile.lastSameDayAdjustmentCheckDay = today
+
         guard shortNight || feltTooHardYesterday else { return false }
 
         let reason: String

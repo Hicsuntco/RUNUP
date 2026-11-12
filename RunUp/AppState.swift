@@ -908,15 +908,27 @@ final class AppState {
     /// `AdaptivePlanEngine.applySameDayAdjustmentIfNeeded`). Deliberately its own call, not folded
     /// into `syncDailyGoalsFromHealthKit` below: the RPE half of the check needs no HealthKit
     /// connection at all, and nesting it inside that HealthKit-gated function would have silently
-    /// denied it to anyone who's never connected Apple Santé. Sleep is read here (nil if not
-    /// connected) so the "already checked today" guard is only ever consumed once, with the real
-    /// sleep-aware answer — not consumed early by some other call site checking with `nil` before
-    /// a HealthKit-aware one gets a chance to run today.
+    /// denied it to anyone who's never connected Apple Santé.
+    ///
+    /// Le sommeil est lu ici, et son absence est QUALIFIÉE : pas de source connectée, ou une
+    /// source qui n'a pas encore versé la nuit. Les deux arrivaient confondues sous un `nil`, et
+    /// le contrôle du jour se consommait dans les deux cas — une ouverture à 6 h 30, avant que la
+    /// montre ait écrit, brûlait la journée. Voir `AdaptivePlanEngine.SommeilDeLaNuit`.
     private func checkSameDayAdjustment() async {
         let today = Calendar.current.startOfDay(for: .now)
         guard profile.lastSameDayAdjustmentCheckDay != today else { return }
-        let sleepHours = profile.connectedSources.contains(.apple) ? await healthKit.lastNightSleepHours() : nil
-        guard AdaptivePlanEngine.applySameDayAdjustmentIfNeeded(profile, sleepHours: sleepHours) else { return }
+        // Les trois cas sont distingués ICI, parce que c'est ici qu'on sait lequel : une absence
+        // de source n'est pas une nuit qui n'est pas encore écrite. Voir
+        // `AdaptivePlanEngine.SommeilDeLaNuit` pour ce que leur confusion coûtait.
+        let sommeil: AdaptivePlanEngine.SommeilDeLaNuit
+        if !profile.connectedSources.contains(.apple) {
+            sommeil = .aucuneSource
+        } else if let heures = await healthKit.lastNightSleepHours() {
+            sommeil = .lu(heures)
+        } else {
+            sommeil = .pasEncoreEcrit
+        }
+        guard AdaptivePlanEngine.applySameDayAdjustmentIfNeeded(profile, sommeil: sommeil) else { return }
         // La mention est lue sur l'allègement lui-même, et non sur `todaySession.adjustment` :
         // c'est la source, le champ de la séance n'en est qu'une copie posée par le générateur.
         // En course libre il n'y a pas de semaine régénérée, donc pas de copie — la notification

@@ -270,6 +270,46 @@ final class ContinuiteDuPlanTests: XCTestCase {
         XCTAssertEqual(p.weekSessions.map(\.session?.displayTitle), avant)
     }
 
+    // MARK: - Le contrôle du jour ne se consomme qu'une fois qu'il a regardé
+
+    /// UNE NUIT PAS ENCORE ÉCRITE NE BRÛLE PLUS LA JOURNÉE.
+    ///
+    /// Le repère se posait juste après le garde de date, avant de regarder le signal. Une
+    /// ouverture à 6 h 30, avant que la montre ait versé la nuit dans Santé, consommait donc le
+    /// contrôle du jour sans avoir rien lu : à 9 h la donnée était là, et le garde refusait.
+    /// L'information existait, elle est arrivée dix minutes trop tard.
+    @MainActor
+    func testUneNuitPasEncoreEcriteNeConsommePasLaJournee() {
+        let p = profil()
+        XCTAssertFalse(AdaptivePlanEngine.applySameDayAdjustmentIfNeeded(p, sommeil: .pasEncoreEcrit))
+        XCTAssertNil(p.lastSameDayAdjustmentCheckDay, "rien n'a été lu, rien n'est conclu")
+
+        // La même journée, une fois la nuit versée : la décision se prend enfin.
+        XCTAssertTrue(AdaptivePlanEngine.applySameDayAdjustmentIfNeeded(p, sommeil: .lu(4.5)))
+        XCTAssertNotNil(p.allegementDuJour)
+        XCTAssertNotNil(p.lastSameDayAdjustmentCheckDay)
+    }
+
+    /// Une bonne nuit est une RÉPONSE : elle n'allège rien, et elle clôt la journée. Sans quoi le
+    /// contrôle se rejouerait à chaque synchronisation de Santé.
+    @MainActor
+    func testUneBonneNuitNallegeRienMaisConclutLaJournee() {
+        let p = profil()
+        XCTAssertFalse(AdaptivePlanEngine.applySameDayAdjustmentIfNeeded(p, sommeil: .lu(8)))
+        XCTAssertNil(p.allegementDuJour)
+        XCTAssertNotNil(p.lastSameDayAdjustmentCheckDay, "il n'y a plus rien à attendre")
+    }
+
+    /// Aucune source de sommeil n'est pas une absence provisoire : il n'y a rien à attendre, donc
+    /// la journée se conclut tout de suite. Quelqu'un qui n'a jamais connecté Apple Santé ne doit
+    /// pas voir ce contrôle se relancer à chaque ouverture.
+    @MainActor
+    func testSansSourceDeSommeilLaJourneeSeConclutQuandMeme() {
+        let p = profil()
+        XCTAssertFalse(AdaptivePlanEngine.applySameDayAdjustmentIfNeeded(p, sommeil: .aucuneSource))
+        XCTAssertNotNil(p.lastSameDayAdjustmentCheckDay)
+    }
+
     // MARK: - La bande de jours dit ce que la semaine porte
 
     /// La bande se lisait sur les jours de course, pas sur les séances réellement posées : elle

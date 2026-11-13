@@ -12,8 +12,18 @@ import XCTest
 final class BaisseProgrammeeTests: XCTestCase {
 
     /// Un programme sans date de course : le cycle ouvert, qui décharge toutes les 4 semaines.
+    ///
+    /// `.progress` et non un objectif écrit au hasard : c'est `periodiseVersUneDate` qui décide de
+    /// la branche, et il est faux pour les quatre objectifs sans date. Le cas suivant vérifie que
+    /// celui-ci en est bien un, pour qu'un reclassement futur fasse tomber le test plutôt que de
+    /// lui faire mesurer silencieusement l'autre branche.
     private var cycleOuvert: AdaptivePlanEngine.ProgramShape {
-        AdaptivePlanEngine.ProgramShape.compute(goal: "forme", raceDate: nil, from: .now)
+        AdaptivePlanEngine.ProgramShape.compute(goal: .progress, raceDate: nil, from: .now)
+    }
+
+    func testLObjectifDeReferenceEstBienSansDate() {
+        XCTAssertFalse(GoalType.progress.periodiseVersUneDate)
+        XCTAssertNil(cycleOuvert.totalWeeks, "le cycle ouvert n'a pas de nombre de semaines")
     }
 
     func testLeCycleOuvertDechargeUneSemaineSurQuatre() {

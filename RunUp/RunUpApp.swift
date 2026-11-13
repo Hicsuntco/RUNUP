@@ -167,6 +167,13 @@ private struct RootView: View {
                 // des premières secondes d'une vraie course, bandeau de recherche compris. Voir
                 // `CaptureSeed.courseEnCoursDemandee`.
                 if CaptureSeed.courseEnCoursDemandee {
+                    // LA SÉANCE D'ABORD, la course ensuite. `LiveRunView` lit la consigne dans
+                    // `profile.todaySession` dès son premier dessin : la poser après aurait
+                    // photographié l'écran sans son bloc de consigne une fois sur deux, selon
+                    // l'ordre des redessins. Voir `CaptureSeed.seanceDeDemonstration` pour ce que
+                    // cet état corrige, et pourquoi il ne pouvait pas être laissé au hasard du
+                    // jour de la semaine.
+                    appState?.profile.todaySession = CaptureSeed.seanceDeDemonstration
                     appState?.startRun()
                 }
                 // Même ordre, même raison : la page d'une sortie se présente par-dessus l'écran.

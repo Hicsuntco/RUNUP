@@ -4961,3 +4961,30 @@ nombre littéral après `horsEchelle:`, donc elle ne voyait pas
 ce contrôle. Il comptait 8 grands corps ; il en voit 13. Un `horsEchelle:` calculé est désormais
 contrôlé dans le doute : exiger une réduction d'un corps finalement petit ne coûte rien, la
 manquer sur un grand coûte un chiffre faux à l'écran.
+
+### La barrière de ce chantier n'était pas franchissable, et je ne l'ai su qu'en regardant
+
+L'écran de course EST photographié — en diagnostic, et même à deux fois la taille de texte. J'avais
+d'abord écrit l'inverse ; c'était faux, et la correction vient d'avoir ouvert les images.
+
+Les deux montrent la même chose : **une course libre, quatre secondes après le départ, sans
+consigne.** Pas d'allure cible, pas de nom de segment, pas de barre de progression. Le chrono est
+sur sa branche 64, celle que ce chantier ne touche pas.
+
+**La modification n'apparaissait donc sur aucune image que le projet sait prendre.** Et le trou
+dépasse ce chantier : tout ce qu'une app de coaching ajoute à un chronomètre n'avait jamais été
+photographié.
+
+Pire qu'une absence. `todaySession` est la séance DU JOUR DE LA SEMAINE où la campagne tourne : un
+dimanche de repos, l'allure vaut « — » et le bloc disparaît. Deux campagnes lancées à deux jours
+d'écart ne photographiaient pas le même écran — **tout avant/après sur cet écran était faux sans
+prévenir.**
+
+`CaptureSeed.seanceDeDemonstration` pose une séance déterministe avant le départ : 6 × 800 m,
+allure 4:45, Z4, récupération 400 m. Une séance à RÉPÉTITIONS parce que c'est le cas le plus
+chargé — elle seule porte un nom de segment, un restant et une barre. Un footing continu
+afficherait la consigne sans ses trois accessoires, donc il éprouverait moins.
+
+Deux erreurs attrapées avant compilation, en vérifiant plutôt qu'en supposant : l'ordre des
+paramètres de l'initialiseur de `WorkoutSession`, et `.intervals`, qui n'existe pas comme genre de
+séance — c'est `.vo2maxIntervals`.

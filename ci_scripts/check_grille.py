@@ -58,8 +58,6 @@ if len(RAYONS) != len([n for n in mr.group(1).split(",") if n.strip()]):
 FORMES_DESSINEES = {
     "RunUp/Views/Profile/SettingsView.swift":
         (4, "l'aperçu d'habillage miniaturise un téléphone : coque 9, écran 5"),
-    "RunUp/Views/Stats/StatsView.swift":
-        (1, "l'infobulle du graphique, tracée dans un Canvas"),
     "RunUp/Views/Home/PlanView.swift":
         (3, "les marques de la frise de programme : 2, 3 et 4 points de large"),
 }

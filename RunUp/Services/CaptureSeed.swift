@@ -128,6 +128,19 @@ enum CaptureSeed {
         ProcessInfo.processInfo.arguments.contains("--reglages")
     }
 
+    /// `--reglages-plus` : descendre encore d'un cran, jusqu'à `MoreSettingsView`.
+    ///
+    /// `--reglages` ouvrait la feuille des réglages, et la capture du 13 novembre a montré
+    /// qu'elle ne suffisait pas : le bloc du cycle n'est pas DANS cette feuille, il est derrière
+    /// sa ligne « Plus de réglages ». Le commentaire ci-dessus le disait déjà — « profil, puis
+    /// réglages, puis plus de réglages » — et je n'avais ouvert que les deux premiers.
+    ///
+    /// Zéro pixel de `#F6EAE5` et zéro de `#80462E` sur l'image obtenue : la mesure, pas
+    /// l'impression.
+    static var plusDeReglagesDemandes: Bool {
+        ProcessInfo.processInfo.arguments.contains("--reglages-plus")
+    }
+
     /// `--encours` : démarrer une course, pour photographier l'écran de course.
     ///
     /// ET IL N'Y AURA PAS DE DISTANCE DESSUS, C'EST ATTENDU. Le simulateur n'a pas de signal GPS,

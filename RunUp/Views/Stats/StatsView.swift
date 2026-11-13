@@ -674,21 +674,26 @@ struct StatsView: View {
             let minPace = points.min() ?? 0
             let maxPace = points.max() ?? 1
             let range = max(1, maxPace - minPace)
-            let stepX = size.width / CGFloat(points.count - 1)
+            // LE PREMIER ET LE DERNIER POINT PORTENT UNE PASTILLE DE 7 POINTS, centrée sur eux.
+            // Tracés à x = 0 et x = largeur, la moitié de chacune tombait HORS du canevas : sur
+            // la carte de nuit, le dernier point se lit alors comme un trait coupé net au bord.
+            // Quatre points de retrait de chaque côté les font tenir.
+            let bord: CGFloat = 4
+            let stepX = (size.width - bord * 2) / CGFloat(points.count - 1)
             var line = Path()
             var fill = Path()
-            fill.move(to: CGPoint(x: 0, y: size.height))
+            fill.move(to: CGPoint(x: bord, y: size.height))
             var lastPoint = CGPoint.zero
             var pointPositions: [CGPoint] = []
             for (i, p) in points.enumerated() {
                 let t = CGFloat((p - minPace) / range) // 0 = fastest ... 1 = slowest
-                let point = CGPoint(x: CGFloat(i) * stepX, y: size.height * (0.15 + 0.7 * t))
+                let point = CGPoint(x: bord + CGFloat(i) * stepX, y: size.height * (0.15 + 0.7 * t))
                 if i == 0 { line.move(to: point) } else { line.addLine(to: point) }
                 fill.addLine(to: point)
                 lastPoint = point
                 pointPositions.append(point)
             }
-            fill.addLine(to: CGPoint(x: size.width, y: size.height))
+            fill.addLine(to: CGPoint(x: size.width - bord, y: size.height))
             fill.closeSubpath()
             context.fill(fill, with: .linearGradient(Gradient(colors: [RUColor.accentDeLaNuit.opacity(0.35), .clear]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
             context.stroke(line, with: .color(RUColor.accentDeLaNuit), lineWidth: 2.5)
@@ -700,7 +705,9 @@ struct StatsView: View {
             if let recordIndex = recordPointIndex, recordIndex < pointPositions.count {
                 let p = pointPositions[recordIndex]
                 context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)), with: .color(RUColor.limeSombre))
-                context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)).strokedPath(StrokeStyle(lineWidth: 1.5)), with: .color(RUColor.traceBackground))
+                // Le détourage reprend le fond : sur la nuit, détourer veut dire creuser un
+                // liseré de nuit entre la pastille lime et le tracé qu'elle croise.
+                context.fill(Path(ellipseIn: CGRect(x: p.x - 5, y: p.y - 5, width: 10, height: 10)).strokedPath(StrokeStyle(lineWidth: 2)), with: .color(RUColor.traceBackground))
 
                 // Le mot était coupé par la courbe. Un record d'allure est un point
                 // BAS en valeur, donc HAUT à l'écran : `max(9, p.y - 14)` le plaquait
@@ -722,11 +729,24 @@ struct StatsView: View {
                 let labelY = fitsAbove ? p.y - 14 : p.y + 14
                 let halfWidth = labelSize.width / 2
                 let labelX = min(max(p.x, halfWidth + 3), size.width - halfWidth - 3)
-                let plate = CGRect(x: labelX - halfWidth - 4,
-                                   y: labelY - labelSize.height / 2 - 2,
-                                   width: labelSize.width + 8,
-                                   height: labelSize.height + 4)
-                context.fill(Path(roundedRect: plate, cornerRadius: 4), with: .color(RUColor.traceBackground.opacity(0.92)))
+                // UNE PASTILLE, ET NON UNE PLAQUE DE LA COULEUR DU FOND.
+                //
+                // Sur la carte blanche, le fond de l'étiquette était `RUColor.card` : du blanc sur
+                // du blanc, donc invisible — il ne faisait qu'effacer le trait derrière le mot.
+                // Repris tel quel sur la nuit, il est devenu un RECTANGLE SOMBRE posé sur la
+                // courbe : la capture du 13 novembre montre le tracé qui disparaît dessous et
+                // semble cassé.
+                //
+                // Un fond légèrement PLUS CLAIR que la nuit se lit comme un objet voulu, à l'image
+                // de la pastille d'écart juste au-dessus dans la même carte — qui porte exactement
+                // cette valeur. Et une capsule, parce qu'un coin de 4 points sur une étiquette de
+                // treize de haut n'est ni carré ni rond.
+                let plate = CGRect(x: labelX - halfWidth - 7,
+                                   y: labelY - labelSize.height / 2 - 3,
+                                   width: labelSize.width + 14,
+                                   height: labelSize.height + 6)
+                context.fill(Path(roundedRect: plate, cornerRadius: plate.height / 2),
+                             with: .color(RUColor.surLaNuit.opacity(0.10)))
                 context.draw(label, at: CGPoint(x: labelX, y: labelY))
             }
         }

@@ -144,7 +144,7 @@ struct RingsView: View {
                 CarteDeNuit(hauteur: 236, marge: 0, voile: false) {
                     ZStack {
                         DailyGoalsBarsView(goals: displayGoals.map { .init(slot: $0.slot, progress: $0.progress) },
-                                           size: 168, animateOnAppear: true, surLaNuit: true)
+                                           size: 196, animateOnAppear: true, surLaNuit: true)
                         VStack(spacing: 2) {
                             Text("\(displayDone) / \(displayTotal)")
                                 .displayStyle(.figure).foregroundColor(RUColor.surLaNuit)

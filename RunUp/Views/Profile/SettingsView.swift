@@ -58,6 +58,14 @@ struct SettingsView: View {
         .sheet(isPresented: $showMoreSettings) {
             MoreSettingsView()
         }
+        // Le bloc du cycle n'est pas dans CETTE feuille : il est derrière « Plus de réglages ».
+        // La capture du 13 novembre l'a montré — la feuille était enfin photographiée, et la
+        // ligne de phase n'y était toujours pas, à zéro pixel de sa teinte et de sa surface.
+        #if DEBUG
+        .onAppear {
+            if CaptureSeed.plusDeReglagesDemandes { showMoreSettings = true }
+        }
+        #endif
         .sheet(isPresented: $showPaywall) {
             PaywallView(subscriptions: subscriptions, onClose: { showPaywall = false })
                 .runUpSheetStyle(detents: [.large], gereSonBas: true)

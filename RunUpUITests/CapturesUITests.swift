@@ -169,6 +169,29 @@ final class CapturesUITests: XCTestCase {
                 defilements: 2, reglages: true)
     }
 
+    /// # LE BLOC DU CYCLE, DEUX FOIS, À DEUX PROFONDEURS
+    ///
+    /// `test26Reglages` a enfin photographié la feuille des réglages — et la ligne de phase n'y
+    /// était pas : zéro pixel de `#F6EAE5` et zéro de `#80462E` sur l'image. Elle n'est pas DANS
+    /// cette feuille, elle est derrière sa ligne « Plus de réglages », soit un troisième niveau.
+    ///
+    /// DEUX CAPTURES ET NON UNE, et c'est un choix assumé. Le défilement se fait en coordonnées,
+    /// pas en éléments — c'est écrit plus bas et c'est ce qui a sauvé ces captures —, donc on ne
+    /// peut pas demander « descends jusqu'au bloc du cycle » : il faut compter les gestes. Le
+    /// bloc est la cinquième carte de `MoreSettingsView`, ce qui donne un ou deux gestes selon la
+    /// hauteur des quatre précédentes, qui dépend du profil. Une campagne coûte une heure ;
+    /// deux images en coûtent trente secondes de plus et encadrent la réponse au lieu de la
+    /// deviner. Si les deux le montrent, on en retirera une.
+    func test29CycleHaut() {
+        prendre(rang: 29, ecran: "profile", nom: "cycle-haut", diagnostic: true,
+                defilements: 1, reglages: true, plusDeReglages: true)
+    }
+
+    func test30CycleBas() {
+        prendre(rang: 30, ecran: "profile", nom: "cycle-bas", diagnostic: true,
+                defilements: 3, reglages: true, plusDeReglages: true)
+    }
+
     // MARK: Les trois écrans que personne ne revoit
     //
     // L'inscription, parce qu'on ne s'inscrit qu'une fois. Le mur d'abonnement, parce qu'on est
@@ -297,7 +320,7 @@ final class CapturesUITests: XCTestCase {
                          profil: String? = nil, course: Bool = false,
                          sortie: Bool = false, onglet: String? = nil, defilements: Int = 0,
                          inscription: Bool = false, paywall: Bool = false,
-                         reglages: Bool = false,
+                         reglages: Bool = false, plusDeReglages: Bool = false,
                          courseEnCours: Bool = false, attente: TimeInterval = 2.0,
                          tailleDuTexte: String? = nil) {
         let clair = ProcessInfo.processInfo.environment["RUNUP_CAPTURES_CLAIR"] != nil
@@ -312,6 +335,10 @@ final class CapturesUITests: XCTestCase {
         if inscription { app.launchArguments += ["--inscription"] }
         if paywall { app.launchArguments += ["--paywall"] }
         if reglages { app.launchArguments += ["--reglages"] }
+        // `--reglages-plus` ne se suffit pas : il ouvre la feuille SUIVANTE, donc la première
+        // doit être demandée aussi. Les deux ensemble plutôt qu'un drapeau qui en implique un
+        // autre — un appelant qui lit la liste voit le chemin complet.
+        if plusDeReglages { app.launchArguments += ["--reglages-plus"] }
         if courseEnCours { app.launchArguments += ["--encours"] }
         // LA TAILLE DU TEXTE, PAR LE MÊME CHEMIN QUE LA LANGUE.
         //

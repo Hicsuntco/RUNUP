@@ -23,6 +23,22 @@ struct RubanDeSemaine: View {
     /// 0 = lundi. Hors de 0...6, aucun jour n'est marqué.
     var aujourdHui: Int
 
+    /// ## POURQUOI UNE MARQUE ÉTROITE ET NON UNE COLONNE PLEINE
+    ///
+    /// La première version laissait la barre occuper toute sa colonne. Sur la capture du
+    /// 13 novembre, sept colonnes dans la largeur d'un téléphone donnaient des barres AUSSI LARGES
+    /// QUE HAUTES : quatre blocs de couleur et trois tirets gris, c'est-à-dire un jouet, pas une
+    /// mesure. Le graphique du Plan n'a pas ce défaut parce qu'il a seize barres dans la même
+    /// largeur — la finesse y vient du nombre.
+    ///
+    /// À sept, la finesse se décide. Quatorze points de large, centrés dans leur colonne : la
+    /// hauteur redevient ce qu'on lit, et l'air entre les marques fait le rythme de la semaine.
+    static let largeurDeLaMarque: CGFloat = 14
+
+    /// Un jour sans séance garde un trait. Un creux fait partie de la forme d'une semaine ; une
+    /// colonne vide en ferait un trou.
+    static let hauteurDuRepos: CGFloat = 14
+
     /// La plus longue séance de la semaine donne l'échelle. `max(1, …)` : une semaine entièrement
     /// au repos ne doit pas diviser par zéro, elle doit dessiner sept creux.
     private var plusLongue: Int {
@@ -54,14 +70,13 @@ struct RubanDeSemaine: View {
     private func colonne(_ jour: PlannedDay) -> some View {
         let famille = jour.session?.family ?? .rest
         let minutes = jour.session?.durationMinutes ?? 0
-        // 14 points de plancher : un jour de repos garde un trait, sinon la semaine se lit comme
-        // une rangée trouée au lieu d'une forme.
-        let hauteur = minutes == 0 ? 14
-            : max(20, CGFloat(minutes) / CGFloat(plusLongue) * 62)
+        let hauteur = minutes == 0 ? Self.hauteurDuRepos
+            : max(22, CGFloat(minutes) / CGFloat(plusLongue) * 76)
         return VStack(spacing: 6) {
             Spacer(minLength: 0)
             RoundedRectangle(cornerRadius: RUSpacing.radiusBar, style: .continuous)
                 .fill(famille.tintSurLaNuit)
+                .frame(width: Self.largeurDeLaMarque)
                 // Une séance faite recule sans disparaître — la même règle que les semaines
                 // passées du graphique du plan, et la même valeur.
                 .opacity(jour.completed ? 0.3 : 1)

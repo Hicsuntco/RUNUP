@@ -80,9 +80,16 @@ struct CarteDeNuit<Dessin: View, Legende: View>: View {
     /// voile uni assez opaque pour tenir le pire cas éteindrait le dessin dans tous les autres.
     ///
     /// 0,62 est la valeur mesurée sur le bandeau de l'accueil depuis septembre.
+    ///
+    /// IL PART DU MILIEU, DES DEUX CÔTÉS. La version posée en haut partait du BAS de la carte :
+    /// le dégradé couvrait donc toute la hauteur, et à mi-chemin il valait encore un tiers de
+    /// noir. Sur la capture du 13 novembre, les barres du Plan et les marques du Coach en
+    /// portaient la trace — chacune s'assombrissait vers son sommet, ce qu'on prend pour un
+    /// dégradé décoratif, c'est-à-dire pour la chose même que la règle 7 interdit. Il n'avait
+    /// rien à faire sur la moitié du cadre où aucun texte n'est posé.
     private var voileDeLecture: some View {
         LinearGradient(colors: [.black.opacity(0), .black.opacity(0.62)],
-                       startPoint: pose == .basGauche ? .center : .bottom,
+                       startPoint: .center,
                        endPoint: pose == .basGauche ? .bottom : .top)
     }
 }
@@ -94,13 +101,37 @@ struct CarteDeNuit<Dessin: View, Legende: View>: View {
 /// Il remplace le `RUCardHeader` des cartes blanches, et il est VOLONTAIREMENT plus discret :
 /// sur une carte de nuit, le titre n'est pas ce qu'on regarde en premier, le dessin l'est. Un
 /// en-tête à icône et sous-titre rendrait la carte bavarde là où elle doit être muette.
+/// Un chiffre de carte de nuit : la valeur, son unité, l'encre de la nuit.
+///
+/// IL EXISTE POUR UNE RAISON DE TRADUCTION, pas seulement de rangement. `LegendeDeNuit` recevait
+/// ses chiffres dans un tableau de TUPLES — `[(valeur: String, unite: String)]`. Le contrôle des
+/// chaînes suit une étiquette d'un type à l'autre quand c'est un `String` déclaré ; un champ de
+/// tuple n'en est pas un, et le suivre demanderait d'interpréter l'accès à un élément de
+/// collection, ce que `check_strings.py` refuse de faire par principe.
+///
+/// Ce qui est sorti par ce trou : « km au plus fort », sur la carte de nuit du Plan, en FRANÇAIS
+/// dans la version espagnole, à côté d'un « 7 semanas » correctement traduit. C'est la campagne
+/// en trois langues qui l'a montré, pas le garde.
+///
+/// Avec un type nommé, `unite` redevient une étiquette ordinaire : le relais la voit, et un
+/// littéral absent du catalogue est refusé avant la campagne.
+struct ChiffreDeNuit: View {
+    var valeur: String
+    var unite: String
+
+    var body: some View {
+        RUChiffre(valeur: valeur, unite: unite, cran: .subtitle,
+                  couleur: RUColor.surLaNuit, couleurDeLUnite: RUColor.surLaNuit2)
+    }
+}
+
 struct LegendeDeNuit: View {
     /// Un `Text` et non une clé : l'accueil y met une DATE déjà formatée, que le catalogue ne
     /// contient pas et ne doit pas contenir, tandis que le Plan et le Coach y mettent une vraie
     /// clé traduite. C'est l'appelant qui sait laquelle des deux il tient — `RUChiffre` fait le
     /// même partage entre sa `valeur` en `verbatim` et son `unite` en clé.
     var surtitre: Text?
-    var chiffres: [(valeur: String, unite: String)]
+    var chiffres: [ChiffreDeNuit]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -111,9 +142,7 @@ struct LegendeDeNuit: View {
             }
             HStack(alignment: .firstTextBaseline, spacing: 14) {
                 ForEach(chiffres.indices, id: \.self) { i in
-                    RUChiffre(valeur: chiffres[i].valeur, unite: chiffres[i].unite,
-                              cran: .subtitle, couleur: RUColor.surLaNuit,
-                              couleurDeLUnite: RUColor.surLaNuit2)
+                    chiffres[i]
                 }
             }
         }

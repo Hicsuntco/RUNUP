@@ -30839,6 +30839,23 @@
         }
       }
     },
+    "km au plus fort": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "km at its peak"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "km en su pico"
+          }
+        }
+      }
+    },
     "km parcourus": {
       "localizations": {
         "en": {

@@ -5325,3 +5325,62 @@ ligne d'erreur.
 `Captures` en `build-for-testing` : on construit le bundle de test, on ne lance rien. Les
 vingt-six tests de capture prendraient l'heure que ce workflow existe pour éviter ; les compiler
 coûte deux minutes et déplace la découverte d'une erreur de soixante minutes à quatorze.
+
+## 13 novembre 2026 — ce que les deux autres langues et le thème sombre ont dit
+
+La campagne photographie trois langues et deux thèmes. Les trois défauts ci-dessous ne se voient
+sur aucune des images françaises en thème clair.
+
+### Le voile éteignait le dessin qu'il devait protéger
+
+La carte de nuit pose un voile noir dégradé sous ses chiffres, pour qu'ils se lisent quelle que
+soit la forme derrière. Posé EN HAUT — le cas du Plan et du Coach, dont le dessin est collé au bas
+du cadre — il partait du bas de la carte : le dégradé couvrait donc toute la hauteur, et à
+mi-chemin il valait encore un tiers de noir.
+
+Sur la capture espagnole, chaque barre du Plan s'assombrit visiblement vers son sommet. On y lit
+un dégradé décoratif, c'est-à-dire exactement ce que la règle 7 interdit — alors que c'est un
+voile de lecture mal borné. Il part maintenant du MILIEU des deux côtés, et ne touche plus la
+moitié du cadre où aucun texte n'est posé.
+
+### « km au plus fort » sortait en français chez les hispanophones
+
+À côté d'un « 7 semanas » correctement traduit. La carte de nuit du Plan porte deux chiffres, et
+un seul des deux libellés était au catalogue.
+
+**Pourquoi le garde ne l'a pas vu.** `LegendeDeNuit` recevait ses chiffres dans un tableau de
+TUPLES. `check_strings.py` suit une étiquette d'un type à l'autre quand c'est un `String` déclaré
+— c'est son « relais » — mais un champ de tuple n'en est pas un, et le suivre demanderait
+d'interpréter l'accès à un élément de collection. Ce fichier refuse de deviner, et il a raison.
+
+**Ce que j'ai essayé d'abord, et pourquoi je l'ai retiré.** Inscrire `LegendeDeNuit` dans la liste
+des puits d'affichage. Il a aussitôt signalé CINQ littéraux dont quatre vont très bien : ils
+descendent jusqu'à `RUChiffre`, qui les passe au catalogue. Un garde qui refuse du code juste est
+pire qu'aucun garde — c'est la leçon de `check_entrees`, et elle a servi dans l'heure.
+
+**Ce qui est fait à la place.** Le tuple anonyme devient un composant nommé, `ChiffreDeNuit`. Son
+`unite` est alors une étiquette ordinaire, que le relais suit comme celle de n'importe quel type.
+Vérifié en retirant la clé du catalogue : le garde refuse, en nommant le fichier et la ligne.
+
+### Le thème sombre, lui, va bien
+
+La carte de nuit y est plus sombre que les cartes voisines et plus claire que la page : elle se
+lit comme un panneau en retrait plutôt que comme un objet posé. C'est la conséquence assumée de
+`traceBackground`, qui ne suit pas le thème — en thème sombre, la nuit EST la page, et la
+signature passe par le dessin, pas par le fond.
+
+### La mesure
+
+Part d'image sombre en thème clair, même définition qu'au 12 novembre (moyenne des composantes
+sous 70, un pixel sur quatre) :
+
+| Écran | Avant | Après |
+| --- | --- | --- |
+| Club | 30,1 % | 30,1 % |
+| Journée | 1,5 % | **20,8 %** |
+| Stats | 1,9 % | **20,2 %** |
+| Coach | 2,7 % | **17,9 %** |
+| Accueil | 15,1 % | 15,1 % |
+| Plan | 1,3 % | **13,9 %** |
+
+Quatre écrans étaient sous 3 %. Les six tiennent maintenant entre 13,9 % et 30,1 %.

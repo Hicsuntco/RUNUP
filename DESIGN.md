@@ -449,19 +449,24 @@ Une seule chose : **la carte sombre au tracé néon.** Un presque-noir plein cad
 s'y dessine en rose-violet lumineux, la date et les deux chiffres posés dessus. Elle a un point de
 vue — la sortie comme un objet qui brille dans le noir — et elle ne ressemble à rien d'autre.
 
-### L'état d'avant, mesuré sur les captures du 12 novembre
+### Avant et après, mesurés
 
 Part de l'image occupée par une surface sombre, **en thème clair** — donc là où le sombre est un
-choix et non le thème :
+choix et non le thème. Même mesure des deux côtés : un pixel compte comme sombre quand la moyenne
+de ses trois composantes est sous 70, sur un échantillon d'un pixel sur quatre.
 
-| Écran | Surface sombre | Néon |
+| Écran | Avant | Après |
 | --- | --- | --- |
-| Club | 30,1 % | 0,9 % |
-| Accueil | 15,0 % | 0,6 % |
-| Coach | 2,6 % | 7,3 % |
-| Stats | 1,9 % | 1,3 % |
-| Journée | 1,6 % | 0,2 % |
-| Plan | 1,3 % | 4,6 % |
+| Club | 30,1 % | 30,1 % *(inchangé — il la portait déjà)* |
+| Journée | 1,5 % | **20,8 %** |
+| Stats | 1,9 % | **20,2 %** |
+| Coach | 2,7 % | **17,9 %** |
+| Accueil | 15,1 % | 15,1 % *(inchangé — c'est l'original)* |
+| Plan | 1,3 % | **13,9 %** |
+
+Les six écrans tiennent maintenant entre 13,9 % et 30,1 %. Avant, quatre d'entre eux étaient sous
+3 % : ils n'avaient aucun élément de signature, et étaient interchangeables avec ceux de n'importe
+quelle app de course.
 
 ### LA RÈGLE
 

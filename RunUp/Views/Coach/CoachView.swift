@@ -175,7 +175,11 @@ struct CoachView: View {
         let derniere = dernieresCourses.first
         let semaine = profile.weekSessions.sorted { $0.weekday < $1.weekday }
         if semaine.count == 7 {
-            CarteDeNuit(hauteur: 182, pose: .hautGauche, marge: 0) {
+            // 206 et non 182 : la légende tient deux lignes, et la marque la plus haute — le
+            // dimanche de la semaine de démonstration — montait derrière « 8,1 km · 5:18 » sur la
+            // capture du 13 novembre. Un dessin qui croise son propre libellé n'est pas un
+            // dessin qu'on a cadré.
+            CarteDeNuit(hauteur: 206, pose: .hautGauche, marge: 0) {
                 RubanDeSemaine(jours: semaine, aujourdHui: indexDuJour)
                     .padding(.horizontal, RUSpacing.cardPadding)
                     .padding(.bottom, RUSpacing.cardPadding)

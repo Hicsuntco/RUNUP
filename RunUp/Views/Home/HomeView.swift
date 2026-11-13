@@ -720,8 +720,8 @@ struct HomeView: View {
                         surtitre: Text(verbatim: derniere.date.formatted(
                             .dateTime.weekday(.abbreviated).day().month(.abbreviated)
                                 .locale(Locale.current))),
-                        chiffres: [(Distances.valeur(derniere.distanceKm), "km"),
-                                   (derniere.avgPace, "/km")])
+                        chiffres: [ChiffreDeNuit(valeur: Distances.valeur(derniere.distanceKm), unite: "km"),
+                                   ChiffreDeNuit(valeur: derniere.avgPace, unite: "/km")])
                 }
             }
             .buttonStyle(PressableStyle())

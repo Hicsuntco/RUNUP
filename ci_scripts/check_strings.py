@@ -449,6 +449,16 @@ def litteraux_des_methodes_localisees(source: str):
 # affiché. Y ajouter une fonction est une décision, et c'est la bonne forme — une règle qui
 # devinerait signalerait la moitié du dépôt.
 #: Fonctions dont l'argument `String` finit à l'écran. Un littéral nu y est un défaut.
+#
+# `LegendeDeNuit` y a été ajouté le 13 novembre, puis RETIRÉ le jour même. Ses littéraux ne sont
+# pas perdus : ils descendent jusqu'à `RUChiffre`, qui les passe à `LocalizedStringKey`. Les
+# inscrire ici en signalait quatre qui vont très bien — et un garde qui refuse du code juste est
+# pire qu'aucun garde.
+#
+# Le vrai trou était ailleurs, et il a été bouché dans le code plutôt qu'ici : les chiffres de la
+# carte de nuit arrivaient dans un tableau de TUPLES, que le relais ne peut pas suivre — un champ
+# de tuple n'est pas un `String` déclaré. Ils arrivent maintenant dans un composant nommé,
+# `ChiffreDeNuit`, dont le relais voit l'étiquette comme celle de n'importe quel autre type.
 PUITS = {"showCue"}
 
 APPEL_PUITS = re.compile(r"\b(" + "|".join(sorted(PUITS)) + r")\s*\(")

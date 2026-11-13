@@ -186,8 +186,8 @@ struct PlanView: View {
                 .frame(maxHeight: .infinity, alignment: .bottom)
             } legende: {
                 LegendeDeNuit(surtitre: Text("La forme du plan, semaine par semaine"),
-                              chiffres: [(String(weekSummaries.count), "semaines"),
-                                         (String(maxKm), "km au plus fort")])
+                              chiffres: [ChiffreDeNuit(valeur: String(weekSummaries.count), unite: "semaines"),
+                                         ChiffreDeNuit(valeur: String(maxKm), unite: "km au plus fort")])
             }
             phaseBar
             deloadNote

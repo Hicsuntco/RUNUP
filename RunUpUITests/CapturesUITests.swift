@@ -175,21 +175,19 @@ final class CapturesUITests: XCTestCase {
     /// était pas : zéro pixel de `#F6EAE5` et zéro de `#80462E` sur l'image. Elle n'est pas DANS
     /// cette feuille, elle est derrière sa ligne « Plus de réglages », soit un troisième niveau.
     ///
-    /// DEUX CAPTURES ET NON UNE, et c'est un choix assumé. Le défilement se fait en coordonnées,
-    /// pas en éléments — c'est écrit plus bas et c'est ce qui a sauvé ces captures —, donc on ne
-    /// peut pas demander « descends jusqu'au bloc du cycle » : il faut compter les gestes. Le
-    /// bloc est la cinquième carte de `MoreSettingsView`, ce qui donne un ou deux gestes selon la
-    /// hauteur des quatre précédentes, qui dépend du profil. Une campagne coûte une heure ;
-    /// deux images en coûtent trente secondes de plus et encadrent la réponse au lieu de la
-    /// deviner. Si les deux le montrent, on en retirera une.
-    func test29CycleHaut() {
-        prendre(rang: 29, ecran: "profile", nom: "cycle-haut", diagnostic: true,
-                defilements: 1, reglages: true, plusDeReglages: true)
-    }
-
-    func test30CycleBas() {
-        prendre(rang: 30, ecran: "profile", nom: "cycle-bas", diagnostic: true,
-                defilements: 3, reglages: true, plusDeReglages: true)
+    /// Deux captures avaient été prises, à un et à trois défilements : le défilement se fait en
+    /// coordonnées et non en éléments — c'est ce qui a sauvé ces captures — donc on ne peut pas
+    /// demander « descends jusqu'au bloc du cycle », il faut compter les gestes. Trois les a
+    /// montrés, un ne montrait rien. La seconde reste, la première est retirée.
+    ///
+    /// `attente: 4.0` et non les deux secondes par défaut. L'image obtenue à trois défilements
+    /// portait bien la ligne de phase — mais à 97 % d'opacité, sur les trois canaux : la capture
+    /// a saisi la fin d'un fondu. Deux feuilles s'ouvrent l'une après l'autre avant d'arriver
+    /// ici, et deux secondes ne suffisent pas à les laisser se poser. Une teinte mesurée pendant
+    /// un fondu n'est pas la teinte du jeton, et c'est tout l'objet de cette capture.
+    func test29Cycle() {
+        prendre(rang: 29, ecran: "profile", nom: "cycle", diagnostic: true,
+                defilements: 3, reglages: true, plusDeReglages: true, attente: 4.0)
     }
 
     // MARK: Les trois écrans que personne ne revoit

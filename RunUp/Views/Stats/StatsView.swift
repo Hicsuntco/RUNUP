@@ -394,13 +394,18 @@ struct StatsView: View {
         return runs.filter { range.contains($0.date) }
     }
 
-    private var thisWeekKm: Double { thisWeekRuns.onFoot.reduce(0) { $0 + $1.distanceKm } }
-
-    private var lastWeekKm: Double {
-        let thisWeekStart = AdaptivePlanEngine.currentWeekRange().lowerBound
-        guard let lastWeekStart = Calendar.current.date(byAdding: .day, value: -7, to: thisWeekStart) else { return 0 }
-        return runs.onFoot.filter { $0.date >= lastWeekStart && $0.date < thisWeekStart }.reduce(0) { $0 + $1.distanceKm }
+    /// Cette semaine et la semaine passée AU MÊME POINT — voir `SemaineComparable`.
+    ///
+    /// `thisWeekKm` et `lastWeekKm` existaient séparément ici, et la seconde comptait une semaine
+    /// ENTIÈRE pendant que la première comptait une semaine en cours. La soustraction des deux
+    /// n'avait donc pas de sens avant le dimanche soir.
+    private var semaine: (cette: Double, passee: Double) {
+        SemaineComparable.kilometres(runs)
     }
+
+    private var thisWeekKm: Double { semaine.cette }
+
+    private var lastWeekKm: Double { semaine.passee }
 
     private var weekCard: some View {
         Button(action: { appState.go(.weeklyRecap) }) {

@@ -5070,3 +5070,49 @@ Le problème n'était pas la regex, c'étaient les nombres — anonymes et dispe
 Ils vivent maintenant dans un `enum Tempo` nommé, qu'on lit d'un coup d'œil et que le garde lit
 sans rien deviner. L'addition est devenue évidente à l'œil nu, ce qu'elle aurait dû être depuis
 le début.
+
+## 13 novembre 2026 — la pastille hebdo comparait deux choses de nature différente
+
+### Le défaut
+
+`WeekKmSummary` affichait `cetteSemaine − semainePassée`, où la première est la semaine EN COURS,
+donc partielle, et la seconde une semaine ENTIÈRE.
+
+**Le lundi matin, tout le monde était « en retard ».** Quelqu'un parfaitement à jour de son plan,
+qui n'avait simplement pas encore couru cette semaine-là, lisait « ▼ 19,6 km » **en ambre, la
+couleur d'alerte du système**. Une semaine d'allègement, de maladie ou de vacances était peinte
+comme une faute.
+
+Aucun symptôme technique : les deux nombres étaient justes et la soustraction correcte. C'est ce
+qu'ils MESURAIENT qui ne se comparait pas.
+
+Quelqu'un avait déjà vu la moitié symétrique du problème, écrite juste à côté : « une semaine
+passée à zéro ne produit pas une pastille +5,0, qui ferait passer un début pour un progrès ». Le
+cas partiel-contre-complet n'avait pas été posé.
+
+### Ce qui change, et ce qui ne change pas
+
+`SemaineComparable.kilometres` coupe la semaine passée **au même point** : lundi à midi, elle
+compare le lundi-midi d'il y a sept jours. L'écart redevient une information — « à ce moment-là de
+la semaine dernière, j'en étais là ».
+
+**Au même POINT, pas au même jour** : reculer de sept jours exactement conserve l'heure. Comparer
+« jeudi 12 h » à tout le jeudi fausserait l'écart d'une demi-journée, et toujours dans le même
+sens. Un cas le tient.
+
+**Ce que ce calcul ne décide pas**, et c'est volontaire : qu'un écart négatif s'affiche en ambre,
+c'est-à-dire comme une alerte, reste une question de ton de voix. Elle appartient à Charlotte.
+
+### Une troisième copie retirée, et une fonction née morte
+
+Le calcul était écrit deux fois — `HomeView` et `StatsView` — chacune avec sa propre façon de
+borner la semaine. Deux copies d'une comparaison, c'est deux occasions de la réparer à moitié.
+
+Et j'ai failli en laisser une de plus : ma première version portait un
+`kilometresEntiers(semainesAvant:)` « pour les usages qui voudraient un total de semaine entière ».
+Aucun ne le voulait. **Une fonction gardée au cas où est du code mort qui a l'air d'une
+intention** — elle est partie, avec le `weeklyKm` de `HomeView` qui n'avait plus d'appelant.
+
+Six cas dans `RunUpTests/SemaineComparableTests.swift`, dont le défaut lui-même : un lundi midi,
+avec vingt kilomètres courus la semaine passée mais tous après le mercredi, l'écart doit valoir
+zéro — l'ancien calcul rendait vingt.

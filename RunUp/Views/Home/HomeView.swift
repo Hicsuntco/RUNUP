@@ -13,7 +13,7 @@ struct HomeView: View {
     // has its own separate `@Query` for the full list it actually displays.
     @Query(filter: #Predicate<AppNotification> { !$0.read }) private var unreadNotifications: [AppNotification]
     /// Borné aux trois dernières semaines, et c'est largement suffisant : `runs` ne sert QU'À
-    /// `weeklyKm`, qui somme cette semaine et la précédente. Sans cette borne, l'écran ouvert tous
+    /// `semaine`, qui somme cette semaine et le même segment de la précédente. Sans cette borne, l'écran ouvert tous
     /// les jours au lancement chargeait TOUT l'historique — chaque ligne portant son tracé GPS
     /// sérialisé, soit des dizaines de mégaoctets après quelques centaines de courses — pour
     /// produire deux additions hebdomadaires. Et il le rechargeait à chaque retour sur l'onglet,
@@ -293,10 +293,13 @@ struct HomeView: View {
                 // l'écran du plan, et deux barres de progression dans une même carte ne se lisent
                 // plus ni l'une ni l'autre.
                 if montreLeProgramme {
+                    // `SemaineComparable` coupe la semaine passée AU MÊME POINT : sans ça, une
+                    // semaine en cours (partielle) était soustraite d'une semaine entière, et
+                    // tout le monde était « en retard » le lundi matin.
                     WeekKmSummary(
-                        doneKm: weeklyKm(weeksAgo: 0),
+                        doneKm: semaine.cette,
                         plannedKm: profile.plannedWeeklyKm,
-                        lastWeekKm: weeklyKm(weeksAgo: 1),
+                        lastWeekKm: semaine.passee,
                         footnote: nil
                     )
                 }
@@ -983,12 +986,11 @@ struct HomeView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func weeklyKm(weeksAgo: Int) -> Double {
-        let cal = Calendar.current
-        let thisWeekStart = AdaptivePlanEngine.currentWeekRange().lowerBound
-        guard let weekStart = cal.date(byAdding: .weekOfYear, value: -weeksAgo, to: thisWeekStart) else { return 0 }
-        let range = AdaptivePlanEngine.currentWeekRange(from: weekStart)
-        return runs.onFoot.filter { range.contains($0.date) }.reduce(0) { $0 + $1.distanceKm }
+    /// Cette semaine et la semaine passée au même point — voir `SemaineComparable`, qui porte
+    /// la mesure et la raison. Le calcul vivait ici ET dans `StatsView`, chacun avec sa propre
+    /// façon de borner, ce qui faisait deux occasions de le réparer à moitié.
+    private var semaine: (cette: Double, passee: Double) {
+        SemaineComparable.kilometres(runs)
     }
 
     /// Légende verticale `.ring-legend` de la maquette (pastille · nom de l'objectif · valeur

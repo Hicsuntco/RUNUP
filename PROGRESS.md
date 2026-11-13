@@ -5303,3 +5303,25 @@ palette redeviendrait un interpréteur.
 d'Apple. Celui de RunUp en diffère réellement — une seule piste segmentée en trois arcs, et non
 trois anneaux concentriques, avec le compte au centre — mais la question 3 de la DA se pose là, et
 seulement là. C'est un jugement sur une image rendue, pas une mesure.
+
+## 13 novembre 2026 — trois campagnes mortes sur une erreur que le build ne pouvait pas voir
+
+`CapturesUITests.swift` écrivait `prendre(…, reglages: true, defilements: 2)`. Swift exige que les
+arguments d'un appel suivent l'ordre des paramètres, et `defilements` est déclaré avant `reglages`.
+La cible ne compilait plus depuis `c6e1821`.
+
+**Pourquoi personne ne l'a vu.** `RunUpUITests` n'appartient qu'au schéma `Captures`. Le workflow
+de build lance `xcodebuild test -scheme RunUp` : il ne l'a jamais compilée. Pendant trois
+campagnes — une heure chacune — le build restait vert et annonçait 886 tests passés, pendant que
+la chaîne qui produit les images mourait à sa troisième étape.
+
+J'avais écrit la barrière qui prévenait de regarder là en premier : « si le build échoue, regarder
+d'abord si `reglages:` manque dans un appel de `prendre(...)` ». Je ne l'ai pas suivie, parce que
+les deux premières campagnes s'étaient arrêtées sur une annulation de plateforme à quinze minutes,
+sans aucun log récupérable — et que j'ai cru à un aléa de machine. La troisième a enfin rendu la
+ligne d'erreur.
+
+**Le trou est bouché à la racine, pas au cas.** Le workflow de build compile désormais le schéma
+`Captures` en `build-for-testing` : on construit le bundle de test, on ne lance rien. Les
+vingt-six tests de capture prendraient l'heure que ce workflow existe pour éviter ; les compiler
+coûte deux minutes et déplace la découverte d'une erreur de soixante minutes à quatorze.

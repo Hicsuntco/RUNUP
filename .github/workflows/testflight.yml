@@ -911,6 +911,41 @@ jobs:
       - name: Les captures exigées montrent-elles l'app d'aujourd'hui
         run: python3 ci_scripts/check_requis.py
 
+      # ── LA CIBLE DES TESTS D'INTERFACE N'ÉTAIT COMPILÉE PAR PERSONNE ICI ────────────────────
+      #
+      # `RunUpUITests` n'appartient qu'au schéma `Captures` (voir project.yml) ; l'étape
+      # ci-dessous construit `RunUp`, et ne l'a donc jamais vue. Résultat le 13 novembre : une
+      # erreur d'ordre d'arguments dans `CapturesUITests.swift` a fait tomber TROIS campagnes de
+      # captures d'affilée — une heure chacune — pendant que ce build-ci restait vert et annonçait
+      # 886 tests passés.
+      #
+      # `build-for-testing` et non `test` : on COMPILE le bundle, on ne lance rien. Lancer les
+      # vingt-six tests de capture prendrait l'heure que ce workflow existe pour éviter. L'app
+      # Debug est déjà construite par l'étape suivante, donc le surcoût se limite au bundle de
+      # test lui-même.
+      - name: Compiler les tests d'interface, sans les lancer
+        run: |
+          set -o pipefail
+          UDID=$(xcrun simctl list devices available | grep -m1 -E '^ *iPhone' | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          if [ -z "$UDID" ]; then
+            echo "✗ Aucun simulateur iPhone disponible sur cette machine."
+            exit 1
+          fi
+          set +e
+          xcodebuild build-for-testing \
+            -project RunUp.xcodeproj \
+            -scheme Captures \
+            -destination "id=$UDID" \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/ui.log"
+          CODE=${PIPESTATUS[0]}
+          set -e
+          if [ "$CODE" -ne 0 ]; then
+            echo "────────── ce qui a échoué ──────────"
+            grep -hE "\.swift:[0-9]+:[0-9]+: (error|warning):" "$RUNNER_TEMP/ui.log" | sort -u | head -20 \
+              | while IFS= read -r L; do echo "::error::$L"; done
+            exit "$CODE"
+          fi
+
       - name: Tests
         run: |
           set -o pipefail

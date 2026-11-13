@@ -160,8 +160,13 @@ final class CapturesUITests: XCTestCase {
     /// Deux défilements : le bloc du cycle est bas dans la feuille, sous les notifications et les
     /// sources connectées.
     func test26Reglages() {
+        // L'ordre suit celui de `prendre` : Swift exige que les arguments d'un appel apparaissent
+        // dans l'ordre des paramètres, et `defilements` est déclaré avant `reglages`. Écrit à
+        // l'envers, ce fichier ne compilait plus — et la cible des tests d'interface n'est
+        // construite QUE par le workflow des captures, jamais par celui du build. Trois campagnes
+        // sont mortes dessus avant que la quatrième n'en montre la cause.
         prendre(rang: 26, ecran: "profile", nom: "reglages", diagnostic: true,
-                reglages: true, defilements: 2)
+                defilements: 2, reglages: true)
     }
 
     // MARK: Les trois écrans que personne ne revoit

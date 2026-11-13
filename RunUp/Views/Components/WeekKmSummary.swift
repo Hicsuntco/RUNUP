@@ -19,6 +19,10 @@ struct WeekKmSummary: View {
     /// inventer — le chiffre reste seul, sans barre.
     var plannedKm: Double
     var lastWeekKm: Double
+    /// Vrai quand le plan prévoit LUI-MÊME moins de volume cette semaine — décharge ou affûtage.
+    /// Voir `couleurDeLEcart`. Faux par défaut : un appelant qui ne sait pas répondre garde le
+    /// comportement d'avant plutôt qu'une affirmation inventée.
+    var baisseProgrammee: Bool = false
     /// Une ligne grise sous la barre, quand l'écran a de quoi la remplir. Les séances restent
     /// dites, mais comme une précision — pas comme un second dénominateur en concurrence.
     var footnote: String?
@@ -29,6 +33,24 @@ struct WeekKmSummary: View {
     }
 
     private var delta: Double { doneKm - lastWeekKm }
+
+    /// UNE BAISSE PROGRAMMÉE N'EST PAS UNE ALERTE.
+    ///
+    /// L'écart négatif s'affichait en `amber`, que le système réserve à l'attention. Or le plan
+    /// PROGRAMME des semaines où le volume baisse : le fil des phases les annonce lui-même — « en
+    /// gris, les semaines de décharge : le volume baisse exprès, c'est là que les progrès se
+    /// fixent ». L'app prescrivait donc une baisse, puis la peignait comme une faute.
+    ///
+    /// L'affûtage compte pour la même raison, et ce n'est pas une extension de confort : son
+    /// commentaire dans `trainingBlock` dit qu'il « déleste par construction ». Une semaine
+    /// d'affûtage où l'on court moins fait exactement ce qu'on lui demande.
+    ///
+    /// La baisse reste AFFICHÉE — c'est une information, et la masquer rendrait l'app moins
+    /// honnête, pas plus douce. Elle cesse seulement d'être criée.
+    private var couleurDeLEcart: Color {
+        if delta >= 0 { return RUColor.lime }
+        return baisseProgrammee ? RUColor.text3 : RUColor.amber
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -47,7 +69,7 @@ struct WeekKmSummary: View {
                         text: delta >= 0
                             ? "▲ +\(String(format: "%.1f", locale: Locale.current, delta)) km"
                             : "▼ \(String(format: "%.1f", locale: Locale.current, -delta)) km",
-                        color: delta >= 0 ? RUColor.lime : RUColor.amber
+                        color: couleurDeLEcart
                     )
                 }
             }

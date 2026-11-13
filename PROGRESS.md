@@ -5161,3 +5161,38 @@ Et la feuille des réglages n'était photographiée nulle part. Elle n'est pas u
 une feuille présentée depuis le profil, que le harnais ne sait pas atteindre en demandant un écran.
 `--reglages` l'ouvre, exactement comme `--paywall` ouvre le mur d'abonnement — le fichier portait
 déjà ce patron, et sa raison écrite.
+
+## 13 novembre 2026 — une baisse programmée n'est plus une alerte
+
+Charlotte a tranché : option 2. L'ambre ne sort que si la baisse n'était **pas** prévue.
+
+### Ce que l'app se disait à elle-même
+
+Le fil des phases du plan annonce, mot pour mot : « En gris, les semaines de décharge : le volume
+baisse **exprès**, c'est là que les progrès se fixent. » Et la pastille peignait cette même baisse
+en `amber`, que DESIGN.md § 2.2 définit comme « attention ». **L'app prescrivait une baisse, puis
+l'affichait comme une faute.**
+
+### Ce qui change
+
+| Semaine | Écart négatif |
+| --- | --- |
+| Base, Spécifique | ambre — la baisse n'était pas prévue |
+| **Décharge, Affûtage** | **neutre (`text3`)** — le plan l'a demandée |
+
+**L'affûtage compte pour la même raison**, et ce n'est pas une extension de confort : son
+commentaire dans `trainingBlock` dit qu'il « déleste par construction ». Une semaine d'affûtage où
+l'on court moins fait exactement ce qu'on lui demande.
+
+**La baisse reste affichée.** La masquer rendrait l'app moins honnête, pas plus douce — elle cesse
+seulement d'être criée.
+
+### La question se répond une fois
+
+`AdaptivePlanEngine.baisseProgrammee(forWeek:shape:)`, dans le moteur et non dans les vues :
+l'accueil et les statistiques affichent la même carte de semaine, et deux lectures d'une même
+question sont deux occasions d'en changer une seule. C'est la quatrième copie retirée de cette
+carte en deux jours.
+
+Quatre cas dans `BaisseProgrammeeTests`, dont celui qui exige que **les quatre blocs soient
+classés** : un bloc oublié prendrait silencieusement le comportement par défaut.

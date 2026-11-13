@@ -557,6 +557,25 @@ enum AdaptivePlanEngine {
         }
     }
 
+    /// LE PLAN PRÉVOIT-IL MOINS DE VOLUME CETTE SEMAINE ?
+    ///
+    /// Deux blocs baissent la charge, et chacun le dit lui-même. `.deload` est « a planned
+    /// cutback week », et `.affutage` « sheds load by construction » — les deux formules sont
+    /// dans ce fichier.
+    ///
+    /// Posée ici plutôt que dans les vues parce que DEUX écrans la posent : l'accueil et les
+    /// statistiques affichent la même carte de semaine. Deux lectures d'une même question, c'est
+    /// deux occasions d'en changer une seule.
+    ///
+    /// Ce qu'elle sert : un écart hebdomadaire négatif s'affichait en ambre, la couleur
+    /// d'attention — y compris les semaines où l'app elle-même venait de prescrire la baisse.
+    static func baisseProgrammee(forWeek week: Int, shape: ProgramShape) -> Bool {
+        switch trainingBlock(forWeek: week, shape: shape) {
+        case .deload, .affutage: return true
+        case .base, .specifique: return false
+        }
+    }
+
     static func trainingBlock(forWeek week: Int, shape: ProgramShape) -> TrainingBlock {
         guard let total = shape.totalWeeks else {
             return week % 4 == 0 ? .deload : .base

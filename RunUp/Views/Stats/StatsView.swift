@@ -431,6 +431,11 @@ struct StatsView: View {
                     doneKm: thisWeekKm,
                     plannedKm: profile.plannedWeeklyKm,
                     lastWeekKm: lastWeekKm,
+                    baisseProgrammee: AdaptivePlanEngine.baisseProgrammee(
+                        forWeek: profile.weekNumber,
+                        shape: AdaptivePlanEngine.ProgramShape.compute(
+                            goal: profile.goalId, raceDate: profile.raceDate,
+                            from: profile.programStartDate ?? .now)),
                     footnote: profile.runningDays.isEmpty
                         ? nil
                         : Pluriel.choisir(thisWeekRuns.count,

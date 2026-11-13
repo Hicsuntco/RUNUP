@@ -605,12 +605,21 @@ struct MoreSettingsView: View {
                     .buttonStyle(PressableStyle())
 
                     if let phase = profile.cyclePhase {
+                        // LA PHASE EST POSÉE SUR SA PROPRE SURFACE, et c'est ce que la direction
+                        // artistique demandait depuis le début : une teinte ET un fond pour le
+                        // cycle. La ligne flottait jusqu'ici sur la carte des réglages, à côté
+                        // d'interrupteurs — rien ne disait qu'elle appartenait à autre chose.
                         HStack(spacing: 8) {
-                            Circle().fill(cyclePhaseColor(phase)).frame(width: 8, height: 8)
+                            Circle().fill(RUColor.cycle).frame(width: 8, height: 8)
                             Text("Phase actuelle estimée : \(cyclePhaseLabel(phase))")
                                 .font(RUFont.sans(.body, weight: .semibold))
-                                .foregroundColor(cyclePhaseColor(phase))
+                                .foregroundColor(RUColor.cycle)
+                            Spacer(minLength: 0)
                         }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(RUColor.cycleSurface, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                        .padding(.top, 10)
                     }
                 }
                 .padding(.horizontal, 14).padding(.bottom, 14).padding(.top, 2)
@@ -630,14 +639,12 @@ struct MoreSettingsView: View {
         }
     }
 
-    private func cyclePhaseColor(_ phase: UserProfile.CyclePhase) -> Color {
-        switch phase {
-        case .menstrual: return RUColor.rose
-        case .follicular: return RUColor.lime
-        case .ovulation: return RUColor.cyan
-        case .luteal: return RUColor.amber
-        }
-    }
+    /// LA COULEUR DU CYCLE NE DÉPEND PAS DE LA PHASE, et la fonction disparaît avec son `switch`.
+    ///
+    /// Elle rendait quatre couleurs empruntées — `rose`, qui est l'accent choisi par la
+    /// coureuse, puis les trois teintes des familles de séance. Voir `RUColor.cycle`, qui porte
+    /// la mesure : on n'affiche jamais deux phases à la fois, donc la couleur ne pouvait rien
+    /// distinguer que le mot à côté ne disait déjà.
 
     /// Real account, tied to the Club backend (see `AuthService`) — includes account deletion,
     /// required by App Store guideline 5.1.1(v) whenever an app offers account creation.

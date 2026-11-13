@@ -51,14 +51,51 @@ enum RUMotion {
     /// l'app paraisse lente — c'est deux fois moins que `settle`, qui habille des cartes.
     static let ecran = Animation.easeOut(duration: 0.22)
 
+    // ── LES TROIS DURÉES QUI N'AVAIENT JAMAIS ÉTÉ ARGUMENTÉES ────────────────────────────────
+    //
+    // `ecran` et `digit` portent chacune une raison mesurée — 0,10 s de fond vide à couvrir, un
+    // plafond de 200 ms avant que le chrono ne tremble. Les trois suivantes n'avaient qu'une
+    // étiquette disant à quoi elles servaient : 440, 800 et 1 450 ms, posées et jamais discutées,
+    // quand la direction artistique demande 200 à 300 ms en consultation.
+    //
+    // LA FOURCHETTE DU BRIEF NE COUVRE PAS TOUT, et c'est la distinction qui tranche. Elle parle
+    // des TRANSITIONS — ce qui remplace une chose par une autre. Une animation de VALEUR, un
+    // anneau qui se remplit ou un tracé qui se dessine, ne remplace rien : elle montre une
+    // quantité en train d'être parcourue. Sa contrainte n'est pas la même, et elle est simple :
+    // elle doit être finie avant qu'on ait besoin de lire ou d'agir.
+
     /// Ce qui arrive à l'écran : cartes, feuilles, lignes de liste.
-    static let settle = Animation.spring(duration: 0.44, bounce: 0.12)
+    ///
+    /// C'EST UNE TRANSITION, DONC LA FOURCHETTE S'APPLIQUE. Et pas sur n'importe quoi : ce jeton
+    /// gouverne le CHANGEMENT D'ONGLET (`RootTabView`), que son propre commentaire appelle
+    /// « l'animation la plus vue de l'app ». Toute l'app paraissait lente de 160 ms, à chaque
+    /// passage d'un onglet à l'autre.
+    ///
+    /// 280 ms, soit le haut de la fourchette : un ressort à 0,12 de rebond a besoin d'un peu plus
+    /// qu'un fondu pour se poser sans paraître sec.
+    static let settle = Animation.spring(duration: 0.28, bounce: 0.12)
 
     /// Ce qui porte une valeur et ne doit jamais la dépasser : anneaux, jauges, tracés, compteurs.
-    static let glide = Animation.spring(duration: 0.80, bounce: 0)
+    ///
+    /// UNE ANIMATION DE VALEUR, donc hors fourchette par nature — mais 800 ms restait un chiffre
+    /// posé sans contrainte. Celle qui la borne vient de l'écran de lancement, et elle est
+    /// arithmétique : le dévoilement y démarre à 0,58 s et l'écran commence à s'effacer à 1,15 s.
+    /// À 800 ms il finissait à 1,38 s — autrement dit **29 % du mouvement d'ouverture de l'app se
+    /// jouait pendant que l'écran disparaissait déjà, et personne ne l'a jamais vu.**
+    ///
+    /// 500 ms le fait finir à 1,08 s, avec 70 ms de marge avant le fondu.
+    static let glide = Animation.spring(duration: 0.50, bounce: 0)
 
     /// Le long voyage : un tracé de course qui se redessine en entier.
-    static let draw = Animation.timingCurve(0.22, 0.61, 0.36, 1, duration: 1.45)
+    ///
+    /// Une animation de valeur elle aussi, et la plus longue de l'app. Sa contrainte : elle joue
+    /// sur CHAQUE carte du fil qui porte un tracé, à chaque apparition — ce n'est donc pas un
+    /// moment rare qu'on regarde, c'est du contenu qu'on attend. À 1,45 s on attendait une
+    /// seconde et demie pour voir une vignette.
+    ///
+    /// 700 ms reste le plus long geste du système — deux fois et demie `settle` — sans que le fil
+    /// se regarde au lieu de se lire.
+    static let draw = Animation.timingCurve(0.22, 0.61, 0.36, 1, duration: 0.70)
 
     /// Un chiffre qui change tout seul : chrono, distance, allure.
     ///

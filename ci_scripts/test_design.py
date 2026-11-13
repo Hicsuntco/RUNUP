@@ -127,7 +127,12 @@ def _():
 
 @cas_test("une durée de mouvement fausse est attrapée")
 def _():
-    doc = _fausse("| `draw` | 1 450 ms |", "| `draw` | 1 200 ms |")
+    # La durée est lue dans Motion.swift, pas recopiée : elle est passée de 1 450 à 700 ms le
+    # 13 novembre, et ce cas a cessé de tester quoi que ce soit — `_fausse` l'a dit.
+    ms = ck.durees()["draw"]
+    espace = "\u202f" if ms >= 1000 else ""
+    ecrit = f"{ms // 1000}{espace}{ms % 1000:03d}" if ms >= 1000 else str(ms)
+    doc = _fausse(f"| `draw` | {ecrit} ms |", "| `draw` | 1 ms |")
     problemes = _sur(doc)
     assert any("draw" in quoi for _, quoi, _ in problemes), problemes
 

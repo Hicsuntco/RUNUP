@@ -55,6 +55,7 @@ couvrent qu'une partie :
 | Écart, marge ou rayon hors de la géométrie déclarée | `check_grille.py` |
 | Chiffre et unité composés à la main | `check_chiffres.py` |
 | Grand chiffre qui peut se tronquer en silence | `check_grands_chiffres.py` |
+| Ouverture qui déborde sur son propre fondu | `check_lancement.py` |
 | Jeton de texte hors famille ou en opacité | `check_jetons_de_texte.py` |
 
 **L'emoji n'est tenu par aucun garde**, et je l'ai découvert en écrivant ce fichier : j'avais cité
@@ -115,6 +116,22 @@ sombres sont réglées pour ressortir sur du presque-noir et deviendraient illis
 | `ember` | `#C2352A` | `#FF6B5A` | fractionné |
 | `azure` | `#0F62C8` | `#5AA9FF` | fonctionnel |
 | `grape` | `#5B3FD6` | `#9B7CFF` | sortie longue |
+| `cycle` | `#80462E` | `#F2B8A0` | la phase du cycle, les quatre confondues |
+| `cycleSurface` | `#F6EAE5` | `#130702` | le fond d'un bloc qui appartient au cycle |
+
+**Une seule teinte pour les quatre phases, et c'est une mesure.** Elles empruntaient leurs
+couleurs : `.menstrual` prenait `rose`, c'est-à-dire **l'accent choisi par la coureuse** — donc la
+phase menstruelle était rose pour l'une et vert lime pour celle qui a pris le nuancier Lime. Les
+trois autres prenaient `lime`, `cyan` et `amber`, les teintes des familles de séance : un point
+lime disait « endurance » sur un écran et « phase folliculaire » sur l'autre.
+
+L'app n'affiche jamais deux phases à la fois, et celle du moment est nommée en toutes lettres à
+côté du point. Quatre couleurs distinguaient donc des choses qu'on ne voit jamais ensemble.
+
+`#F2B8A0` est la valeur de la DA, ici telle quelle en sombre. En clair elle donne 1,73:1 sur une
+carte blanche — la branche claire descend à la même teinte, jusqu'à 5,93:1 au pire des cinq fonds.
+La surface, elle, a repris la teinte de `#FDF1EC` mais pas sa luminosité : sur notre page chaude,
+la valeur de la DA donnait **1,006:1**, c'est-à-dire rien.
 
 ### 2.3 Une teinte par famille de séance, la même partout
 
@@ -363,16 +380,34 @@ système demande moins d'animation — une animation n'est jamais appelée direc
 | `digit` | 180 ms | un chiffre qui change |
 | `ecran` | 220 ms | une transition d'écran |
 | `snap` | 260 ms | une réponse à un geste |
-| `settle` | 440 ms | l'arrivée d'une carte |
-| `glide` | 800 ms | le remplissage d'un anneau |
-| `draw` | 1 450 ms | le tracé d'un itinéraire |
+| `settle` | 280 ms | l'arrivée d'une carte, **et le changement d'onglet** |
+| `glide` | 500 ms | le remplissage d'un anneau |
+| `draw` | 700 ms | le tracé d'un itinéraire |
 
 Plus `stagger` à 55 ms, plafonné à 6 éléments — au-delà, le dernier d'une liste arriverait une
 demi-seconde après le premier.
 
-> **Écart connu, non résolu.** Le brief demande 200 à 300 ms en consultation. `digit`, `ecran` et
-> `snap` y sont ; `settle`, `glide` et `draw` sont au-dessus, chacun avec une raison écrite, et
-> aucun n'a été confronté à la fourchette. Chantier ouvert.
+**La fourchette du brief ne couvre pas tout, et c'est la distinction qui tranche.** Elle parle des
+TRANSITIONS — ce qui remplace une chose par une autre. Une animation de VALEUR, un anneau qui se
+remplit ou un tracé qui se dessine, ne remplace rien : elle montre une quantité en train d'être
+parcourue. Sa contrainte est autre, et simple : **être finie avant qu'on ait besoin de lire ou
+d'agir.**
+
+`digit`, `ecran` et `settle` sont des transitions, et les trois tiennent la fourchette.
+
+`settle` gouvernait le **changement d'onglet** — ce que son propre commentaire appelle
+« l'animation la plus vue de l'app » — à 440 ms. Toute l'app paraissait lente de 160 ms, à chaque
+passage d'un onglet à l'autre.
+
+`glide` et `draw` sont des animations de valeur. Leurs bornes sont mesurées, pas choisies :
+`glide` doit laisser le dévoilement de l'écran d'ouverture finir avant le fondu, `draw` joue sur
+chaque carte du fil qui porte un tracé — ce n'est pas un moment rare qu'on regarde, c'est du
+contenu qu'on attend.
+
+**L'ouverture est finie avant que l'écran ne s'efface**, et ça ne l'était pas : le dévoilement
+finissait à 1,38 s quand le fondu commençait à 1,15 — 29 % du mouvement d'ouverture de l'app se
+jouait pendant qu'elle disparaissait. Chaque valeur était raisonnable toute seule ; le défaut ne
+vivait que dans leur somme. `check_lancement.py` refait l'addition à chaque CI.
 
 ---
 
@@ -398,5 +433,3 @@ demi-seconde après le premier.
 | La chaleur du fond de consultation | Le brief demande `#FBF9F7`, blanc chaud ; l'app porte `#F4F3F8`, gris-lavande froid. **C'est le plus grand écart visible qui reste**, et D2 a explicitement laissé le chaud non imposé. |
 | La nuance de l'accent par défaut | Le brief demande `#F0225F` ; le nuancier « Rose » porte `#FF0A78`. |
 | Le corps du chiffre central de l'écran de séance | Voir l'écart connu du § 5. |
-| Les trois durées hors fourchette | Voir l'écart connu du § 6. |
-| Le cycle n'a aucun jeton | La DA demande `#F2B8A0` sur `#FDF1EC` ; l'app n'a rien et affiche la phase en gris comme le reste. |

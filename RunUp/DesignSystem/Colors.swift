@@ -242,6 +242,39 @@ enum RUColor {
     //
     // Toutes tiennent au-dessus de 3:1 sur `card`, dans les deux thèmes : ember 6,4 / 5,5 —
     // azure 7,3 / 5,8 — grape 5,8 / 6,7.
+    /// LE CYCLE A SA PROPRE TEINTE, et il n'en avait aucune.
+    ///
+    /// Les quatre phases empruntaient leurs couleurs ailleurs : `.menstrual` prenait `rose`,
+    /// c'est-à-dire L'ACCENT DE LA COUREUSE — donc la phase menstruelle était rose pour l'une et
+    /// vert lime pour celle qui a choisi le nuancier Lime. C'est exactement ce que le commentaire
+    /// de `SessionFamily.tint` interdit vingt lignes plus bas : une information qui emprunte
+    /// l'accent change de couleur quand on change de goût, et la palette ne veut plus rien dire.
+    ///
+    /// Les trois autres prenaient `lime`, `cyan` et `amber`, c'est-à-dire les teintes des
+    /// FAMILLES DE SÉANCE. Un point lime disait « endurance » sur un écran et « phase
+    /// folliculaire » sur l'autre.
+    ///
+    /// UNE SEULE TEINTE POUR LES QUATRE PHASES, et c'est une mesure, pas une simplification.
+    /// L'app n'affiche jamais deux phases à la fois : on est dans une phase, elle est nommée en
+    /// toutes lettres à côté du point. Quatre couleurs distinguaient donc des choses qu'on ne
+    /// voit jamais ensemble — elles coûtaient quatre entrées de palette pour une différence que
+    /// personne ne peut percevoir, puisqu'il n'y a rien à comparer.
+    ///
+    /// La teinte est celle que la direction artistique demande, `#F2B8A0`, et elle est ici telle
+    /// quelle en SOMBRE. En clair elle donne 1,73:1 sur une carte blanche, loin des 3:1 d'un objet
+    /// graphique et plus loin encore des 4,5 d'un texte — la branche claire descend donc à la même
+    /// teinte, assez foncée pour être lue : 5,93:1 au pire des cinq fonds.
+    static var cycle: Color { isLight ? Color(hex: 0x80462E) : Color(hex: 0xF2B8A0) }
+
+    /// La surface douce du cycle, pour une carte ou un bandeau qui lui appartient.
+    ///
+    /// LA TEINTE DE LA DA, PAS SA LUMINOSITÉ, pour la troisième fois de la semaine. `#FDF1EC` a
+    /// été dessiné contre le `#FBF9F7` du brief ; sur notre page chaude il donne **1,006:1**,
+    /// c'est-à-dire rien du tout. La valeur retenue garde sa teinte — vert 12 et bleu 17 sous le
+    /// rouge — et reprend la séparation qu'une sous-surface doit avoir : 1,179:1 sous une carte
+    /// blanche, soit celle de `card2`.
+    static var cycleSurface: Color { isLight ? Color(hex: 0xF6EAE5) : Color(hex: 0x130702) }
+
     static var ember: Color { isLight ? Color(hex: 0xC2352A) : Color(hex: 0xFF6B5A) }
     static var azure: Color { isLight ? Color(hex: 0x0F62C8) : Color(hex: 0x5AA9FF) }
     static var grape: Color { isLight ? Color(hex: 0x5B3FD6) : Color(hex: 0x9B7CFF) }

@@ -74,26 +74,57 @@ struct SplashView: View {
         .onAppear { jouer() }
     }
 
+    /// LA CHORÉGRAPHIE D'OUVERTURE, EN CLAIR.
+    ///
+    /// Ces six nombres étaient écrits à même les appels, et personne ne les avait jamais
+    /// additionnés. Le dévoilement démarrait à 0,58 s pour 0,80 s, donc il finissait à 1,38 s —
+    /// quand le fondu commençait à 1,15. **29 % du mouvement d'ouverture de l'app se jouait
+    /// pendant que l'écran disparaissait déjà.** Chaque valeur était raisonnable toute seule ;
+    /// le défaut ne vivait que dans leur somme.
+    ///
+    /// Nommés ici pour deux raisons. On les lit maintenant les uns à côté des autres, ce qui rend
+    /// l'addition évidente. Et `check_lancement.py` les lit aussi : il refait la somme à chaque
+    /// CI, avec les durées réelles de `RUMotion`, donc raccourcir ou rallonger un jeton du
+    /// système de mouvement ne peut plus désaccorder l'ouverture en silence.
+    private enum Tempo {
+        /// Le tracé se dessine, dès la première image.
+        static let traceDuree = 0.75
+        /// La tuile arrive — durée empruntée à `RUMotion.settle`.
+        static let tuileDepart = 0.42
+        /// Le nom se dévoile — durée empruntée à `RUMotion.glide`.
+        static let revealDepart = 0.58
+        /// Quand l'écran commence à s'effacer. TOUT doit être fini avant.
+        static let fondu = 1.150
+        static let fonduDuree = 0.28
+        /// Ce qu'on laisse au fondu avant de rendre la main.
+        static let apresFondu = 0.290
+
+        /// La version sans animation : on montre l'image finie, on la tient, on s'efface.
+        static let replatTenue = 0.650
+        static let replatFondu = 0.25
+        static let replatApres = 0.260
+    }
+
     private func jouer() {
         guard !reduceMotion else {
             drawn = 1; tile = 1; reveal = 1
             Task {
-                try? await Task.sleep(for: .milliseconds(650))
-                withAnimation(.easeIn(duration: 0.25)) { opacity = 0 }
-                try? await Task.sleep(for: .milliseconds(260))
+                try? await Task.sleep(for: .seconds(Tempo.replatTenue))
+                withAnimation(.easeIn(duration: Tempo.replatFondu)) { opacity = 0 }
+                try? await Task.sleep(for: .seconds(Tempo.replatApres))
                 onFinished()
             }
             return
         }
 
-        withAnimation(.timingCurve(0.2, 0.7, 0.3, 1, duration: 0.75)) { drawn = 1 }
-        withAnimation(RUMotion.settle.delay(0.42)) { tile = 1 }
-        withAnimation(RUMotion.glide.delay(0.58)) { reveal = 1 }
+        withAnimation(.timingCurve(0.2, 0.7, 0.3, 1, duration: Tempo.traceDuree)) { drawn = 1 }
+        withAnimation(RUMotion.settle.delay(Tempo.tuileDepart)) { tile = 1 }
+        withAnimation(RUMotion.glide.delay(Tempo.revealDepart)) { reveal = 1 }
 
         Task {
-            try? await Task.sleep(for: .milliseconds(1_150))
-            withAnimation(.easeIn(duration: 0.28)) { opacity = 0 }
-            try? await Task.sleep(for: .milliseconds(290))
+            try? await Task.sleep(for: .seconds(Tempo.fondu))
+            withAnimation(.easeIn(duration: Tempo.fonduDuree)) { opacity = 0 }
+            try? await Task.sleep(for: .seconds(Tempo.apresFondu))
             onFinished()
         }
     }

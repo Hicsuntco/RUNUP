@@ -4988,3 +4988,85 @@ afficherait la consigne sans ses trois accessoires, donc il éprouverait moins.
 Deux erreurs attrapées avant compilation, en vérifiant plutôt qu'en supposant : l'ordre des
 paramètres de l'initialiseur de `WorkoutSession`, et `.intervals`, qui n'existe pas comme genre de
 séance — c'est `.vo2maxIntervals`.
+
+## 13 novembre 2026 — le cycle a sa teinte, et le mouvement ses raisons
+
+### Le cycle empruntait ses quatre couleurs
+
+`.menstrual` prenait `RUColor.rose`, **c'est-à-dire l'accent choisi par la coureuse** : la phase
+menstruelle était rose pour l'une et vert lime pour celle qui a pris le nuancier Lime. C'est
+exactement ce que le commentaire de `SessionFamily.tint` interdit vingt lignes plus bas — une
+information qui emprunte l'accent change de couleur quand on change de goût.
+
+Les trois autres prenaient `lime`, `cyan` et `amber`, les teintes des **familles de séance**. Un
+point lime disait « endurance » sur un écran et « phase folliculaire » sur l'autre.
+
+**Une seule teinte pour les quatre phases, et c'est une mesure.** L'app n'affiche jamais deux
+phases à la fois, et celle du moment est nommée en toutes lettres à côté du point. Quatre couleurs
+distinguaient donc des choses qu'on ne voit jamais ensemble.
+
+| Jeton | Clair | Sombre |
+| --- | --- | --- |
+| `cycle` | `#80462E` | `#F2B8A0` |
+| `cycleSurface` | `#F6EAE5` | `#130702` |
+
+`#F2B8A0` est la valeur de la DA, ici telle quelle en sombre. En clair elle donne 1,73:1 sur une
+carte blanche — la branche claire descend à la même teinte jusqu'à 5,93:1 au pire des cinq fonds.
+
+**Et la surface a repris la teinte de la DA, pas sa luminosité — pour la troisième fois.**
+`#FDF1EC` a été dessiné contre le `#FBF9F7` du brief ; sur notre page chaude il donne **1,006:1**,
+c'est-à-dire rien. La valeur retenue reprend la séparation de `card2` : 1,179:1 sous une carte.
+
+La phase est maintenant posée SUR cette surface. Elle flottait jusqu'ici au milieu
+d'interrupteurs, et rien ne disait qu'elle appartenait à autre chose.
+
+### Les trois durées n'avaient pas de raison — mon audit disait l'inverse
+
+`ecran` et `digit` portent chacune une mesure : 0,10 s de fond vide à couvrir, un plafond de
+200 ms avant que le chrono ne tremble. `settle`, `glide` et `draw` n'avaient qu'une étiquette.
+J'avais écrit « chacune a une raison écrite » : c'était faux.
+
+**La fourchette du brief ne couvre pas tout**, et c'est la distinction qui tranche. Elle parle des
+TRANSITIONS. Une animation de VALEUR — un anneau qui se remplit, un tracé qui se dessine — ne
+remplace rien : sa contrainte est d'être finie avant qu'on ait besoin de lire ou d'agir.
+
+| Jeton | Avant | Après | Ce qui le borne |
+| --- | --- | --- | --- |
+| `settle` | 440 ms | **280 ms** | C'est une transition, et elle gouverne le CHANGEMENT D'ONGLET |
+| `glide` | 800 ms | **500 ms** | Le dévoilement de l'ouverture doit finir avant le fondu |
+| `draw` | 1 450 ms | **700 ms** | Joue sur chaque carte du fil qui porte un tracé |
+
+`settle` gouverne ce que son propre commentaire appelle « l'animation la plus vue de l'app ».
+**Toute l'app paraissait lente de 160 ms, à chaque passage d'un onglet à l'autre.**
+
+### 29 % de l'ouverture se jouait après le début du fondu
+
+Trouvé par addition, pas par l'œil. L'écran de lancement décale trois mouvements puis s'efface
+après un délai fixe :
+
+| | Démarre | Finit |
+| --- | --- | --- |
+| le tracé | 0,00 s | 0,75 s |
+| la tuile | 0,42 s | 0,86 s |
+| **le dévoilement** | 0,58 s | **1,38 s** |
+| *le fondu commence* | | *1,15 s* |
+
+**Personne n'a jamais vu la fin de l'animation d'ouverture de RunUp.** Chaque valeur était
+raisonnable toute seule ; le défaut ne vivait que dans leur somme. Avec `glide` à 500 ms, le
+dernier mouvement finit à 1,08 s, 70 ms avant le fondu.
+
+### Ce qui le garde, et trois versions ratées
+
+`check_lancement.py`, 7 cas. Il refait l'addition à chaque CI, avec les durées réelles de
+`RUMotion` — donc raccourcir un jeton du système ne peut plus désaccorder l'ouverture en silence.
+
+**Mes trois premières versions lisaient le mauvais nombre.** La première prenait le `Task.sleep`
+de la branche « réduire les animations », qui sort tout de suite. La deuxième prenait celui
+d'APRÈS le fondu, parce que le fondu est lui-même un `withAnimation`. La troisième butait sur une
+parenthèse interne. La cause était la même à chaque fois : **j'analysais à l'expression régulière
+une fonction à deux branches.**
+
+Le problème n'était pas la regex, c'étaient les nombres — anonymes et dispersés dans les appels.
+Ils vivent maintenant dans un `enum Tempo` nommé, qu'on lit d'un coup d'œil et que le garde lit
+sans rien deviner. L'addition est devenue évidente à l'œil nu, ce qu'elle aurait dû être depuis
+le début.

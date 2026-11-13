@@ -858,6 +858,16 @@ jobs:
           cd ci_scripts && python3 test_grands_chiffres.py
           cd .. && python3 ci_scripts/check_grands_chiffres.py
 
+      # L'animation d'ouverture joue trois mouvements décalés, puis s'efface après un délai fixe.
+      # Personne n'avait jamais additionné les deux : le dévoilement finissait à 1,38 s quand le
+      # fondu commençait à 1,15, donc 29 % du mouvement d'ouverture de l'app se jouait pendant
+      # que l'écran disparaissait déjà. Chaque valeur était raisonnable toute seule — le défaut ne
+      # vivait que dans leur somme, et il revient dès qu'on touche à une durée de RUMotion.
+      - name: Vérifier que l'ouverture est finie avant que l'écran ne s'efface
+        run: |
+          cd ci_scripts && python3 test_lancement.py
+          cd .. && python3 ci_scripts/check_lancement.py
+
       # « Le contenu au milieu, le bouton en bas » centre joliment tant que le contenu est plus
       # court que l'écran. À deux fois la taille de texte — que l'app autorise — les `Spacer`
       # tombent à zéro et le bouton sort par le bas. En bas de `PlanRecapView`, c'est

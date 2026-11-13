@@ -226,9 +226,26 @@ enum RUColor {
     // Fixed semantic colors (readiness, coach, warnings) — meaning, not brand, so they don't
     // follow the accent theme. Deeper shades in light mode: the dark-mode values are tuned to pop
     // against near-black and would read as barely-visible text on white.
-    static var lime: Color { isLight ? Color(hex: 0x6B9E00) : Color(hex: 0xC8FF3D) }
-    static var cyan: Color { isLight ? Color(hex: 0x0E9C8C) : Color(hex: 0x38E0D0) }
-    static var amber: Color { isLight ? Color(hex: 0xB86A00) : Color(hex: 0xFFB03D) }
+    static var lime: Color { isLight ? Color(hex: 0x6B9E00) : limeSombre }
+    static var cyan: Color { isLight ? Color(hex: 0x0E9C8C) : cyanSombre }
+    static var amber: Color { isLight ? Color(hex: 0xB86A00) : amberSombre }
+
+    // ── LES MÊMES, POUR LA NUIT ──────────────────────────────────────────────────────────────
+    //
+    // Le commentaire juste au-dessus dit tout : « les valeurs du mode sombre sont calibrées pour
+    // ressortir sur du presque-noir ». La nuit EST du presque-noir, dans les deux thèmes. Une
+    // couleur sémantique posée dessus doit donc être la variante sombre, quel que soit le thème
+    // de la page — sinon le point RECORD de la courbe d'allure, qui est en lime, tombe à 3,4:1
+    // en thème clair au lieu de 13,8.
+    //
+    // Ces constantes ne sont pas des copies : ce sont LES valeurs, et les jetons ci-dessus les
+    // lisent. Une valeur écrite deux fois diverge, c'est ce fichier qui le répète le plus souvent.
+    static let limeSombre = Color(hex: 0xC8FF3D)
+    static let cyanSombre = Color(hex: 0x38E0D0)
+    static let amberSombre = Color(hex: 0xFFB03D)
+    static let emberSombre = Color(hex: 0xFF6B5A)
+    static let azureSombre = Color(hex: 0x5AA9FF)
+    static let grapeSombre = Color(hex: 0x9B7CFF)
     /// Amber warning *text* on an amber-tinted card (`CoachView`'s error bubble) — the plain
     /// `amber` token is tuned for icons/accents, not for body text at length, same reasoning as
     /// `rose2` above.
@@ -275,9 +292,9 @@ enum RUColor {
     /// blanche, soit celle de `card2`.
     static var cycleSurface: Color { isLight ? Color(hex: 0xF6EAE5) : Color(hex: 0x130702) }
 
-    static var ember: Color { isLight ? Color(hex: 0xC2352A) : Color(hex: 0xFF6B5A) }
-    static var azure: Color { isLight ? Color(hex: 0x0F62C8) : Color(hex: 0x5AA9FF) }
-    static var grape: Color { isLight ? Color(hex: 0x5B3FD6) : Color(hex: 0x9B7CFF) }
+    static var ember: Color { isLight ? Color(hex: 0xC2352A) : emberSombre }
+    static var azure: Color { isLight ? Color(hex: 0x0F62C8) : azureSombre }
+    static var grape: Color { isLight ? Color(hex: 0x5B3FD6) : grapeSombre }
 
     // ── LES QUATRE JETONS DE TEXTE ───────────────────────────────────────────────────────────
     //
@@ -536,6 +553,66 @@ enum RUColor {
     /// décoration, et la règle 7 l'interdit. `#14131E` est le milieu exact des deux : la nuit sur
     /// laquelle le tracé se lit est la même, elle n'est simplement plus dégradée.
     static var traceBackground: Color { Color(hex: 0x14131E) }
+
+    // MARK: Ce qu'on pose SUR la nuit
+
+    /// # LA NUIT NE SUIT PAS LE THÈME, ET CE QU'ON Y PEINT NE DOIT PAS LE SUIVRE NON PLUS
+    ///
+    /// `traceBackground` vaut `#14131E` dans les deux thèmes — c'est écrit juste au-dessus, et
+    /// c'est juste. Mais le dessin posé dessus, lui, était peint avec les jetons de la page :
+    /// `RUColor.textPrimary` pour l'anneau de départ, la trace fantôme et la tête du tracé.
+    ///
+    /// En thème clair, `textPrimary` vaut `#181511`. L'anneau de départ était donc du presque-noir
+    /// à 85 % posé sur du presque-noir : sur la capture de l'accueil, il ne se lit pas comme un
+    /// repère mais comme un TROU percé dans la lueur. La trace fantôme à 7 % disparaissait tout
+    /// court. Le thème clair est le thème par défaut depuis la décision D2 : c'était donc le cas
+    /// NORMAL.
+    ///
+    /// Même histoire pour l'accent. `RUColor.rose` rend `primaryOnLight` en thème clair, une
+    /// valeur descendue par `meetingContrastOnWhite` pour rester lisible SUR DU BLANC. Sur la
+    /// nuit, cette correction n'a aucun objet, et elle coûte — mesuré sur les huit nuanciers, en
+    /// rapport de luminance contre `#14131E` :
+    ///
+    /// | nuancier | sombre | clair | perte |
+    /// | --- | --- | --- | --- |
+    /// | rose, violet, bleu, magenta | 4,23 à 5,55 | idem à 6 % près | ≤ 6 % |
+    /// | corail | 5,94 | 5,25 | 12 % |
+    /// | ambre | 10,10 | 5,26 | 48 % |
+    /// | cyan | 10,37 | 5,25 | 49 % |
+    /// | lime | 12,34 | 5,23 | 58 % |
+    ///
+    /// Le nuancier par défaut ne perdait presque rien, ce qui explique que personne ne l'ait vu :
+    /// trois nuanciers sur huit perdaient la moitié de l'éclat de leur tracé, et ce sont
+    /// précisément ceux que la maquette avait dû assombrir pour le blanc.
+    ///
+    /// D'où cette famille. Sur la nuit, on ne lit JAMAIS `textPrimary`, `rose`, `rose2` ni
+    /// `violet` : on lit ce qui suit. `check_nuit.py` le tient.
+
+    /// L'encre pleine sur la nuit : du blanc, dans les deux thèmes.
+    static let surLaNuit = Color.white
+
+    /// L'encre seconde sur la nuit — la date, les unités, ce qui accompagne un chiffre.
+    ///
+    /// 0,72 et pas 0,60 : c'est la valeur que le bandeau de l'accueil portait déjà en dur à trois
+    /// endroits, elle est vérifiée sur capture depuis septembre, et la changer en la nommant
+    /// aurait fait passer une retouche pour un rangement.
+    static let surLaNuit2 = Color.white.opacity(0.72)
+
+    /// L'encre d'appoint — un trait de grille, le reste d'un parcours pas encore couru.
+    static let surLaNuit3 = Color.white.opacity(0.16)
+
+    /// Les trois couleurs d'accent TELLES QU'ELLES SONT, sans la correction pour fond blanc.
+    ///
+    /// L'ordre est celui du dégradé du tracé : le clair part en bas à gauche, la queue arrive en
+    /// haut à droite. Ce sont les variantes sombres quel que soit le thème, pour la raison dite
+    /// plus haut — la nuit n'est pas du blanc, et une couleur assombrie pour du blanc y est
+    /// seulement éteinte.
+    static var accentsDeLaNuit: [Color] {
+        [AccentTheme.current.light, AccentTheme.current.primary, AccentTheme.current.tail]
+    }
+
+    /// L'accent principal sur la nuit, quand un seul suffit.
+    static var accentDeLaNuit: Color { AccentTheme.current.primary }
 }
 
 /// La palette des familles de séance : une couleur par famille, la même partout.
@@ -553,6 +630,25 @@ extension SessionFamily {
         case .tempo: return RUColor.amber
         case .intervals: return RUColor.ember
         case .functional: return RUColor.azure
+        }
+    }
+
+    /// Les mêmes sept, sur une carte de nuit.
+    ///
+    /// Six d'entre elles sont des couleurs sémantiques, dont le commentaire dit déjà que « les
+    /// valeurs du mode sombre sont calibrées pour ressortir sur du presque-noir » — et la nuit
+    /// EST du presque-noir, dans les deux thèmes. Le repos passe de `text3`, un gris sombre
+    /// invisible sur `#14131E`, à du blanc très voilé : un jour sans séance doit se lire comme
+    /// un creux, pas comme une absence de pixel.
+    var tintSurLaNuit: Color {
+        switch self {
+        case .rest: return RUColor.surLaNuit.opacity(0.28)
+        case .recovery: return RUColor.cyanSombre
+        case .endurance: return RUColor.limeSombre
+        case .longRun: return RUColor.grapeSombre
+        case .tempo: return RUColor.amberSombre
+        case .intervals: return RUColor.emberSombre
+        case .functional: return RUColor.azureSombre
         }
     }
 

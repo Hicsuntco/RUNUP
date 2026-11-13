@@ -2193,6 +2193,23 @@
         }
       }
     },
+    "%lld séance faite sur %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld session done out of %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld sesión hecha de %lld"
+          }
+        }
+      }
+    },
     "%lld séance sur %lld prévues": {
       "localizations": {
         "en": {
@@ -2222,6 +2239,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld sesiones"
+          }
+        }
+      }
+    },
+    "%lld séances faites sur %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld sessions done out of %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld sesiones hechas de %lld"
           }
         }
       }
@@ -14453,6 +14487,23 @@
         }
       }
     },
+    "La forme du plan, semaine par semaine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan's shape, week by week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La forma de tu plan, semana a semana"
+          }
+        }
+      }
+    },
     "La liste qui compte est celle de **ta** course : l'organisation la publie, et la contrôle au départ. Celle-ci est le socle commun des grands trails — pars de là, puis relis la leur.": {
       "localizations": {
         "en": {
@@ -14664,6 +14715,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo crear la copia."
+          }
+        }
+      }
+    },
+    "La semaine que ton coach regarde": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The week your coach is reading"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La semana que mira tu entrenador"
           }
         }
       }

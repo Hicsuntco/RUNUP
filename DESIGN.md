@@ -437,22 +437,19 @@ vivait que dans leur somme. `check_lancement.py` refait l'addition à chaque CI.
 
 ---
 
-## 9. La question qui reste : une signature employée au tiers
+## 9. La signature : la carte de nuit
 
 Le test final de la DA — « sorti de son cadre de téléphone et sans logo, l'écran doit être
-reconnaissable comme RunUp » — n'est **pas** tenu aujourd'hui, et la raison est mesurable.
+reconnaissable comme RunUp » — ne tenait que sur deux écrans sur six. Charlotte a tranché le
+13 novembre : l'étendre aux quatre autres.
 
-### Ce que l'app a d'authored
+### Ce que l'app avait d'authored
 
 Une seule chose : **la carte sombre au tracé néon.** Un presque-noir plein cadre, un tracé GPS qui
 s'y dessine en rose-violet lumineux, la date et les deux chiffres posés dessus. Elle a un point de
 vue — la sortie comme un objet qui brille dans le noir — et elle ne ressemble à rien d'autre.
 
-Tout le reste de l'accueil est le vocabulaire par défaut d'un tableau de bord de sport : des
-cartes blanches arrondies empilées sur une page teintée, un anneau de progression avec un compte
-au centre et ses objectifs en légende dessous. Rien n'y est mal fait. Rien n'y est à nous.
-
-### Où la signature apparaît, mesuré sur les captures du 12 novembre
+### L'état d'avant, mesuré sur les captures du 12 novembre
 
 Part de l'image occupée par une surface sombre, **en thème clair** — donc là où le sombre est un
 choix et non le thème :
@@ -466,20 +463,81 @@ choix et non le thème :
 | Journée | 1,6 % | 0,2 % |
 | Plan | 1,3 % | 4,6 % |
 
-**Deux écrans sur six la portent. Les quatre autres n'ont aucun élément de signature** — ils sont
-corrects, cohérents, et interchangeables avec ceux de n'importe quelle app de course.
+### LA RÈGLE
 
-### Ce que ça veut dire pour une refonte
+Elle est écrite dans `RunUp/Views/Components/CarteDeNuit.swift`, qui est le composant, pour qu'on
+ne puisse pas la suivre sans la lire. Quatre choses ensemble, et il faut les quatre :
 
-La refonte ne consiste pas à inventer une direction : **il y en a une, et elle marche.** Elle
-consiste à l'étendre aux quatre écrans qui retombent sur le générique.
+1. **Ce qui est mesuré devient le dessin.** Pas une illustration de la donnée : la donnée
+   elle-même, tracée. Le tracé EST la sortie, les barres SONT le plan, la courbe EST l'allure, le
+   ruban EST la semaine. Un écran qui n'a rien à dessiner n'a pas de carte de nuit.
+2. **Le dessin occupe le cadre**, bord à bord à la marge près. Il n'est pas une vignette posée
+   dans une carte : c'est le cadre qui lui est donné.
+3. **La nuit, et rien d'autre d'allumé.** `RUColor.traceBackground` (`#14131E`) dans les deux
+   thèmes, et l'accent y est à pleine force — ce qu'il n'est nulle part ailleurs sur page claire.
+4. **Les chiffres se posent dessus.** Pas dessous, pas à côté : sur le dessin, sous un voile qui
+   garantit la lecture quelle que soit la forme. Ils légendent une image, ils n'étiquettent pas un
+   graphique.
 
-C'est une décision de DIRECTION, pas un défaut — et c'est pour ça qu'elle est ici, dans ce qui
-attend Charlotte, et non appliquée. Remodeler quatre écrans sur ma propre lecture du mot
-« reconnaissable » serait du goût déguisé en correction.
+Et une cinquième, négative : **une seule par écran.** Deux points de fixation n'en font aucun.
 
-**Ce qui n'est PAS en cause**, vérifié avant de l'écrire : l'anneau de progression. Ses trois
-couleurs suivent en partie le nuancier d'accent, ce qui ressemble au défaut du cycle — mais les
-trois objectifs sont montrés ENSEMBLE, avec leur légende. La couleur y distingue trois choses
-simultanées, et chaque coureuse garde la sienne d'un bout à l'autre de l'app. Le cas du cycle
-était l'inverse : quatre couleurs pour des états qu'on ne voit jamais côte à côte.
+### Ce que chaque écran y met
+
+| Écran | Le dessin | Ce qui est posé dessus |
+| --- | --- | --- |
+| Accueil | le tracé GPS de la dernière sortie | sa date, sa distance, son allure |
+| Plan | seize semaines de volume, en couleurs de phase | le nombre de semaines, le plus gros volume |
+| Coach | les sept jours de la semaine, famille et durée | forme, séance du jour, dernière sortie |
+| Journée | l'anneau des trois objectifs | le compte, **au moyeu** et non en bas à gauche |
+| Stats | la courbe d'allure et son point RECORD | l'allure moyenne et son écart |
+| Club | le tracé GPS de chaque sortie du mur | *(inchangé — il la portait déjà)* |
+
+La Journée est la seule où les chiffres sont DANS la forme plutôt que dessus : son compte est le
+moyeu de l'anneau. C'est une exception à la règle 4, et elle est nommée ici pour ne pas être
+imitée ailleurs sans raison.
+
+### L'ENCRE DE LA NUIT
+
+La nuit ne suit pas le thème. Ce qu'on y peint ne doit donc pas le suivre non plus — et c'était le
+cas partout :
+
+- l'anneau de départ du tracé était en `RUColor.textPrimary`, soit `#181511` en thème clair : du
+  presque-noir à 85 % sur du presque-noir. Sur la capture de l'accueil, il ne se lit pas comme un
+  repère mais comme un **trou** percé dans la lueur ;
+- la trace fantôme, à 7 % de la même encre, disparaissait tout court ;
+- le tracé lisait `RUColor.rose`, qui rend `primaryOnLight` en thème clair — une valeur descendue
+  pour rester lisible **sur du blanc**, qu'il n'y a pas ici.
+
+Mesuré sur les huit nuanciers, rapport de luminance de l'accent contre `#14131E` :
+
+| nuancier | sombre | clair | perte |
+| --- | --- | --- | --- |
+| rose, violet, bleu, magenta | 4,23 à 5,55 | idem à 6 % près | ≤ 6 % |
+| corail | 5,94 | 5,25 | 12 % |
+| ambre | 10,10 | 5,26 | 48 % |
+| cyan | 10,37 | 5,25 | 49 % |
+| lime | 12,34 | 5,23 | 58 % |
+
+Le nuancier par défaut ne perdait presque rien, ce qui explique que personne ne l'ait vu pendant
+deux mois : trois nuanciers sur huit perdaient la moitié de l'éclat de leur tracé.
+
+Sur la nuit, on lit donc : `surLaNuit`, `surLaNuit2` (0,72) et `surLaNuit3` (0,16) pour l'encre ;
+`accentsDeLaNuit` ou `AccentTheme.current.*` pour l'accent ; `limeSombre`, `cyanSombre`,
+`amberSombre`, `emberSombre`, `azureSombre`, `grapeSombre` pour le sens ; `SessionFamily.tintSurLaNuit`
+pour les sept familles. **`check_nuit.py` le tient** — il refuse un jeton de page dans le corps
+d'un appel à `CarteDeNuit`, et dans les fichiers qui ne dessinent que sur la nuit.
+
+Un composant qui vit sur les DEUX fonds ne choisit pas une palette : il reçoit un booléen
+`surLaNuit` et calibre ses encres. C'est le cas de `DailyGoalsBarsView`, posé sur la page à
+l'accueil et sur la nuit sur la Journée, et de la ligne d'allure des Stats. Une teinte qui doit
+*paraître* la même sur deux fonds différents n'a pas la même valeur sur les deux : c'est déjà le
+mécanisme de `primaryOnLight`, et ce n'est pas une divergence.
+
+### Ce qui reste à regarder, et que je ne tranche pas
+
+**La Journée.** Un anneau de progression sur fond noir est le vocabulaire de l'app Activité
+d'Apple, reconnue partout. Celui de RunUp en diffère réellement — une seule piste segmentée en
+trois arcs, et non trois anneaux concentriques, avec le compte au centre — mais la question 3 de
+la DA (« est-ce qu'on devine qu'il a été généré ? » et, par extension, copié ?) se pose là et
+seulement là. C'est un jugement sur une image rendue, pas une mesure : il appartient à Charlotte,
+sur la capture.

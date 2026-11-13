@@ -28,7 +28,12 @@ struct DrawnRoute: View, Animatable {
     var lineWidth: CGFloat = 3
     /// Le tracé est peint d'un dégradé d'accent : il part discret et arrive à pleine valeur, donc
     /// l'arrivée est le point le plus lumineux de la forme.
-    var colors: [Color] = [RUColor.rose2, RUColor.rose, RUColor.violet]
+    ///
+    /// `accentsDeLaNuit` et non `[rose2, rose, violet]` : ces trois-là rendent les variantes
+    /// descendues pour le fond blanc dès que le thème est clair, et ce tracé n'est jamais sur du
+    /// blanc. Trois nuanciers sur huit y perdaient la moitié de leur éclat — la mesure est dans
+    /// `RUColor.surLaNuit`.
+    var colors: [Color] = RUColor.accentsDeLaNuit
     /// Plus de sommets qu'une vignette : à pleine largeur, 60 points donnent une ligne brisée.
     var targetPoints: Int = 220
     /// Marque le départ d'un anneau creux une fois le tracé fini.
@@ -83,7 +88,7 @@ struct DrawnRoute: View, Animatable {
 
             // La trace fantôme du reste du parcours. Sans elle, l'œil ne sait pas où ça va et le
             // dessin se lit comme une barre de progression. Avec elle, on voit la forme à remplir.
-            context.stroke(full, with: .color(RUColor.textPrimary.opacity(0.07)),
+            context.stroke(full, with: .color(RUColor.surLaNuit.opacity(0.07)),
                            style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
 
             // Le halo, dans son propre calque : un filtre appliqué au contexte principal flouterait
@@ -101,7 +106,7 @@ struct DrawnRoute: View, Animatable {
                 let r = lineWidth * 1.5
                 context.stroke(Path(ellipseIn: CGRect(x: start.x - r, y: start.y - r,
                                                       width: r * 2, height: r * 2)),
-                               with: .color(RUColor.textPrimary.opacity(0.85)),
+                               with: .color(RUColor.surLaNuit.opacity(0.85)),
                                lineWidth: lineWidth * 0.7)
             }
 
@@ -114,11 +119,11 @@ struct DrawnRoute: View, Animatable {
                     glow.addFilter(.blur(radius: lineWidth * 3))
                     glow.fill(Path(ellipseIn: CGRect(x: head.x - r * 2.2, y: head.y - r * 2.2,
                                                      width: r * 4.4, height: r * 4.4)),
-                              with: .color(colors.last ?? RUColor.rose))
+                              with: .color(colors.last ?? RUColor.accentDeLaNuit))
                 }
                 context.fill(Path(ellipseIn: CGRect(x: head.x - r, y: head.y - r,
                                                     width: r * 2, height: r * 2)),
-                             with: .color(RUColor.textPrimary))
+                             with: .color(RUColor.surLaNuit))
             }
         }
     }
@@ -145,7 +150,7 @@ struct DrawnRoute: View, Animatable {
 struct SelfDrawingRoute: View {
     var route: [RunRecord.RoutePoint]
     var lineWidth: CGFloat = 3
-    var colors: [Color] = [RUColor.rose2, RUColor.rose, RUColor.violet]
+    var colors: [Color] = RUColor.accentsDeLaNuit
     var targetPoints: Int = 220
     var showsStart = true
 

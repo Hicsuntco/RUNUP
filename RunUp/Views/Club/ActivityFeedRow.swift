@@ -352,10 +352,13 @@ struct ActivityFeedRow: View {
     private func banniereDeTrace(_ trace: [RunRecord.RoutePoint]) -> some View {
         ZStack {
             RUColor.traceBackground
+            // Sans `colors:` — et c'est le point. Cet appel-ci peignait le tracé en deux
+            // teintes, l'accueil en trois : deux tracés pour la même course, selon l'écran où
+            // on la regarde. Le défaut de la NUANCE est le même que celui de la nuit, dont le
+            // commentaire du jeton prévenait déjà : une deuxième copie diverge.
             SelfDrawingRoute(
                 route: trace,
                 lineWidth: 3.5,
-                colors: [RUColor.rose, RUColor.violet],
                 targetPoints: 140,
                 showsStart: true
             )

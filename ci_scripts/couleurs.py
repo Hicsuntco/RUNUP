@@ -75,6 +75,23 @@ def declarations(source: str = None) -> dict:
             trouves[nom] = {"clair": une, "sombre": une}
     for nom, hexa in _LET.findall(source):
         trouves[nom] = {"clair": int(hexa, 16), "sombre": int(hexa, 16)}
+
+    # ── UN JETON PEUT NOMMER UN AUTRE JETON ──────────────────────────────────────────────────
+    #
+    # `lime` valait `isLight ? Color(hex: 0x6B9E00) : Color(hex: 0xC8FF3D)`. La carte de nuit a
+    # eu besoin de la variante sombre SANS la branche de thème — une couleur sémantique posée sur
+    # `#14131E` doit être celle du mode sombre, quel que soit le thème de la page. Plutôt que de
+    # recopier la valeur, `Colors.swift` l'a nommée : `static let limeSombre`, que `lime` lit.
+    #
+    # Sans cette résolution, `declarations()` rendait la CHAÎNE « limeSombre » pour la branche
+    # sombre de six jetons, et `check_design.py` a refusé la table de DESIGN.md — à juste titre :
+    # il ne pouvait plus vérifier ce que le document annonçait. Une seule indirection suffit, et
+    # c'est volontaire : au-delà, une couleur se lit par chaînage et ce fichier redevient un
+    # interpréteur.
+    for nom, branches in trouves.items():
+        for theme, v in branches.items():
+            if isinstance(v, str) and isinstance(trouves.get(v, {}).get(theme), int):
+                branches[theme] = trouves[v][theme]
     return trouves
 
 

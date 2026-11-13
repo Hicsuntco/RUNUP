@@ -712,34 +712,17 @@ struct HomeView: View {
                 // une photo. Un voile dégradé au bas garantit la lisibilité quelle que soit la
                 // forme de la boucle — le trait peut passer derrière le texte sans le gêner,
                 // exactement comme une photo le ferait.
-                ZStack(alignment: .bottomLeading) {
-                    RUColor.traceBackground
+                CarteDeNuit(hauteur: min(hauteurDeLaTrace, 300)) {
                     SelfDrawingRoute(route: derniere.route, lineWidth: 3,
                                      targetPoints: 140, showsStart: true)
-                        .padding(14)
-                    LinearGradient(colors: [.black.opacity(0), .black.opacity(0.62)],
-                                   startPoint: .center, endPoint: .bottom)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(derniere.date.formatted(.dateTime.weekday(.abbreviated).day()
-                                                        .month(.abbreviated).locale(Locale.current)))
-                            .font(RUFont.sans(.small, weight: .medium))
-                            .foregroundColor(.white.opacity(0.72))
-                        HStack(alignment: .firstTextBaseline, spacing: 14) {
-                            RUChiffre(valeur: Distances.valeur(derniere.distanceKm), unite: "km",
-                                      cran: .subtitle, couleur: .white,
-                                      couleurDeLUnite: .white.opacity(0.72))
-                            RUChiffre(valeur: derniere.avgPace, unite: "/km",
-                                      cran: .subtitle, couleur: .white,
-                                      couleurDeLUnite: .white.opacity(0.72))
-                        }
-                    }
-                    .padding(14)
+                } legende: {
+                    LegendeDeNuit(
+                        surtitre: Text(verbatim: derniere.date.formatted(
+                            .dateTime.weekday(.abbreviated).day().month(.abbreviated)
+                                .locale(Locale.current))),
+                        chiffres: [(Distances.valeur(derniere.distanceKm), "km"),
+                                   (derniere.avgPace, "/km")])
                 }
-                .frame(height: min(hauteurDeLaTrace, 300))
-                .background(RUColor.card)
-                .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
-                    .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             }
             .buttonStyle(PressableStyle())
             .accessibilityElement(children: .combine)

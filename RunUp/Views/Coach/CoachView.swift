@@ -157,32 +157,100 @@ struct CoachView: View {
     ///
     /// Chaque tuile disparaît quand sa donnée n'existe pas : une forme sans un seul ressenti
     /// derrière serait un nombre inventé, et « — » n'apprend rien à personne.
-    private var ceQuIlRegarde: some View {
+    /// # ET CE QU'IL REGARDE DEVIENT LE DESSIN
+    ///
+    /// Le bloc disait la bonne chose avec le mauvais objet : trois tuiles blanches alignées, le
+    /// vocabulaire par défaut d'un tableau de bord. Le Coach mesurait 2,6 % de surface sombre en
+    /// thème clair (DESIGN.md § 9) alors que c'est l'écran qui a le plus à montrer — il se vend
+    /// sur « il connaît ton programme », et un programme a une FORME.
+    ///
+    /// Le ruban la dessine : sept jours, leur famille en couleur, leur durée en hauteur,
+    /// aujourd'hui marqué. C'est littéralement ce que le coach lit avant de répondre. Les trois
+    /// tuiles deviennent la légende posée dessus — elles disent les mêmes quatre chiffres,
+    /// elles ne les disent plus à la place du dessin.
+    ///
+    /// La règle 1 de `CarteDeNuit` s'applique ici aussi : sans plan, pas de forme, donc pas de
+    /// carte de nuit. Une semaine vide retombe sur les tuiles, sur la page, comme avant.
+    @ViewBuilder private var ceQuIlRegarde: some View {
         let derniere = dernieresCourses.first
-        return VStack(alignment: .leading, spacing: 8) {
-            Text("Ce qu'il regarde")
-                .font(RUFont.sans(.label, weight: .medium))
-                .foregroundColor(RUColor.text3)
-                .textCase(.uppercase)
-                .tracking(1.4)
-            HStack(spacing: 8) {
-                if profile.hasReadinessData {
-                    tuileLue(nom: "Forme", valeur: "\(profile.readiness)/100", accent: true)
-                }
-                tuileLue(nom: "Aujourd'hui", valeur: profile.todaySession.displayTitle, accent: false)
-                if let derniere, derniere.distanceKm > 0 {
-                    tuileLue(nom: "Dernière sortie",
-                             // `locale:` et pas `String(format:)` nu : sans lui, la virgule
-                             // décimale française devient un point. « 12.4 km » sur l'écran du
-                             // coach, en français.
-                             valeur: String(format: "%.1f km", locale: Locale.current, derniere.distanceKm)
-                                 + " · " + PaceModel.paceText(Double(derniere.durationSeconds) / derniere.distanceKm),
-                             accent: false)
+        let semaine = profile.weekSessions.sorted { $0.weekday < $1.weekday }
+        if semaine.count == 7 {
+            CarteDeNuit(hauteur: 182, pose: .hautGauche, marge: 0) {
+                RubanDeSemaine(jours: semaine, aujourdHui: indexDuJour)
+                    .padding(.horizontal, RUSpacing.cardPadding)
+                    .padding(.bottom, RUSpacing.cardPadding)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+            } legende: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Ce qu'il regarde")
+                        .font(RUFont.sans(.label, weight: .medium))
+                        .foregroundColor(RUColor.surLaNuit2)
+                        .textCase(.uppercase)
+                        .tracking(1.4)
+                    HStack(spacing: 10) {
+                        if profile.hasReadinessData {
+                            mesureLue(nom: "Forme", valeur: "\(profile.readiness)/100")
+                        }
+                        mesureLue(nom: "Aujourd'hui", valeur: profile.todaySession.displayTitle)
+                        if let derniere, derniere.distanceKm > 0 {
+                            mesureLue(nom: "Dernière sortie", valeur: resumeDeLaDerniere(derniere))
+                        }
+                    }
                 }
             }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 4)
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Ce qu'il regarde")
+                    .font(RUFont.sans(.label, weight: .medium))
+                    .foregroundColor(RUColor.text3)
+                    .textCase(.uppercase)
+                    .tracking(1.4)
+                HStack(spacing: 8) {
+                    if profile.hasReadinessData {
+                        tuileLue(nom: "Forme", valeur: "\(profile.readiness)/100", accent: true)
+                    }
+                    tuileLue(nom: "Aujourd'hui", valeur: profile.todaySession.displayTitle, accent: false)
+                    if let derniere, derniere.distanceKm > 0 {
+                        tuileLue(nom: "Dernière sortie", valeur: resumeDeLaDerniere(derniere), accent: false)
+                    }
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 4)
         }
-        .padding(.horizontal, 18)
-        .padding(.bottom, 4)
+    }
+
+    /// Lundi = 0, comme `PlannedDay.weekday`. `Calendar` compte le dimanche comme 1.
+    private var indexDuJour: Int {
+        (Calendar.current.component(.weekday, from: .now) + 5) % 7
+    }
+
+    /// « 8,1 km · 5:18 ».
+    ///
+    /// `locale:` et pas `String(format:)` nu : sans lui, la virgule décimale française devient un
+    /// point. « 12.4 km » sur l'écran du coach, en français. Extrait parce que les deux branches
+    /// l'affichent, et qu'une deuxième copie aurait perdu ce `locale:` un jour ou l'autre.
+    private func resumeDeLaDerniere(_ course: RunRecord) -> String {
+        String(format: "%.1f km", locale: Locale.current, course.distanceKm)
+            + " · " + PaceModel.paceText(Double(course.durationSeconds) / course.distanceKm)
+    }
+
+    /// Une mesure posée sur la nuit : pas de carte, pas de bordure — le fond est déjà l'objet.
+    private func mesureLue(nom: String, valeur: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(LocalizedStringKey(nom))
+                .font(RUFont.sans(.small))
+                .foregroundColor(RUColor.surLaNuit2)
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Text(valeur)
+                .font(RUFont.sans(.label, weight: .semibold))
+                .foregroundColor(RUColor.surLaNuit)
+                .lineLimit(1).minimumScaleFactor(0.6)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 
     private func tuileLue(nom: String, valeur: String, accent: Bool) -> some View {

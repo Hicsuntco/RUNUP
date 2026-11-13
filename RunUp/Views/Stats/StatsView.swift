@@ -553,134 +553,189 @@ struct StatsView: View {
         .background(RUColor.card2, in: Capsule())
     }
 
+    /// # LA COURBE D'ALLURE EST LE DESSIN DE CET ÉCRAN
+    ///
+    /// Les Stats mesuraient 1,9 % de surface sombre en thème clair (DESIGN.md § 9) : quatre
+    /// tuiles à sparkline, une carte de semaine et cette courbe, toutes sur du blanc. Or la
+    /// courbe est la seule chose de l'écran qu'on REGARDE avant de lire — c'est elle qui dit en
+    /// un coup d'œil si ça monte ou si ça descend, et elle porte le point RECORD.
+    ///
+    /// Elle passe donc sur la nuit, avec l'allure et son écart posés dessus. Les règles sont
+    /// énoncées une fois dans `CarteDeNuit` ; ce qui est particulier ici :
+    ///
+    /// - Le SÉLECTEUR de fenêtre reste sur la page. C'est une commande, pas une donnée : une
+    ///   carte de nuit porte le dessin et sa légende, rien qu'on manipule.
+    /// - Les états vides n'ont PAS de carte de nuit, et c'est la règle 1 qui le décide — « un
+    ///   écran qui n'a rien à dessiner n'a pas de carte de nuit ». Moins de deux sorties, pas de
+    ///   courbe : une phrase sur une carte blanche, comme avant.
+    /// - Les extrêmes « Plus rapide / Plus lente » restent sous la carte, sur la page. Ce sont
+    ///   deux repères chiffrés qui commentent le dessin, pas le dessin.
     private var paceCard: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
             RUCardHeader(icon: "speedometer",
                          title: "Allure moyenne",
                          subtitle: "Une sortie par point") {
                 rangePicker
             }
-            if let recentAvgPace {
-                HStack(alignment: .lastTextBaseline, spacing: 6) {
-                    // L'unité était en `.emphasis`, soit 20 pt à côté d'un chiffre de 48 : elle
-                    // ne l'accompagnait pas, elle lui répondait. Voir `RUChiffre`.
-                    RUChiffre(valeur: PaceModel.formatDuration(recentAvgPace), unite: "/km", cran: .banner)
-                    // Poussé au bord droit (le `margin-left:auto` de la maquette) : collé au
-                    // "/km", le delta se lisait comme une deuxième unité accrochée au chiffre
-                    // héros ; à l'opposé de la ligne, il se lit comme ce qu'il est — une
-                    // comparaison, en vis-à-vis de l'allure qu'elle commente.
-                    Spacer(minLength: 8)
-                    if let previousAvgPace {
-                        let deltaSeconds = previousAvgPace - recentAvgPace // positive = faster now
-                        StatChip(
-                            text: deltaSeconds >= 0 ? "▲ \(Int(deltaSeconds.rounded()))″/km" : "▼ \(Int(-deltaSeconds.rounded()))″/km",
-                            color: deltaSeconds >= 0 ? RUColor.lime : RUColor.amber
-                        )
-                    }
+            if let recentAvgPace, recentPacesSecPerKm.count >= 2 {
+                CarteDeNuit(hauteur: 206, pose: .hautGauche, marge: 0) {
+                    courbeDAllure
+                        .padding(.horizontal, RUSpacing.cardPadding)
+                        .padding(.bottom, RUSpacing.cardPadding)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                } legende: {
+                    enteteDAllure(recentAvgPace, surLaNuit: true)
                 }
-                Text(Pluriel.choisir(chartRuns.count,
-                     String(localized: "\(chartRuns.count) sortie · \(selectedRange.caption)"),
-                     String(localized: "\(chartRuns.count) sorties · \(selectedRange.caption)")))
-                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
-
-                if recentPacesSecPerKm.count >= 2 {
-                    Canvas { context, size in
-                        let points = recentPacesSecPerKm
-                        let minPace = points.min() ?? 0
-                        let maxPace = points.max() ?? 1
-                        let range = max(1, maxPace - minPace)
-                        let stepX = size.width / CGFloat(points.count - 1)
-                        var line = Path()
-                        var fill = Path()
-                        fill.move(to: CGPoint(x: 0, y: size.height))
-                        var lastPoint = CGPoint.zero
-                        var pointPositions: [CGPoint] = []
-                        for (i, p) in points.enumerated() {
-                            let t = CGFloat((p - minPace) / range) // 0 = fastest ... 1 = slowest
-                            let point = CGPoint(x: CGFloat(i) * stepX, y: size.height * (0.15 + 0.7 * t))
-                            if i == 0 { line.move(to: point) } else { line.addLine(to: point) }
-                            fill.addLine(to: point)
-                            lastPoint = point
-                            pointPositions.append(point)
-                        }
-                        fill.addLine(to: CGPoint(x: size.width, y: size.height))
-                        fill.closeSubpath()
-                        context.fill(fill, with: .linearGradient(Gradient(colors: [RUColor.rose.opacity(0.35), .clear]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
-                        context.stroke(line, with: .color(RUColor.rose), lineWidth: 2.5)
-                        context.fill(Path(ellipseIn: CGRect(x: lastPoint.x - 3.5, y: lastPoint.y - 3.5, width: 7, height: 7)), with: .color(RUColor.rose))
-
-                        // Her all-time best pace, marked right on the trend line instead of only
-                        // living in a separate "records" card further down — was invisible here
-                        // even when the exact point plotted WAS the record.
-                        if let recordIndex = recordPointIndex, recordIndex < pointPositions.count {
-                            let p = pointPositions[recordIndex]
-                            context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)), with: .color(RUColor.lime))
-                            context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)).strokedPath(StrokeStyle(lineWidth: 1.5)), with: .color(RUColor.card))
-
-                            // Le mot était coupé par la courbe. Un record d'allure est un point
-                            // BAS en valeur, donc HAUT à l'écran : `max(9, p.y - 14)` le plaquait
-                            // presque toujours contre le bord supérieur, c'est-à-dire exactement
-                            // là où passe le tracé. Et il était centré sur une abscisse bornée à
-                            // 22 points au jugé, sans rapport avec la largeur réelle du mot, donc
-                            // rogné à droite sur les écrans étroits.
-                            //
-                            // Deux corrections, et il faut les deux. On MESURE l'étiquette au
-                            // lieu de deviner. Puis, faute de place au-dessus, on la pose SOUS le
-                            // point plutôt que de la coller au plafond — et on peint un fond
-                            // derrière elle dans tous les cas, parce qu'au milieu d'un graphique
-                            // aucune position n'est à l'abri d'un trait qui passe.
-                            let label = context.resolve(
-                                Text("RECORD").font(RUFont.sans(.micro, weight: .bold)).foregroundColor(RUColor.lime)
-                            )
-                            let labelSize = label.measure(in: size)
-                            let fitsAbove = p.y - 14 - labelSize.height / 2 >= 1
-                            let labelY = fitsAbove ? p.y - 14 : p.y + 14
-                            let halfWidth = labelSize.width / 2
-                            let labelX = min(max(p.x, halfWidth + 3), size.width - halfWidth - 3)
-                            let plate = CGRect(x: labelX - halfWidth - 4,
-                                               y: labelY - labelSize.height / 2 - 2,
-                                               width: labelSize.width + 8,
-                                               height: labelSize.height + 4)
-                            context.fill(Path(roundedRect: plate, cornerRadius: 4), with: .color(RUColor.card.opacity(0.92)))
-                            context.draw(label, at: CGPoint(x: labelX, y: labelY))
-                        }
+                if let minPace = recentPacesSecPerKm.min(), let maxPace = recentPacesSecPerKm.max(), minPace != maxPace {
+                    HStack {
+                        Text("Plus rapide \(PaceModel.formatDuration(minPace))/km")
+                        Spacer()
+                        Text("Plus lente \(PaceModel.formatDuration(maxPace))/km")
                     }
-                    .frame(height: 70)
-                    .padding(.top, 6)
-                    // The trend shape itself carries zero VoiceOver content otherwise — the
-                    // min/max text below it (when shown) only covers the endpoints, not the
-                    // direction of change.
-                    .accessibilityLabel("Tendance d'allure")
-                    .accessibilityValue(paceTrendAccessibilitySummary)
-
-                    if let minPace = recentPacesSecPerKm.min(), let maxPace = recentPacesSecPerKm.max(), minPace != maxPace {
-                        HStack {
-                            Text("Plus rapide \(PaceModel.formatDuration(minPace))/km")
-                            Spacer()
-                            Text("Plus lente \(PaceModel.formatDuration(maxPace))/km")
-                        }
-                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                        .padding(.top, 4)
-                    }
-                } else {
-                    Text("Pas assez de courses sur cette période — essaie une fenêtre plus large.")
-                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                        .padding(.top, 6)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 }
             } else {
-                // Depuis que le chiffre suit la fenêtre choisie, « vide » a deux sens très
-                // différents : jamais couru, ou rien couru CETTE période. Dire « termine quelques
+                // Rien à dessiner, donc pas de carte de nuit : la règle 1 de `CarteDeNuit`. Une
+                // nuit vide avec un chiffre dessus serait un fond sombre pour faire signature,
+                // c'est-à-dire exactement ce que la règle refuse.
+                //
+                // « Vide » a deux sens très différents depuis que le chiffre suit la fenêtre
+                // choisie : jamais couru, ou rien couru CETTE période. Dire « termine quelques
                 // courses » à quelqu'un qui en a cinquante derrière lui, parce qu'il regarde les
                 // 7 derniers jours, c'est le message qui donne tort à l'app.
-                Text(runs.isEmpty
-                     ? "Termine quelques courses pour voir ton allure évoluer ici."
-                     : "Pas assez de courses sur cette période — essaie une fenêtre plus large.")
-                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
-                    .padding(.top, 4)
+                VStack(alignment: .leading, spacing: 8) {
+                    if let recentAvgPace {
+                        enteteDAllure(recentAvgPace, surLaNuit: false)
+                    }
+                    Text(recentAvgPace == nil && runs.isEmpty
+                         ? "Termine quelques courses pour voir ton allure évoluer ici."
+                         : "Pas assez de courses sur cette période — essaie une fenêtre plus large.")
+                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(18)
+                .ruCard()
             }
         }
-        .padding(18)
-        .ruCard()
+    }
+
+    /// L'allure, son écart et le nombre de sorties — sur la nuit ou sur la page.
+    ///
+    /// Les deux branches de `paceCard` l'appellent. Elle n'était pas factorisée, et la branche
+    /// sans courbe avait silencieusement perdu l'écart avec la période précédente : une sortie
+    /// dans la fenêtre suffit pourtant à le calculer, et c'est là qu'il est le plus utile.
+    ///
+    /// `surLaNuit` décide de l'encre, pas de la mise en page. Un seul paramètre booléen plutôt
+    /// que trois couleurs passées à la main : les appelants ne choisissent pas des couleurs, ils
+    /// disent sur quel fond ils sont, et le composant sait le reste.
+    @ViewBuilder
+    private func enteteDAllure(_ allure: Double, surLaNuit: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .lastTextBaseline, spacing: 6) {
+                RUChiffre(valeur: PaceModel.formatDuration(allure), unite: "/km", cran: .banner,
+                          couleur: surLaNuit ? RUColor.surLaNuit : RUColor.textPrimary,
+                          couleurDeLUnite: surLaNuit ? RUColor.surLaNuit2 : RUColor.text3)
+                // Poussé au bord droit : collé au « /km », l'écart se lisait comme une deuxième
+                // unité accrochée au chiffre héros ; à l'opposé de la ligne, il se lit comme ce
+                // qu'il est — une comparaison, en vis-à-vis de l'allure qu'elle commente.
+                Spacer(minLength: 8)
+                if let previousAvgPace {
+                    let delta = previousAvgPace - allure // positif = plus rapide maintenant
+                    // Le fond par défaut de la pastille est « noir à 5 % » en thème clair,
+                    // c'est-à-dire rien du tout sur la nuit. Le composant prévoit `background`
+                    // pour les fonds qui ne sont pas ceux du thème ; c'en est un.
+                    StatChip(
+                        text: delta >= 0 ? "▲ \(Int(delta.rounded()))″/km" : "▼ \(Int(-delta.rounded()))″/km",
+                        color: surLaNuit ? (delta >= 0 ? RUColor.limeSombre : RUColor.amberSombre)
+                                         : (delta >= 0 ? RUColor.lime : RUColor.amber),
+                        background: surLaNuit ? RUColor.surLaNuit.opacity(0.10) : nil
+                    )
+                }
+            }
+            Text(Pluriel.choisir(chartRuns.count,
+                 String(localized: "\(chartRuns.count) sortie · \(selectedRange.caption)"),
+                 String(localized: "\(chartRuns.count) sorties · \(selectedRange.caption)")))
+                .font(RUFont.sans(.small))
+                .foregroundColor(surLaNuit ? RUColor.surLaNuit2 : RUColor.text2)
+        }
+    }
+
+    /// La courbe elle-même : une sortie par point, la plus rapide en haut.
+    ///
+    /// Elle est peinte avec les couleurs de la NUIT, pas celles de la page. `RUColor.rose` rend
+    /// la variante descendue pour le fond blanc dès que le thème est clair ; le point RECORD, en
+    /// `RUColor.lime`, tombait à 3,4:1 sur la nuit au lieu de 13,8. Et les deux `RUColor.card`
+    /// qui détouraient le point et son étiquette peignaient du BLANC : sur la nuit, détourer
+    /// veut dire reprendre le fond, donc `traceBackground`.
+    private var courbeDAllure: some View {
+        Canvas { context, size in
+            let points = recentPacesSecPerKm
+            let minPace = points.min() ?? 0
+            let maxPace = points.max() ?? 1
+            let range = max(1, maxPace - minPace)
+            let stepX = size.width / CGFloat(points.count - 1)
+            var line = Path()
+            var fill = Path()
+            fill.move(to: CGPoint(x: 0, y: size.height))
+            var lastPoint = CGPoint.zero
+            var pointPositions: [CGPoint] = []
+            for (i, p) in points.enumerated() {
+                let t = CGFloat((p - minPace) / range) // 0 = fastest ... 1 = slowest
+                let point = CGPoint(x: CGFloat(i) * stepX, y: size.height * (0.15 + 0.7 * t))
+                if i == 0 { line.move(to: point) } else { line.addLine(to: point) }
+                fill.addLine(to: point)
+                lastPoint = point
+                pointPositions.append(point)
+            }
+            fill.addLine(to: CGPoint(x: size.width, y: size.height))
+            fill.closeSubpath()
+            context.fill(fill, with: .linearGradient(Gradient(colors: [RUColor.accentDeLaNuit.opacity(0.35), .clear]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+            context.stroke(line, with: .color(RUColor.accentDeLaNuit), lineWidth: 2.5)
+            context.fill(Path(ellipseIn: CGRect(x: lastPoint.x - 3.5, y: lastPoint.y - 3.5, width: 7, height: 7)), with: .color(RUColor.accentDeLaNuit))
+
+            // Her all-time best pace, marked right on the trend line instead of only
+            // living in a separate "records" card further down — was invisible here
+            // even when the exact point plotted WAS the record.
+            if let recordIndex = recordPointIndex, recordIndex < pointPositions.count {
+                let p = pointPositions[recordIndex]
+                context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)), with: .color(RUColor.limeSombre))
+                context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)).strokedPath(StrokeStyle(lineWidth: 1.5)), with: .color(RUColor.traceBackground))
+
+                // Le mot était coupé par la courbe. Un record d'allure est un point
+                // BAS en valeur, donc HAUT à l'écran : `max(9, p.y - 14)` le plaquait
+                // presque toujours contre le bord supérieur, c'est-à-dire exactement
+                // là où passe le tracé. Et il était centré sur une abscisse bornée à
+                // 22 points au jugé, sans rapport avec la largeur réelle du mot, donc
+                // rogné à droite sur les écrans étroits.
+                //
+                // Deux corrections, et il faut les deux. On MESURE l'étiquette au
+                // lieu de deviner. Puis, faute de place au-dessus, on la pose SOUS le
+                // point plutôt que de la coller au plafond — et on peint un fond
+                // derrière elle dans tous les cas, parce qu'au milieu d'un graphique
+                // aucune position n'est à l'abri d'un trait qui passe.
+                let label = context.resolve(
+                    Text("RECORD").font(RUFont.sans(.micro, weight: .bold)).foregroundColor(RUColor.limeSombre)
+                )
+                let labelSize = label.measure(in: size)
+                let fitsAbove = p.y - 14 - labelSize.height / 2 >= 1
+                let labelY = fitsAbove ? p.y - 14 : p.y + 14
+                let halfWidth = labelSize.width / 2
+                let labelX = min(max(p.x, halfWidth + 3), size.width - halfWidth - 3)
+                let plate = CGRect(x: labelX - halfWidth - 4,
+                                   y: labelY - labelSize.height / 2 - 2,
+                                   width: labelSize.width + 8,
+                                   height: labelSize.height + 4)
+                context.fill(Path(roundedRect: plate, cornerRadius: 4), with: .color(RUColor.traceBackground.opacity(0.92)))
+                context.draw(label, at: CGPoint(x: labelX, y: labelY))
+            }
+        }
+        .frame(height: 104)
+        // The trend shape itself carries zero VoiceOver content otherwise — the
+        // min/max text below it (when shown) only covers the endpoints, not the
+        // direction of change.
+        .accessibilityLabel("Tendance d'allure")
+        .accessibilityValue(paceTrendAccessibilitySummary)
     }
 
     // MARK: Personal records — real bests pulled from history, not shown anywhere before this

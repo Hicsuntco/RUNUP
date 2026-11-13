@@ -41,6 +41,18 @@ struct DailyGoalsBarsView: View {
     /// en grand demande un trait plus fin.
     var strokeScale: CGFloat = 1
 
+    /// L'anneau est-il posé sur une carte de nuit ?
+    ///
+    /// Il apparaît sur DEUX écrans — en résumé sur l'accueil, en sujet sur la Journée — et depuis
+    /// que la Journée le pose sur la nuit, ses deux encres doivent suivre le fond et non le thème.
+    /// La piste est « du noir à 9 % » en thème clair : sur `#14131E` elle disparaît, et avec elle
+    /// tout le travail documenté plus bas pour qu'un anneau vide se lise vide. Les remplissages,
+    /// eux, portaient la correction calculée pour le blanc — le cyan y perd 49 % de son éclat.
+    ///
+    /// Un booléen plutôt que des couleurs passées à la main : l'appelant ne choisit pas une
+    /// palette, il dit sur quel fond il est. C'est la même règle que `RUColor.surLaNuit`.
+    var surLaNuit: Bool = false
+
     /// What's actually drawn — starts at 0 when `animateOnAppear` is set, then springs to
     /// `progress` in `onAppear`. `.trim`'s `from`/`to` are themselves animatable, so
     /// `.animation(value:)` on the trimmed shape interpolates smoothly with no custom `Shape`
@@ -53,11 +65,12 @@ struct DailyGoalsBarsView: View {
     // mémberwise que Swift fabrique. `strokeScale` ajouté sans toucher ici a donné « Extra
     // argument 'strokeScale' in call » sur l'unique site d'appel qui s'en sert.
     init(goals: [Goal], size: CGFloat = 96, animateOnAppear: Bool = false,
-         strokeScale: CGFloat = 1) {
+         strokeScale: CGFloat = 1, surLaNuit: Bool = false) {
         self.goals = goals
         self.size = size
         self.animateOnAppear = animateOnAppear
         self.strokeScale = strokeScale
+        self.surLaNuit = surLaNuit
         _displayedProgress = State(initialValue: animateOnAppear ? goals.map { _ in 0 } : goals.map(\.progress))
     }
 
@@ -71,6 +84,15 @@ struct DailyGoalsBarsView: View {
     /// aucune information — la séance et les calories se distinguaient par leur position, pas par
     /// leur couleur. Trois objectifs différents méritent trois signaux différents.
     static var fillColors: [Color] { [RUColor.rose, RUColor.violet, RUColor.cyan] }
+
+    /// Les mêmes trois, sur la nuit : sans la correction calculée pour le fond blanc.
+    ///
+    /// Exposé comme `fillColors` l'est, et pour la même raison — la légende à pastilles de
+    /// `RingsView` lit l'une ou l'autre selon le fond sur lequel ELLE est posée, au lieu d'en
+    /// garder une deuxième copie.
+    static var fillColorsSurLaNuit: [Color] {
+        [AccentTheme.current.primary, AccentTheme.current.tail, RUColor.cyanSombre]
+    }
 
     private static let canvasSize: CGFloat = 100
     /// 15 % du diamètre. C'était 12 %, aligné sur le widget après une comparaison côte à côte —
@@ -121,7 +143,8 @@ struct DailyGoalsBarsView: View {
     var body: some View {
         ZStack {
             ForEach(Array(goals.enumerated()), id: \.offset) { i, goal in
-                let color = Self.fillColors[min(max(0, goal.slot), Self.fillColors.count - 1)]
+                let palette = surLaNuit ? Self.fillColorsSurLaNuit : Self.fillColors
+                let color = palette[min(max(0, goal.slot), palette.count - 1)]
                 // La couleur de l'arc SUIVANT, vers laquelle celui-ci va se fondre.
                 //
                 // Prise dans `goals` et non dans `fillColors` : un jour de repos n'affiche que
@@ -129,7 +152,7 @@ struct DailyGoalsBarsView: View {
                 // numéro suit. C'est le voisin RÉELLEMENT dessiné qui compte, sinon la jonction se
                 // fondrait vers une couleur absente de l'anneau.
                 let nextSlot = goals[(i + 1) % goals.count].slot
-                let nextColor = Self.fillColors[min(max(0, nextSlot), Self.fillColors.count - 1)]
+                let nextColor = palette[min(max(0, nextSlot), palette.count - 1)]
                 let seg = RingSegmentGeometry.segment(at: i, count: goals.count)
                 let pct = max(0, min(1, i < displayedProgress.count ? displayedProgress[i] : 0))
                 let fillEnd = seg.trimStart + (seg.trimEnd - seg.trimStart) * pct
@@ -140,8 +163,9 @@ struct DailyGoalsBarsView: View {
                 Circle()
                     .trim(from: seg.trimStart, to: seg.trimEnd)
                     .stroke(
-                        (RUColor.isLight ? Color.black : Color.white)
-                            .opacity(RUColor.isLight ? Self.lightTrackOpacity : Self.darkTrackOpacity),
+                        (RUColor.isLight && !surLaNuit ? Color.black : Color.white)
+                            .opacity(RUColor.isLight && !surLaNuit ? Self.lightTrackOpacity
+                                                                   : Self.darkTrackOpacity),
                         style: StrokeStyle(lineWidth: stroke, lineCap: .round)
                     )
 

@@ -74,9 +74,11 @@ PERMIS = {
            "uni n'a pas."),
 
     # ── 3. UN VOILE QUI SERT À LIRE ───────────────────────────────────────────────────────────
-    "RunUp/Views/Home/HomeView.swift": (
-        1, "Le voile noir sous le texte posé SUR un tracé GPS. Sans lui, le titre tombe sur une "
-           "carte claire ou sombre selon le parcours, et devient illisible une fois sur deux."),
+    "RunUp/Views/Components/CarteDeNuit.swift": (
+        1, "Le voile noir sous les chiffres posés SUR un dessin. Sans lui, ils tombent sur une "
+           "forme claire ou sombre selon la donnée, et deviennent illisibles une fois sur deux. "
+           "Il était dans HomeView tant qu'un seul écran portait une carte de nuit ; il vit ici "
+           "depuis que cinq écrans en portent une, et l'exception a suivi le code."),
     "RunUp/Views/Live/RecapView.swift": (
         1, "Le fondu en bas du défilement : le contenu s'efface sous le bord au lieu d'y être "
            "coupé net."),

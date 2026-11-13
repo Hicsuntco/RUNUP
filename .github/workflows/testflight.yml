@@ -848,6 +848,16 @@ jobs:
           cd ci_scripts && python3 test_encres.py
           cd .. && python3 ci_scripts/check_encres.py
 
+      # La carte de nuit est le seul élément authored de l'app, et elle était peinte avec les
+      # jetons de la PAGE : l'anneau de départ du tracé en `textPrimary`, soit du presque-noir
+      # sur du presque-noir dès que le thème est clair — sur la capture, un trou dans la lueur.
+      # Et le tracé portait l'accent descendu pour le fond blanc : lime y perdait 58 % de son
+      # éclat, cyan 49 %, ambre 48 %. Aucun des trois n'avait de symptôme technique.
+      - name: Vérifier que rien de la page n'est peint sur la nuit
+        run: |
+          cd ci_scripts && python3 test_nuit.py
+          cd .. && python3 ci_scripts/check_nuit.py
+
       # `lineLimit(1)` sans `minimumScaleFactor`, c'est une troncature. Sur une phrase elle se
       # voit ; sur un NOMBRE elle ment — « 1:23:45 » devient « 1:23… » et rien ne dit que ce n'est
       # pas l'heure complète. Trouvé sur l'écran de séance, où ni le chrono ni l'allure cible n'en

@@ -183,7 +183,6 @@ struct ActivityDetailView: View {
             // copie, écrite trois lignes sous un commentaire qui renvoie au fil.
             RUColor.traceBackground
             SelfDrawingRoute(route: s.route, lineWidth: 3.5,
-                             colors: [RUColor.rose, RUColor.violet],
                              targetPoints: 140, showsStart: true)
                 .padding(24)
         }

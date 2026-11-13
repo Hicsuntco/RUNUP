@@ -5196,3 +5196,110 @@ carte en deux jours.
 
 Quatre cas dans `BaisseProgrammeeTests`, dont celui qui exige que **les quatre blocs soient
 classés** : un bloc oublié prendrait silencieusement le comportement par défaut.
+
+## 13 novembre 2026 — la signature s'étend aux cinq écrans, et son encre était fausse
+
+Charlotte : « Étends la signature aux quatre autres écrans. » DESIGN.md § 9 mesurait l'état :
+part d'image sombre en thème clair, Club 30,1 % · Accueil 15,0 % · Coach 2,6 % · Stats 1,9 % ·
+Journée 1,6 % · Plan 1,3 %. Deux écrans sur six portaient la direction artistique.
+
+### D'abord dire ce qu'est la signature
+
+Avant de peindre, il fallait la définir — sinon on applique un fond sombre et on produit
+exactement le rendu générique qu'on fuit. Elle est écrite dans `CarteDeNuit.swift`, qui est le
+composant, pour qu'on ne puisse pas la suivre sans la lire. Quatre règles, et il faut les quatre :
+**ce qui est mesuré devient le dessin** ; **le dessin occupe le cadre** ; **la nuit, et rien
+d'autre d'allumé** ; **les chiffres se posent dessus**. Et une cinquième, négative : **une seule
+par écran.**
+
+La règle 1 est celle qui tranche le plus : les états vides des Stats n'ont pas de carte de nuit,
+parce qu'il n'y a rien à dessiner. Une nuit vide avec un chiffre dessus serait un fond sombre
+pour faire signature, c'est-à-dire ce que la règle refuse.
+
+### Ce que chaque écran y met
+
+| Écran | Le dessin | Posé dessus |
+| --- | --- | --- |
+| Plan | seize semaines de volume, en couleurs de phase | le nombre de semaines, le plus gros volume |
+| Stats | la courbe d'allure et son point RECORD | l'allure moyenne et son écart |
+| Coach | les sept jours de la semaine, famille et durée | forme, séance du jour, dernière sortie |
+| Journée | l'anneau des trois objectifs | le compte, au moyeu de l'anneau |
+| Accueil | *(inchangé)* le tracé GPS, repassé sur le composant | sa date, sa distance, son allure |
+
+Le ruban du Coach est un objet nouveau, et il parle la langue du graphique du Plan : des hauteurs
+côte à côte. L'un montre seize semaines de volume, l'autre sept jours de séance. Ce n'est pas une
+répétition, c'est une grammaire — la forme d'un entraînement se lit en hauteurs, qu'on regarde un
+bloc ou une semaine.
+
+### CE QUE J'AI TROUVÉ EN CHEMIN, ET QUI COMPTE PLUS
+
+La nuit vaut `#14131E` dans les deux thèmes — c'est écrit, et c'est juste. Mais **tout ce qu'on y
+peignait suivait le thème de la page.**
+
+- L'anneau de départ du tracé GPS était en `RUColor.textPrimary`, soit `#181511` en thème clair :
+  du presque-noir à 85 % sur du presque-noir. En recadrant la capture de l'accueil, il ne se lit
+  pas comme un repère mais comme un **trou** percé dans la lueur. Le thème clair est le défaut
+  depuis la décision D2 : c'était le cas normal, pas un cas limite.
+- La trace fantôme, à 7 % de la même encre, disparaissait.
+- Le tracé lisait `RUColor.rose`, qui rend `primaryOnLight` en thème clair — une valeur descendue
+  par `meetingContrastOnWhite` pour rester lisible **sur du blanc**, qu'il n'y a pas ici.
+
+Mesuré, rapport de luminance de l'accent contre `#14131E` :
+
+| nuancier | sombre | clair | perte |
+| --- | --- | --- | --- |
+| rose, violet, bleu, magenta | 4,23 à 5,55 | idem à 6 % près | ≤ 6 % |
+| corail | 5,94 | 5,25 | 12 % |
+| ambre | 10,10 | 5,26 | 48 % |
+| cyan | 10,37 | 5,25 | 49 % |
+| lime | 12,34 | 5,23 | 58 % |
+
+Le nuancier par défaut ne perd rien, ce qui explique les deux mois : **trois nuanciers sur huit
+perdaient la moitié de l'éclat de leur tracé**, et personne ne les regarde en premier.
+
+D'où la famille `surLaNuit` / `surLaNuit2` / `surLaNuit3`, `accentsDeLaNuit`, et les six couleurs
+sémantiques en `*Sombre`. `check_nuit.py` la tient : il refuse un jeton de page dans le corps d'un
+appel à `CarteDeNuit` et dans les fichiers qui ne dessinent que sur la nuit. **Il a trouvé un
+quatrième cas à sa première exécution** — le repli de la lueur de tête, `colors.last ?? RUColor.rose`,
+que j'avais lu trois fois sans le voir.
+
+### Une divergence réparée au passage
+
+Le Club peignait le tracé en DEUX teintes, l'accueil en TROIS. La même course, deux dessins selon
+l'écran. Le commentaire du jeton `traceBackground` prévoyait exactement ça — « une deuxième copie
+aurait divergé au premier réglage » — à propos du fond ; c'est la nuance qui avait divergé. Les
+deux appels du Club n'imposent plus de palette.
+
+### Ce qui a échoué, et pourquoi
+
+**Deux fois de suite, un fichier de test Swift que rien n'exécutait avant CI.** `tout.sh` lit le
+texte des fichiers, il ne compile pas Swift.
+
+1. `BaisseProgrammeeTests` passait la chaîne « forme » à un paramètre `GoalType`. Aucun cas ne
+   porte ce nom. La compilation est tombée, et les deux workflows avec elle.
+2. `SemaineComparableTests` affirmait que « dix jours en arrière, c'est l'avant-dernière semaine ».
+   Depuis un jeudi, dix jours en arrière tombent sur le **lundi de la semaine passée**, premier
+   jour de la fenêtre comparable. Le code comptait les 42 km, et il avait raison. Le cas est
+   réécrit sur la borne elle-même — une seconde avant, une seconde après — au lieu d'un nombre de
+   jours compté de tête.
+
+Je n'en fais pas un garde. Un contrôle qui vérifierait les littéraux d'énumération rendrait un
+faux positif à chaque chaîne qui ressemble à un cas, et `check_entrees` a déjà appris ce que vaut
+un garde bâti sur une prémisse non vérifiée. Le compilateur est le bon outil ; il tourne sur CI.
+
+### Trois gardes existants ont attrapé mon propre travail
+
+`check_degrade` (le voile de la carte de nuit, exception déplacée de `HomeView` vers le composant
+qui le porte maintenant), `check_grille` (trois écarts hors grille dans le ruban et le Coach),
+`check_strings` (deux chaînes neuves absentes du catalogue, donc françaises en anglais et en
+espagnol). Et `check_design` a refusé la table de DESIGN.md dès que j'ai nommé les valeurs
+sombres : `couleurs.declarations()` ne savait pas suivre un jeton qui en nomme un autre. Il le
+sait, sur une seule indirection — au-delà, une couleur se lirait par chaînage et le lecteur de
+palette redeviendrait un interpréteur.
+
+### Ce qui attend Charlotte
+
+**La Journée.** Un anneau de progression sur fond noir est le vocabulaire de l'app Activité
+d'Apple. Celui de RunUp en diffère réellement — une seule piste segmentée en trois arcs, et non
+trois anneaux concentriques, avec le compte au centre — mais la question 3 de la DA se pose là, et
+seulement là. C'est un jugement sur une image rendue, pas une mesure.

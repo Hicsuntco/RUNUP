@@ -125,22 +125,42 @@ struct RingsView: View {
 
                 dayNavigator
 
-                ZStack {
-                    DailyGoalsBarsView(goals: displayGoals.map { .init(slot: $0.slot, progress: $0.progress) }, size: 168, animateOnAppear: true)
-                        .opacity(isLoadingHistoricalDay ? 0.4 : 1)
-                    VStack(spacing: 2) {
-                        Text("\(displayDone) / \(displayTotal)").displayStyle(.figure).foregroundColor(RUColor.textPrimary)
-                        Text("BOUCLÉS")
-                            .font(RUFont.sans(.small, weight: .bold))
-                            .tracking(1.5)
-                            .foregroundColor(RUColor.text2)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.75)
+                // # L'ANNEAU EST LE DESSIN DE CET ÉCRAN
+                //
+                // La Journée mesurait 1,6 % de surface sombre en thème clair (DESIGN.md § 9) :
+                // un anneau posé à même la page, puis trois cartes blanches. L'anneau EST les
+                // trois objectifs du jour — c'est la seule chose de l'écran qu'on lit sans lire.
+                //
+                // Il reste en revanche posé sur la PAGE sur l'accueil, et ce n'est pas une
+                // divergence : là-bas il résume et renvoie ici, ici il est le sujet. Le composant
+                // reçoit `surLaNuit` et calibre ses deux encres sur le fond — même mécanisme que
+                // `primaryOnLight`, une teinte qui doit paraître la même sur deux fonds n'a pas
+                // la même valeur sur les deux.
+                //
+                // Le centre n'est pas une légende posée sur le dessin mais son MOYEU : il est au
+                // milieu de l'anneau, pas en bas à gauche. La carte de nuit porte donc une
+                // légende vide, et le compte vit dans le dessin — c'est le seul des cinq écrans
+                // où les chiffres sont DANS la forme plutôt que dessus.
+                CarteDeNuit(hauteur: 236, marge: 0, voile: false) {
+                    ZStack {
+                        DailyGoalsBarsView(goals: displayGoals.map { .init(slot: $0.slot, progress: $0.progress) },
+                                           size: 168, animateOnAppear: true, surLaNuit: true)
+                        VStack(spacing: 2) {
+                            Text("\(displayDone) / \(displayTotal)")
+                                .displayStyle(.figure).foregroundColor(RUColor.surLaNuit)
+                            Text("BOUCLÉS")
+                                .font(RUFont.sans(.small, weight: .bold))
+                                .tracking(1.5)
+                                .foregroundColor(RUColor.surLaNuit2)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
+                        }
                     }
                     .opacity(isLoadingHistoricalDay ? 0.4 : 1)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } legende: {
+                    EmptyView()
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
                 .animation(.easeOut(duration: 0.2), value: isLoadingHistoricalDay)
                 // LE SEUL GRAPHIQUE MUET DE L'APP, et c'était l'élément principal de l'écran
                 // entièrement consacré aux objectifs du jour. Au balayage VoiceOver, l'anneau de

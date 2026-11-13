@@ -177,6 +177,24 @@ def _():
     assert ck.ecarts() == [], ck.ecarts()
 
 
+@cas_test("UN JETON QUI EN NOMME UN AUTRE EST RÉSOLU, une fois et une seule")
+def _():
+    # `lime` lit `limeSombre` pour sa branche sombre depuis que la carte de nuit a eu besoin de
+    # la variante sombre sans la branche de thème. Sans résolution, `declarations()` rendait la
+    # chaîne « limeSombre » et ce garde refusait la table de DESIGN.md — à juste titre, puisqu'il
+    # ne pouvait plus vérifier ce qu'elle annonce.
+    source = """
+    static let limeSombre = Color(hex: 0xC8FF3D)
+    static var lime: Color { isLight ? Color(hex: 0x6B9E00) : limeSombre }
+    static var inconnue: Color { isLight ? Color(hex: 0x111111) : pasUnJeton }
+    """
+    lus = couleurs.declarations(source)
+    assert lus["lime"]["sombre"] == 0xC8FF3D, lus["lime"]
+    assert lus["lime"]["clair"] == 0x6B9E00, lus["lime"]
+    # Ce qui ne nomme rien de connu reste brut : c'est une information, pas une erreur.
+    assert lus["inconnue"]["sombre"] == "pasUnJeton", lus["inconnue"]
+
+
 def main() -> int:
     echecs = 0
     for nom, f in cas:

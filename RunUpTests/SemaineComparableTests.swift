@@ -89,12 +89,32 @@ final class SemaineComparableTests: XCTestCase {
         XCTAssertEqual(passee, 0)
     }
 
-    func testLaSemaineEnCoursSArreteAuDimancheSoir() {
-        // Une course d'il y a dix jours n'appartient ni à cette semaine ni au segment comparable.
+    func testLaFenetreComparableSArreteAuLundiPrecedent() {
+        // Ce cas disait « dix jours en arrière, c'est l'avant-dernière semaine ». C'était faux, et
+        // il a échoué sur CI : depuis un JEUDI, dix jours en arrière tombent sur le lundi de la
+        // semaine passée, c'est-à-dire le PREMIER jour de la fenêtre comparable. Le code comptait
+        // les 42 km, et il avait raison.
+        //
+        // Il est réécrit sur la borne elle-même plutôt que sur un nombre de jours compté de tête :
+        // une seconde avant le début de la fenêtre, et une seconde après.
+        let maintenant = decalee(lundiMidi(), jours: 3)       // un jeudi midi
+        let debutDeLaFenetre = decalee(lundiMidi(), jours: -7) // le lundi d'avant, à midi
+        let justeAvant = Calendar.current.startOfDay(for: debutDeLaFenetre).addingTimeInterval(-1)
+        let justeApres = Calendar.current.startOfDay(for: debutDeLaFenetre).addingTimeInterval(1)
+
+        let (_, dehors) = SemaineComparable.kilometres([course(justeAvant, 42)], maintenant: maintenant)
+        XCTAssertEqual(dehors, 0, "une seconde avant le lundi, c'est l'avant-dernière semaine")
+
+        let (_, dedans) = SemaineComparable.kilometres([course(justeApres, 42)], maintenant: maintenant)
+        XCTAssertEqual(dedans, 42, accuracy: 0.001,
+                       "le lundi de la semaine passée ouvre la fenêtre comparable")
+    }
+
+    func testDeuxSemainesEnArriereNeComptentNullePart() {
         let maintenant = decalee(lundiMidi(), jours: 3)
-        let courses = [course(decalee(maintenant, jours: -10), 42)]
+        let courses = [course(decalee(maintenant, jours: -14), 42)]
         let (cette, passee) = SemaineComparable.kilometres(courses, maintenant: maintenant)
         XCTAssertEqual(cette, 0)
-        XCTAssertEqual(passee, 0, "dix jours en arrière, c'est l'avant-dernière semaine")
+        XCTAssertEqual(passee, 0)
     }
 }

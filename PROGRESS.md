@@ -5116,3 +5116,48 @@ intention** — elle est partie, avec le `weeklyKm` de `HomeView` qui n'avait pl
 Six cas dans `RunUpTests/SemaineComparableTests.swift`, dont le défaut lui-même : un lundi midi,
 avec vingt kilomètres courus la semaine passée mais tous après le mercredi, l'écart doit valoir
 zéro — l'ancien calcul rendait vingt.
+
+## 13 novembre 2026 — ce que les captures ont dit, et ce qu'elles ne pouvaient pas dire
+
+### Trois vérifications sur quatre
+
+**L'écran de course porte enfin sa consigne.** « ALLURE CIBLE » et l'allure en accent : cet état
+n'avait jamais été photographié depuis que l'app existe. L'allure domine visiblement le chrono —
+c'était 35 contre 52, c'est 44 contre 35. Et à deux fois la taille de texte, elle tient
+entièrement, sans troncature.
+
+**La pastille hebdo affiche « ▼ 2,4 km » au lieu de « ▼ 19,6 km ».** L'écart est redevenu une
+information. L'ambre reste, et c'est la décision de Charlotte.
+
+### La quatrième : mon correctif de déterminisme n'a rien fait
+
+La capture montre une séance continue à 6:18, pas les 6 × 800 m à 4:45 que `CaptureSeed` posait.
+`todaySession` est EXTRAITE de `weekSessions` par la génération : y écrire à la main juste avant
+une régénération se perd — ce que `check_entrees.py` avertit mot pour mot, dans un paragraphe que
+j'avais écrit deux jours plus tôt pour l'autre champ.
+
+L'écriture est retirée. Un code qui ne fait rien mais qui a l'air d'une intention est pire que son
+absence.
+
+**Et j'ai failli commettre la même faute en la corrigeant.** J'ai voulu étendre le garde à
+`todaySession`. Il a signalé quatre sites, et les quatre sont légitimes : l'initialiseur du profil,
+le décodeur de sauvegarde, la substitution par la course libre qui tourne juste APRÈS le moteur par
+conception, et une constante locale `let todaySession = profile.todaySession` que mon motif prenait
+pour une affectation. La règle n'a pas été ajoutée — ce qui m'a piégé est l'ORDRE d'exécution, et
+une expression régulière ne le voit pas.
+
+### Le cycle n'apparaissait sur aucune des 147 images
+
+Cherché pixel par pixel dans toute la campagne : **zéro occurrence** de `cycle` et de
+`cycleSurface`. Deux raisons, toutes deux corrigées :
+
+Le profil de démonstration portait `cycleTrackingEnabled: false`, donc `cyclePhase` rendait nil et
+la ligne ne se dessinait jamais. Il l'allume maintenant, avec une date **relative** — huit jours
+avant minuit, soit le neuvième jour du cycle, à trois jours de chaque borne de la phase
+folliculaire, pour qu'aucune dérive d'heure ne la fasse basculer. C'est une ENTRÉE, contrairement à
+la séance du jour.
+
+Et la feuille des réglages n'était photographiée nulle part. Elle n'est pas un `AppScreen` : c'est
+une feuille présentée depuis le profil, que le harnais ne sait pas atteindre en demandant un écran.
+`--reglages` l'ouvre, exactement comme `--paywall` ouvre le mur d'abonnement — le fichier portait
+déjà ce patron, et sa raison écrite.

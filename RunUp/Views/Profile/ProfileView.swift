@@ -93,6 +93,12 @@ struct ProfileView: View {
             SettingsView()
                 .runUpSheetStyle(detents: [.large])
         }
+        // La feuille des réglages s'ouvre d'elle-même pour la campagne de captures — même
+        // mécanisme que le paywall, et même raison : elle n'est pas un `AppScreen`, donc le
+        // harnais ne sait pas l'atteindre autrement. Voir `CaptureSeed.reglagesDemandes`.
+        #if DEBUG
+        .onAppear { if CaptureSeed.reglagesDemandes { showSettings = true } }
+        #endif
         .sheet(isPresented: $showSignIn) {
             SignInView()
                 .runUpSheetStyle(detents: [.large])

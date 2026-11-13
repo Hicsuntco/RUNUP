@@ -150,6 +150,20 @@ final class CapturesUITests: XCTestCase {
         prendre(rang: 18, ecran: "profile", nom: "profil-bas", diagnostic: true, defilements: 3)
     }
 
+    /// LES RÉGLAGES, ET CE QU'ILS CACHAIENT.
+    ///
+    /// La feuille des réglages n'était photographiée nulle part. Elle porte pourtant la ligne de
+    /// phase du cycle, qui a reçu sa teinte et sa surface le 13 novembre — et qui, vérification
+    /// faite le jour même en cherchant ces deux couleurs dans toute la campagne, n'apparaissait
+    /// sur AUCUNE des cent quarante-sept images.
+    ///
+    /// Deux défilements : le bloc du cycle est bas dans la feuille, sous les notifications et les
+    /// sources connectées.
+    func test26Reglages() {
+        prendre(rang: 26, ecran: "profile", nom: "reglages", diagnostic: true,
+                reglages: true, defilements: 2)
+    }
+
     // MARK: Les trois écrans que personne ne revoit
     //
     // L'inscription, parce qu'on ne s'inscrit qu'une fois. Le mur d'abonnement, parce qu'on est
@@ -278,6 +292,7 @@ final class CapturesUITests: XCTestCase {
                          profil: String? = nil, course: Bool = false,
                          sortie: Bool = false, onglet: String? = nil, defilements: Int = 0,
                          inscription: Bool = false, paywall: Bool = false,
+                         reglages: Bool = false,
                          courseEnCours: Bool = false, attente: TimeInterval = 2.0,
                          tailleDuTexte: String? = nil) {
         let clair = ProcessInfo.processInfo.environment["RUNUP_CAPTURES_CLAIR"] != nil
@@ -291,6 +306,7 @@ final class CapturesUITests: XCTestCase {
         // Les trois écrans qu'on ne revoit jamais soi-même — voir `CaptureSeed`.
         if inscription { app.launchArguments += ["--inscription"] }
         if paywall { app.launchArguments += ["--paywall"] }
+        if reglages { app.launchArguments += ["--reglages"] }
         if courseEnCours { app.launchArguments += ["--encours"] }
         // LA TAILLE DU TEXTE, PAR LE MÊME CHEMIN QUE LA LANGUE.
         //

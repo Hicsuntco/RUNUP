@@ -114,6 +114,20 @@ enum CaptureSeed {
         ProcessInfo.processInfo.arguments.contains("--paywall")
     }
 
+    /// `--reglages` : ouvrir la feuille des réglages, pour photographier ce qu'elle porte.
+    ///
+    /// MÊME RAISON QUE LE PAYWALL — ce n'est pas un `AppScreen`, c'est une feuille présentée
+    /// depuis le profil, donc le harnais ne sait pas l'atteindre en demandant un écran.
+    ///
+    /// Ce qu'elle cache, mesuré le 13 novembre : la ligne de phase du cycle, qui venait de
+    /// recevoir sa teinte et sa surface, n'apparaissait sur AUCUNE des cent quarante-sept images
+    /// de la campagne. Elle est à deux niveaux de profondeur — profil, puis réglages, puis plus
+    /// de réglages — et aucune capture ne descendait si bas. Une fonctionnalité qu'on ne
+    /// photographie pas est une fonctionnalité qu'on juge de mémoire.
+    static var reglagesDemandes: Bool {
+        ProcessInfo.processInfo.arguments.contains("--reglages")
+    }
+
     /// `--encours` : démarrer une course, pour photographier l'écran de course.
     ///
     /// ET IL N'Y AURA PAS DE DISTANCE DESSUS, C'EST ATTENDU. Le simulateur n'a pas de signal GPS,
@@ -888,8 +902,25 @@ enum CaptureSeed {
             injuryWhen: nil, terrains: [], autresSports: [],
             weeklyTimeBudget: nil,
             preferredTimeOfDay: nil,
-            cycleTrackingEnabled: false,
-            lastPeriodStartDate: nil,
+            // LE SUIVI DE CYCLE EST ALLUMÉ, et c'est pour qu'il EXISTE en image.
+            //
+            // Il était éteint, donc `cyclePhase` rendait nil, donc la ligne de phase ne se
+            // dessinait jamais. Vérifié le 13 novembre en cherchant la teinte du cycle dans
+            // toute la campagne : zéro pixel, sur cent quarante-sept images. La fonctionnalité
+            // est dans l'app, elle a ses jetons, ses contrastes mesurés — et personne ne l'a
+            // jamais vue. Une page qu'on ne photographie pas est une page qu'on juge de mémoire.
+            //
+            // LA DATE EST RELATIVE, pour que la phase ne dépende pas du jour où la campagne
+            // tourne. Huit jours avant minuit donne le neuvième jour du cycle. Avec les 28 jours
+            // ci-dessous l'ovulation tombe au quatorzième, donc la phase folliculaire court du
+            // sixième au douzième : le neuvième est à trois jours de chaque borne, et aucune
+            // dérive d'heure ne peut le faire basculer.
+            //
+            // C'est une ENTRÉE, contrairement à la séance du jour que j'avais voulu poser
+            // directement le matin même — celle-là était un dérivé, et la génération l'écrasait.
+            cycleTrackingEnabled: true,
+            lastPeriodStartDate: Calendar.current.date(
+                byAdding: .day, value: -8, to: Calendar.current.startOfDay(for: .now)),
             averageCycleLengthDays: 28
         )
     }

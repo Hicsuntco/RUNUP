@@ -432,4 +432,54 @@ vivait que dans leur somme. `check_lancement.py` refait l'addition à chaque CI.
 | --- | --- |
 | La chaleur du fond de consultation | Le brief demande `#FBF9F7`, blanc chaud ; l'app porte `#F4F3F8`, gris-lavande froid. **C'est le plus grand écart visible qui reste**, et D2 a explicitement laissé le chaud non imposé. |
 | La nuance de l'accent par défaut | Le brief demande `#F0225F` ; le nuancier « Rose » porte `#FF0A78`. |
-| Le corps du chiffre central de l'écran de séance | Voir l'écart connu du § 5. |
+| **L'app n'a de signature que sur deux écrans sur six** | Voir § 9. C'est la question qui reste après tout le reste. |
+
+
+---
+
+## 9. La question qui reste : une signature employée au tiers
+
+Le test final de la DA — « sorti de son cadre de téléphone et sans logo, l'écran doit être
+reconnaissable comme RunUp » — n'est **pas** tenu aujourd'hui, et la raison est mesurable.
+
+### Ce que l'app a d'authored
+
+Une seule chose : **la carte sombre au tracé néon.** Un presque-noir plein cadre, un tracé GPS qui
+s'y dessine en rose-violet lumineux, la date et les deux chiffres posés dessus. Elle a un point de
+vue — la sortie comme un objet qui brille dans le noir — et elle ne ressemble à rien d'autre.
+
+Tout le reste de l'accueil est le vocabulaire par défaut d'un tableau de bord de sport : des
+cartes blanches arrondies empilées sur une page teintée, un anneau de progression avec un compte
+au centre et ses objectifs en légende dessous. Rien n'y est mal fait. Rien n'y est à nous.
+
+### Où la signature apparaît, mesuré sur les captures du 12 novembre
+
+Part de l'image occupée par une surface sombre, **en thème clair** — donc là où le sombre est un
+choix et non le thème :
+
+| Écran | Surface sombre | Néon |
+| --- | --- | --- |
+| Club | 30,1 % | 0,9 % |
+| Accueil | 15,0 % | 0,6 % |
+| Coach | 2,6 % | 7,3 % |
+| Stats | 1,9 % | 1,3 % |
+| Journée | 1,6 % | 0,2 % |
+| Plan | 1,3 % | 4,6 % |
+
+**Deux écrans sur six la portent. Les quatre autres n'ont aucun élément de signature** — ils sont
+corrects, cohérents, et interchangeables avec ceux de n'importe quelle app de course.
+
+### Ce que ça veut dire pour une refonte
+
+La refonte ne consiste pas à inventer une direction : **il y en a une, et elle marche.** Elle
+consiste à l'étendre aux quatre écrans qui retombent sur le générique.
+
+C'est une décision de DIRECTION, pas un défaut — et c'est pour ça qu'elle est ici, dans ce qui
+attend Charlotte, et non appliquée. Remodeler quatre écrans sur ma propre lecture du mot
+« reconnaissable » serait du goût déguisé en correction.
+
+**Ce qui n'est PAS en cause**, vérifié avant de l'écrire : l'anneau de progression. Ses trois
+couleurs suivent en partie le nuancier d'accent, ce qui ressemble au défaut du cycle — mais les
+trois objectifs sont montrés ENSEMBLE, avec leur légende. La couleur y distingue trois choses
+simultanées, et chaque coureuse garde la sienne d'un bout à l'autre de l'app. Le cas du cycle
+était l'inverse : quatre couleurs pour des états qu'on ne voit jamais côte à côte.

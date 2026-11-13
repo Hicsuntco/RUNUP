@@ -126,39 +126,6 @@ enum CaptureSeed {
         ProcessInfo.processInfo.arguments.contains("--encours")
     }
 
-    /// LA SÉANCE QUE L'ÉCRAN DE COURSE DOIT MONTRER, et pourquoi elle est forcée.
-    ///
-    /// `hasInstruction` de `LiveRunView` lit `profile.todaySession.pace`. Or `todaySession` est
-    /// la séance du JOUR DE LA SEMAINE où la campagne tourne : un dimanche de repos, elle vaut
-    /// `restSession`, dont l'allure est « — ». Le bloc de consigne disparaît alors, et avec lui
-    /// l'allure cible, le nom du segment, son restant et la barre de progression.
-    ///
-    /// Conséquence mesurée le 13 novembre, sur les captures du 12 : les DEUX images de l'écran de
-    /// course — la normale et celle à deux fois la taille de texte — montraient une course libre
-    /// de quatre secondes, sans aucune consigne. **Tout ce qu'une app de coaching ajoute à un
-    /// chronomètre n'avait jamais été photographié.** Le chantier du même jour, qui refait
-    /// précisément la hiérarchie de ce bloc, n'avait donc aucune image pour l'éprouver.
-    ///
-    /// Et le défaut était pire qu'une absence : l'état dépendait du JOUR. Deux campagnes lancées
-    /// à deux jours d'écart ne photographiaient pas le même écran, ce qui rend tout avant/après
-    /// faux sans prévenir.
-    ///
-    /// Une séance à répétitions, parce que c'est le cas le plus chargé : elle seule porte un nom
-    /// de segment, un restant et une barre. Un footing continu afficherait la consigne sans ses
-    /// trois accessoires, donc il éprouverait moins.
-    static var seanceDeDemonstration: WorkoutSession {
-        WorkoutSession(
-            title: "6 × 800 m",
-            subtitle: "Fractionné · récupération 400 m",
-            durationMinutes: 52,
-            pace: "4:45",
-            zone: "Z4",
-            adjustment: nil,
-            kind: .vo2maxIntervals,
-            intervals: IntervalStructure(reps: 6, repMeters: 800, recoveryMeters: 400)
-        )
-    }
-
     /// `--onglet=apercu|classement|activite` : l'onglet du Club à montrer.
     ///
     /// La démonstration ouvre le Club sur son fil, parce que c'est le seul des trois onglets

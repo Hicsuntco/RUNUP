@@ -27,6 +27,30 @@ moteur » — noierait le rapport sous les constructions légitimes de séances 
     reporte explicitement.
   • `…weekSessions = …` n'est permis qu'au moteur, et seulement depuis `generateWeekSessions`
     ou un instantané d'annulation du coach — plus la restauration d'une sauvegarde.
+
+# CE QUI N'EST PAS TENU ICI, ET POURQUOI — `todaySession`
+
+La séance du jour est EXTRAITE de `weekSessions` par la génération. Y écrire à la main juste avant
+une régénération est donc inutile : l'écriture disparaît.
+
+Le 13 novembre, j'ai voulu rendre déterministe la capture de l'écran de course — elle montre la
+séance du JOUR DE LA SEMAINE où la campagne tourne, donc deux campagnes à deux jours d'écart ne
+photographient pas le même écran. J'ai posé la séance voulue directement dans `todaySession`, et
+**ça n'a rien fait** : la campagne suivante a photographié une séance continue à 6:18, pas les
+6 × 800 m à 4:45 que j'avais posés.
+
+J'ai alors voulu l'interdire ici, comme `weekSessions`. **C'était une deuxième erreur.** Le
+contrôle a signalé quatre sites, et les quatre sont légitimes : l'initialiseur du profil, le
+décodeur de sauvegarde, la substitution par la course libre — qui tourne juste APRÈS le moteur,
+par conception — et une simple constante locale `let todaySession = profile.todaySession`, que mon
+motif prenait pour une affectation.
+
+`todaySession` a donc plusieurs écrivains légitimes, contrairement à `weekSessions`. Ce qui m'a
+piégé n'est pas l'écriture mais son ORDRE par rapport à la génération, et une expression régulière
+ne voit pas un ordre d'exécution. La règle n'est pas ajoutée ; l'avertissement reste.
+
+La bonne façon de rendre cette capture déterministe est de semer les ENTRÉES — objectif, niveau,
+jours de course — pour que la génération produise la séance voulue. C'est le travail qui reste.
 """
 import pathlib
 import re
@@ -38,6 +62,7 @@ DOSSIERS = ["RunUp", "RunUpWatch"]
 MOTEUR = "RunUp/Services/AdaptivePlanEngine.swift"
 RESTAURATION = "RunUp/Services/SauvegardeService.swift"
 PRODUCTEURS = ("generateWeekSessions(", "snapshot.weekSessions")
+
 
 # Un `=` d'affectation, et non une comparaison ou un opérateur composé.
 AFFECTATION = re.compile(r"(?<![=!<>+\-*/%&|^~])=(?!=)")

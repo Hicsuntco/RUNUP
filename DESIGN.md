@@ -54,6 +54,7 @@ couvrent qu'une partie :
 | Cran de titrage hors échelle | `check_echelle.py` |
 | Écart, marge ou rayon hors de la géométrie déclarée | `check_grille.py` |
 | Chiffre et unité composés à la main | `check_chiffres.py` |
+| Grand chiffre qui peut se tronquer en silence | `check_grands_chiffres.py` |
 | Jeton de texte hors famille ou en opacité | `check_jetons_de_texte.py` |
 
 **L'emoji n'est tenu par aucun garde**, et je l'ai découvert en écrivant ce fichier : j'avais cité
@@ -318,10 +319,23 @@ faire maintenant. La consigne est donc au-dessus, avec le segment en surtitre et
 gros ; le chrono descend de 64 à 52 points quand il y a une consigne, et retrouve ses 64 quand il
 n'y en a pas (HYROX, course libre).
 
-> **Écart connu, non résolu.** L'allure cible est à `hero`, soit 35 points, sous un chrono à 52.
-> Le code dit de l'allure qu'elle est « la première chose lue de l'écran » et du chrono qu'il
-> « cesse d'être la première chose lue » : les deux commentaires annoncent une hiérarchie que les
-> tailles ne tiennent pas. Chantier ouvert.
+**L'allure cible est le plus grand corps de l'écran**, au cran `banner` — celui que l'échelle
+réserve à « au plus un par écran ». Le chrono prend `hero` quand une consigne l'accompagne, et
+retrouve son très grand corps hors échelle (64) quand il est le seul chiffre, en course libre ou
+en HYROX.
+
+Ça n'a pas toujours été vrai : l'allure était à `hero` sous un chrono à 52, donc 1,49 fois plus
+petit que ce que le code appelait « la première chose lue de l'écran ». Les deux phrases étaient
+écrites à soixante lignes l'une de l'autre.
+
+**Le plafond de l'allure est 44, et c'est une mesure.** Sur l'iPhone le plus étroit il reste 284
+points utiles. « CIBLE 10:30/km » — le pire cas, un coureur lent pendant son échauffement — occupe
+261 points à 44 et 301 à 52. Au-delà de 44, la consigne se tronque en course.
+
+**Tout grand chiffre tenu sur une ligne peut rétrécir.** `lineLimit(1)` sans `minimumScaleFactor`
+tronque, et sur un nombre la troncature ment : « 1:23:45 » devient « 1:23… » sans que rien ne dise
+que ce n'est pas l'heure complète. Ni le chrono ni l'allure n'en portaient, et la ligne débordait
+dès 1,31× de taille de texte quand l'app en autorise 2,00×. `check_grands_chiffres.py` le tient.
 
 **Les chiffres roulent, ils ne sautent pas.** `monospacedDigit` d'abord, et c'est le plus important
 des deux : avec des chiffres de largeurs différentes, un chrono de 52 points se décale

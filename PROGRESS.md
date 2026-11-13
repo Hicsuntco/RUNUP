@@ -4892,3 +4892,72 @@ raison :
 | `traceBackground` | Le fond d'une image, sombre lui aussi. |
 
 `card` reste le blanc pur : c'est la surface la plus claire, elle n'a pas de famille à porter.
+
+## 13 novembre 2026 — l'écran de séance tient enfin la hiérarchie qu'il annonçait
+
+### Deux phrases écrites à soixante lignes l'une de l'autre
+
+`targetPaceLine` : « gros, en accent, c'est la **première chose lue** de l'écran ».
+`metricsPanel` : le chrono « **cesse d'être la première chose lue** ».
+
+Mesuré : l'allure était à `hero`, soit 35, et le chrono à 52. **Le chrono faisait 1,49 fois la
+taille de ce qui devait être lu en premier.** Une passe précédente l'avait descendu de 64 à 52 et
+avait écrit la seconde phrase ; elle n'avait pas été assez loin pour changer l'ordre.
+
+### Ce qui change
+
+| | Avant | Après |
+| --- | --- | --- |
+| Allure cible | `hero` (35) | **`banner` (44)** |
+| Chrono avec consigne | 52, hors échelle | **`hero` (35)** |
+| Chrono sans consigne | 64, hors échelle | 64, inchangé |
+
+`banner` est le cran que l'échelle réserve à « une accroche, un record : au plus un par écran ».
+L'allure cible est exactement ça. Et le 52 disparaît : une valeur inventée pour un rang qui ne
+tenait pas.
+
+Sans consigne — course libre, HYROX — le chrono reste à 64 : il est alors le seul chiffre de
+l'écran, il en prend tout le poids, et c'est là que le très grand corps demandé par la direction
+artistique se pose.
+
+### Pourquoi 44 et pas plus : une mesure qui a tranché
+
+Largeurs réelles calculées avec les fichiers Inter du dépôt, facteur 1,09 et tracking −3 %
+compris, sur l'iPhone le plus étroit (320 − 2×18 = **284 points utiles**) :
+
+| Ligne | à 44 | à 52 |
+| --- | --- | --- |
+| « 4:45/km » | 193 pt | 229 pt |
+| « CIBLE 10:30/km » — coureur lent, échauffement | 261 pt | **301 pt, déborde** |
+
+Le préfixe CIBLE n'apparaît qu'à l'échauffement, en récupération et au retour au calme. À 52, la
+consigne se serait tronquée en course, pour les coureurs les plus lents, et aucun test n'aurait pu
+le voir.
+
+### Un défaut plus grave trouvé en mesurant autre chose
+
+**Ni le chrono ni l'allure ne portaient de `minimumScaleFactor`.** `lineLimit(1)` sans réduction
+tronque, et sur une phrase la troncature se voit — les points de suspension disent qu'il manque
+quelque chose. Sur un NOMBRE elle ment : « 1:23:45 » devient « 1:23… », et rien à l'écran ne dit
+que ce n'est pas l'heure complète.
+
+Mesuré : la ligne cédait dès **1,31×** de taille de texte système, quand l'app en autorise
+**2,00×**. C'était vrai avant ce chantier, et mon passage à 44 l'aurait fait céder dès 1,09×.
+
+### Ce qui le garde, et le trou qu'il avait
+
+`check_grands_chiffres.py`, 10 cas. Un grand corps — `hero`, `banner`, ou `horsEchelle` à partir
+de 35 — tenu sur une seule ligne doit pouvoir rétrécir.
+
+**La règle a été corrigée avant d'être écrite.** Sa première formulation exigeait une réduction de
+TOUT grand corps, ce qui refusait deux cas légitimes : le titre d'accueil sur trois lignes avec ses
+`\\n` explicites dans un `ScrollView`, et le titre du paywall qui porte
+`fixedSize(horizontal: false, vertical: true)` pour grandir en hauteur. Passer à la ligne est
+l'autre bonne réponse.
+
+**Et le garde était aveugle à son propre cas d'origine.** Sa première version n'acceptait qu'un
+nombre littéral après `horsEchelle:`, donc elle ne voyait pas
+`horsEchelle: hasInstruction ? RUDisplaySize.hero.rawValue : 64` — la ligne même qui a fait écrire
+ce contrôle. Il comptait 8 grands corps ; il en voit 13. Un `horsEchelle:` calculé est désormais
+contrôlé dans le doute : exiger une réduction d'un corps finalement petit ne coûte rien, la
+manquer sur un grand coûte un chiffre faux à l'écran.

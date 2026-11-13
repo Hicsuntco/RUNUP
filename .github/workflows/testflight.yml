@@ -848,6 +848,16 @@ jobs:
           cd ci_scripts && python3 test_encres.py
           cd .. && python3 ci_scripts/check_encres.py
 
+      # `lineLimit(1)` sans `minimumScaleFactor`, c'est une troncature. Sur une phrase elle se
+      # voit ; sur un NOMBRE elle ment — « 1:23:45 » devient « 1:23… » et rien ne dit que ce n'est
+      # pas l'heure complète. Trouvé sur l'écran de séance, où ni le chrono ni l'allure cible n'en
+      # portaient, et où « CIBLE 10:30/km » débordait des 284 points utiles de l'iPhone le plus
+      # étroit dès 1,31× de taille de texte — l'app en autorise 2,00×.
+      - name: Vérifier qu'aucun grand chiffre ne peut se tronquer en silence
+        run: |
+          cd ci_scripts && python3 test_grands_chiffres.py
+          cd .. && python3 ci_scripts/check_grands_chiffres.py
+
       # « Le contenu au milieu, le bouton en bas » centre joliment tant que le contenu est plus
       # court que l'écran. À deux fois la taille de texte — que l'app autorise — les `Spacer`
       # tombent à zéro et le bouton sort par le bas. En bas de `PlanRecapView`, c'est

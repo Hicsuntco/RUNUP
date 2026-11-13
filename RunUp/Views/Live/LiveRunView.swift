@@ -528,6 +528,10 @@ struct LiveRunView: View {
     /// Pendant une répétition — ou pendant toute une séance continue — l'allure du jour EST ce
     /// qu'elle doit faire maintenant : gros, en accent, c'est la première chose lue de l'écran.
     ///
+    /// Et depuis le 13 novembre, les TAILLES le disent aussi : `banner`, le cran que l'échelle
+    /// réserve à un seul objet par écran. Elle était à `hero` sous un chrono plus grand qu'elle,
+    /// ce qui faisait de cette phrase une intention et pas une description.
+    ///
     /// Pendant l'échauffement, la récupération et le retour au calme, non : ces segments sont
     /// volontairement hors allure cible, et l'écran affichait pourtant « ÉCHAUFFEMENT » suivi de
     /// l'allure des répétitions dans le même accent — soit, lu à bout de souffle, la consigne de
@@ -539,16 +543,18 @@ struct LiveRunView: View {
         let pace = appState.profile.todaySession.pace
         if vm?.isTargetEffortNow ?? true {
             Text(verbatim: "\(pace)/km")
-                .displayStyle(.hero)
+                .displayStyle(.banner)
                 .foregroundColor(Ink.accent)
+                .lineLimit(1).minimumScaleFactor(0.5)
         } else {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text("CIBLE")
                     .font(RUFont.display(.caption)).tracking(2)
                     .foregroundColor(Ink.label)
                 Text(verbatim: "\(pace)/km")
-                    .displayStyle(.hero)
+                    .displayStyle(.banner)
                     .foregroundColor(.white.opacity(0.45))
+                    .lineLimit(1).minimumScaleFactor(0.5)
             }
         }
     }
@@ -606,24 +612,53 @@ struct LiveRunView: View {
             // de 12 pt, en haut à droite, hors du regard de quelqu'un qui court.
             //
             // Elle monte donc au-dessus du chrono, avec le segment en surtitre et l'allure visée
-            // en gros. Le chrono descend de 64 à 52 : il reste le plus grand chiffre de l'écran —
-            // c'est lui qui structure l'effort — mais il cesse d'être la première chose lue.
+            // en gros.
+            //
+            // L'ORDRE ANNONCÉ N'ÉTAIT PAS L'ORDRE RENDU, et ça a tenu un moment. Une première
+            // passe avait descendu le chrono de 64 à 52 en écrivant qu'il « cessait d'être la
+            // première chose lue » — pendant que l'allure cible, dont le commentaire de
+            // `targetPaceLine` dit qu'elle EST « la première chose lue de l'écran », restait à
+            // `hero`, soit 35. Le chrono faisait donc 1,49 fois la taille de ce qui devait être
+            // lu en premier. Les deux phrases étaient écrites à soixante lignes l'une de l'autre.
+            //
+            // L'allure prend `banner`, le seul cran que l'échelle réserve à « au plus un par
+            // écran ». Le chrono prend `hero`. Les deux reviennent SUR l'échelle — le 52 était
+            // hors échelle, et il n'y avait aucune raison de garder une valeur inventée pour un
+            // rang qui ne tenait pas.
+            //
+            // POURQUOI PAS PLUS GRAND QUE 44 POUR L'ALLURE. Mesuré sur l'iPhone le plus étroit,
+            // 284 points utiles : « CIBLE 10:30/km » — le pire cas, un coureur lent pendant son
+            // échauffement — occupe 261 pt à 44 et 301 à 52. Au-delà de 44, la consigne se
+            // tronque en course sans qu'aucun test ne puisse le voir.
             //
             // Rien n'est inventé quand il n'y a rien à dire : sans allure cible au plan (HYROX,
-            // course libre), le bloc disparaît et le chrono retrouve ses 64 pt.
+            // course libre), le bloc disparaît et le chrono retrouve ses 64 pt. C'est alors le
+            // SEUL chiffre de l'écran, donc il en prend tout le poids — et c'est là que le très
+            // grand corps demandé par la direction artistique se pose.
+            //
+            // CE QUE ÇA FAIT AU COUPLE TEMPS / DISTANCE, et c'est voulu. Le chrono passe à 35 et
+            // la distance reste à `figure`, 28 : un seul cran les sépare, là où il y en avait
+            // deux. Ils cessent donc d'être l'un au-dessus de l'autre pour devenir une PAIRE —
+            // ce qui est exactement ce qu'ils sont. Le temps et la distance sont les deux faits
+            // de la course ; l'allure visée est la seule chose qui relève du coaching, et c'est
+            // elle qui domine maintenant. Un cran reste la distinction minimale que l'échelle
+            // dessine (ses pas valent 1,25), donc la paire se lit encore dans l'ordre.
             instruction
 
             VStack(spacing: 0) {
                 // LES CHIFFRES ROULENT, ILS NE SAUTENT PAS.
                 //
                 // `monospacedDigit` d'abord, et c'est le plus important des deux : avec des
-                // chiffres de largeurs différentes, un chrono de 52 points se décale
+                // chiffres de largeurs différentes, un grand chrono se décale
                 // horizontalement à chaque seconde — un tremblement permanent au centre de
                 // l'écran, sur le seul objet qu'on fixe en courant. La transition numérique
                 // ensuite, qui fait glisser le seul chiffre qui change au lieu de remplacer la
                 // ligne entière.
                 Text(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0))
-                    .displayStyle(horsEchelle: hasInstruction ? 52 : 64).foregroundColor(.white)
+                    .displayStyle(horsEchelle: hasInstruction
+                                  ? RUDisplaySize.hero.rawValue : 64)
+                    .foregroundColor(.white)
+                    .lineLimit(1).minimumScaleFactor(0.5)
                     .monospacedDigit()
                     .contentTransition(.numericText())
                     .animation(RUMotion.respecting(reduceMotion, RUMotion.digit), value: Int(vm?.elapsedSeconds ?? 0))

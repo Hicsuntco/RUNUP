@@ -180,11 +180,22 @@ final class CapturesUITests: XCTestCase {
     /// demander « descends jusqu'au bloc du cycle », il faut compter les gestes. Trois les a
     /// montrés, un ne montrait rien. La seconde reste, la première est retirée.
     ///
-    /// `attente: 4.0` et non les deux secondes par défaut. L'image obtenue à trois défilements
-    /// portait bien la ligne de phase — mais à 97 % d'opacité, sur les trois canaux : la capture
-    /// a saisi la fin d'un fondu. Deux feuilles s'ouvrent l'une après l'autre avant d'arriver
-    /// ici, et deux secondes ne suffisent pas à les laisser se poser. Une teinte mesurée pendant
-    /// un fondu n'est pas la teinte du jeton, et c'est tout l'objet de cette capture.
+    /// `attente: 4.0` et non les deux secondes par défaut : deux feuilles s'ouvrent l'une après
+    /// l'autre avant d'arriver ici, et la marge ne coûte rien.
+    ///
+    /// CE N'ÉTAIT PAS UN FONDU, ET JE L'AVAIS ÉCRIT. L'encre de la ligne de phase mesure
+    /// `#834C33` là où `RUColor.cycle` déclare `#80462E` — ce qui est exactement `#80462E` à
+    /// 97 % sur du blanc, d'où ma première explication. Elle est fausse : avec quatre secondes
+    /// d'attente, la campagne suivante rend EXACTEMENT le même compte de pixels, 33 020, au
+    /// pixel près. Une image saisie pendant un fondu ne se reproduit pas à l'identique.
+    ///
+    /// Ce qui est établi, et qui suffit à dormir tranquille : tous les autres jetons de la même
+    /// image ressortent exacts — `textPrimary`, `text2`, `text3`, `card2`, la page, la carte et
+    /// `cycleSurface` —, le rose de marque y compte 142 223 pixels exacts, et en thème SOMBRE le
+    /// même jeton `cycle` rend exactement `#F2B8A0`. Le contraste réellement rendu vaut 5,85:1
+    /// contre 6,29 attendus : au-dessus du seuil, donc la lectrice est protégée.
+    ///
+    /// La cause de l'écart reste ouverte. Elle est notée plutôt que devinée.
     func test29Cycle() {
         prendre(rang: 29, ecran: "profile", nom: "cycle", diagnostic: true,
                 defilements: 3, reglages: true, plusDeReglages: true, attente: 4.0)

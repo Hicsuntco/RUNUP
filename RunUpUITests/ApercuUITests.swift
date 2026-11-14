@@ -109,13 +109,25 @@ final class ApercuUITests: XCTestCase {
         //
         // 1,4 s de pose et non 0,7 : la mesure prend sa référence un demi-seconde après
         // l'arrivée de l'écran, et il lui faut de la marge avant l'appui suivant.
+        //
+        // PUIS 2,0 s, ET C'EST LA PREMIÈRE BASCULE QUI L'A DEMANDÉ. Le 13 novembre, la campagne
+        // espagnole a refusé son film : au plan « première-coach », l'image montrait le Profil.
+        // `bascules.py` donne la mesure plutôt que l'impression — « changement d'écran à 0,13 s
+        // avant le plan (attendu 0,60) ». La bascule avait bien eu lieu, mais trop tard pour que
+        // l'écran soit posé quand la mesure l'a regardé ; les trois suivantes tenaient leurs
+        // 0,60 s. C'est la PREMIÈRE de la campagne qui est lente, celle qui suit le lancement,
+        // et le français comme l'anglais l'avaient passée de justesse.
+        //
+        // Six dixièmes de plus par onglet, quatre onglets, trois langues : sept secondes sur une
+        // campagne d'une heure. Le garde, lui, a fait exactement son travail — un film coupé sur
+        // le mauvais écran serait parti sur l'App Store.
         // Le type est écrit plutôt que déduit : un littéral de tuples mêlant une valeur nommée
         // et des formes abrégées compile ou non selon l'humeur de l'inférence, et ici une erreur
         // de compilation ne se découvre qu'au bout de quarante minutes de machine.
         let passeAblanc: [(String, Onglet)] = [("coach", .coach), ("stats", .stats),
                                                ("profil", .profil), ("accueil", .prog)]
         for (nom, onglet) in passeAblanc {
-            plan(app, "première-\(nom)", onglet: onglet, pose: 1.4, defilements: 0, prise: false)
+            plan(app, "première-\(nom)", onglet: onglet, pose: 2.0, defilements: 0, prise: false)
         }
         Thread.sleep(forTimeInterval: 0.8)
 

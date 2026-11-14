@@ -137,6 +137,10 @@ enum CaptureSeed {
     ///
     /// Zéro pixel de `#F6EAE5` et zéro de `#80462E` sur l'image obtenue : la mesure, pas
     /// l'impression.
+    ///
+    /// Depuis, la surface pêche ressort exacte. L'encre, elle, mesure `#834C33` au lieu de
+    /// `#80462E`, et la cause reste ouverte — voir `test29Cycle`, qui porte ce qui a été établi
+    /// et ce qui ne l'est pas.
     static var plusDeReglagesDemandes: Bool {
         ProcessInfo.processInfo.arguments.contains("--reglages-plus")
     }

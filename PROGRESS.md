@@ -5384,3 +5384,48 @@ sous 70, un pixel sur quatre) :
 | Plan | 1,3 % | **13,9 %** |
 
 Quatre écrans étaient sous 3 %. Les six tiennent maintenant entre 13,9 % et 30,1 %.
+
+## 14 novembre 2026 — le film d'aperçu refusé, et une explication que j'avais inventée
+
+### Le garde du film a fait son travail
+
+La campagne espagnole a refusé son aperçu : au plan « première-coach », l'image montrait le
+Profil. `bascules.py` existe pour ça — il compare chaque plan aux écrans réellement photographiés
+par la même campagne, et non à des horloges. Un film coupé sur le mauvais onglet serait parti sur
+l'App Store.
+
+La mesure dit où regarder : « changement d'écran à 0,13 s avant le plan (attendu 0,60) ». La
+bascule avait bien eu lieu, trop tard pour que l'écran soit posé. Les trois suivantes tenaient
+leurs 0,60 s : c'est la PREMIÈRE bascule de la campagne qui est lente, celle qui suit le
+lancement — le français et l'anglais l'avaient passée de justesse.
+
+La pose de la passe à blanc monte de 1,4 à 2,0 s. Quatre onglets, trois langues : sept secondes
+sur une campagne d'une heure.
+
+### J'avais écrit une explication fausse, et je la retire
+
+Hier, l'encre de la ligne de phase du cycle mesurait `#834C33` là où `RUColor.cycle` déclare
+`#80462E`. J'en ai conclu un fondu saisi en cours, parce que `#834C33` est exactement `#80462E`
+à 97 % sur du blanc, et j'ai porté l'attente de deux à quatre secondes.
+
+**C'était faux.** La campagne suivante rend EXACTEMENT le même compte de pixels — 33 020, au pixel
+près. Une image saisie pendant un fondu ne se reproduit pas à l'identique.
+
+Ce qui est établi, en revanche :
+
+- tous les autres jetons de la même image ressortent exacts : `textPrimary`, `text2`, `text3`,
+  `card2`, la page, la carte, et `cycleSurface` ;
+- le rose de marque y compte **142 223 pixels exacts** — donc le rendu n'altère pas les teintes
+  saturées ;
+- en thème **sombre**, le même jeton `cycle` rend exactement `#F2B8A0`.
+
+Donc ni la capture, ni un fondu, ni la saturation. La cause reste ouverte, et elle est notée comme
+telle plutôt que devinée — c'est une tâche, pas un commentaire qui rassure.
+
+Ce qui protège la lectrice, lui, est mesuré : le contraste réellement rendu vaut **5,85:1** contre
+6,29 attendus, au-dessus du seuil de 4,5.
+
+### Vérifié sur la campagne
+
+Les barres du Plan espagnol sont redevenues des aplats — le voile ne les éteint plus. Et
+« 31 km en su pico » est traduit.

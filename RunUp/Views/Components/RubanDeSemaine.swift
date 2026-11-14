@@ -7,8 +7,25 @@ import SwiftUI
 /// Ce n'est pas une répétition, c'est une grammaire : la forme d'un entraînement se lit en
 /// hauteurs côte à côte, qu'on regarde un bloc ou une semaine.
 ///
-/// Il vit sur une carte de nuit — voir `CarteDeNuit` pour la règle — donc toutes ses encres sont
-/// celles de la nuit et non celles du thème.
+/// IL VIT SUR LES DEUX FONDS. Né sur la carte de nuit du Coach — voir `CarteDeNuit` pour la
+/// règle —, il est devenu le 14 novembre la semaine de l'accueil aussi, sur carte blanche. Ses
+/// encres suivent donc `surLaNuit`, et non le thème.
+///
+/// # UNE SEULE SEMAINE DANS L'APP
+///
+/// L'accueil avait sa propre bande : sept lettres, sept quantièmes, une pastille rose cochée pour
+/// les séances faites. Elle disait QUEL JOUR on est et CE QUI EST FAIT — un calendrier. Le ruban
+/// dit en plus QUOI et COMBIEN DE TEMPS, par la couleur et la hauteur.
+///
+/// Deux objets « semaine » dans la même app, dessinés dans deux langages, c'est la divergence que
+/// `traceBackground` décrit depuis septembre, et celle-ci était de moi : j'ai ajouté le ruban au
+/// Coach le 13 novembre sans voir que l'accueil en avait déjà un. Le ruban reprend donc les
+/// quantièmes, et la bande disparaît.
+///
+/// CE QUI EST PERDU, et c'est dit plutôt que caché : la pastille cochée. Une séance faite recule
+/// maintenant à 0,3 d'opacité, comme les semaines faites du graphique du Plan. C'est le geste que
+/// l'app emploie déjà partout ailleurs pour dire « c'est derrière toi » ; une coche de plus en
+/// aurait fait un deuxième.
 ///
 /// ## POURQUOI LA HAUTEUR DIT LA DURÉE
 ///
@@ -22,6 +39,36 @@ struct RubanDeSemaine: View {
     var jours: [PlannedDay]
     /// 0 = lundi. Hors de 0...6, aucun jour n'est marqué.
     var aujourdHui: Int
+    /// Sur une carte de nuit, ou sur une carte blanche ?
+    ///
+    /// Le ruban est né sur la nuit du Coach, et l'accueil le pose sur du blanc depuis qu'il a
+    /// remplacé sa bande de semaine. Un booléen plutôt que des couleurs passées à la main :
+    /// l'appelant ne choisit pas une palette, il dit sur quel fond il est. Même règle que
+    /// `DailyGoalsBarsView` et que `RUColor.surLaNuit`.
+    var surLaNuit: Bool = true
+    /// Afficher le quantième sous l'initiale.
+    ///
+    /// L'accueil s'en sert, le Coach non. C'est ce que la bande de l'accueil faisait de plus que
+    /// le ruban : elle doublait d'un calendrier, et on y lit « aujourd'hui, c'est le 14 ». Sur le
+    /// Coach, la question est « qu'est-ce que je fais cette semaine », et une rangée de chiffres
+    /// n'y répond pas.
+    var quantiemes: Bool = false
+
+    /// L'encre pleine : blanche sur la nuit, celle du thème sur une carte.
+    private var encre: Color { surLaNuit ? RUColor.surLaNuit : RUColor.textPrimary }
+    /// L'encre seconde, pour les jours qui ne sont pas aujourd'hui.
+    private var encre2: Color { surLaNuit ? RUColor.surLaNuit2 : RUColor.text3 }
+
+    /// Le lundi de la semaine en cours, pour les quantièmes.
+    ///
+    /// Déduit plutôt que passé : le ruban reçoit déjà `aujourdHui`, et un appelant qui devrait
+    /// fournir À LA FOIS l'index du jour et la date du lundi aurait deux occasions de se
+    /// contredire.
+    private var lundi: Date? {
+        let cal = Calendar.current
+        let jour = (cal.component(.weekday, from: .now) + 5) % 7
+        return cal.date(byAdding: .day, value: -jour, to: cal.startOfDay(for: .now))
+    }
 
     /// ## POURQUOI UNE MARQUE ÉTROITE ET NON UNE COLONNE PLEINE
     ///
@@ -60,11 +107,19 @@ struct RubanDeSemaine: View {
         HStack(alignment: .bottom, spacing: 4) {
             ForEach(jours) { jour in
                 colonne(jour)
+                    // UN ÉLÉMENT PAR JOUR, ET NON UN RÉSUMÉ POUR TOUT LE RUBAN.
+                    //
+                    // La bande de l'accueil, que ce ruban remplace, en exposait déjà un par jour
+                    // avec son libellé — « mardi 14, séance faite ». La remplacer par un seul
+                    // élément résumé aurait été une régression d'accessibilité sur l'écran le
+                    // plus ouvert de l'app, échangée contre rien.
+                    //
+                    // Le Coach y gagne aussi : sa semaine se parcourt jour par jour au lieu de
+                    // se lire d'un bloc.
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(libelle(jour))
             }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("La semaine que ton coach regarde")
-        .accessibilityValue(resume)
     }
 
     private func colonne(_ jour: PlannedDay) -> some View {
@@ -75,35 +130,53 @@ struct RubanDeSemaine: View {
         return VStack(spacing: 6) {
             Spacer(minLength: 0)
             RoundedRectangle(cornerRadius: RUSpacing.radiusBar, style: .continuous)
-                .fill(famille.tintSurLaNuit)
+                .fill(surLaNuit ? famille.tintSurLaNuit : famille.tint)
                 .frame(width: Self.largeurDeLaMarque)
                 // Une séance faite recule sans disparaître — la même règle que les semaines
                 // passées du graphique du plan, et la même valeur.
                 .opacity(jour.completed ? 0.3 : 1)
                 .frame(height: hauteur)
-            Text(verbatim: initiales[min(max(0, jour.weekday), 6)])
-                .font(RUFont.sans(.micro, weight: .bold))
-                .foregroundColor(jour.weekday == aujourdHui ? RUColor.surLaNuit : RUColor.surLaNuit2)
-                .lineLimit(1)
+            VStack(spacing: 2) {
+                Text(verbatim: initiales[min(max(0, jour.weekday), 6)])
+                    .font(RUFont.sans(.micro, weight: .bold))
+                    .foregroundColor(jour.weekday == aujourdHui ? encre : encre2)
+                    .lineLimit(1)
+                if quantiemes, let quantieme = quantieme(de: jour.weekday) {
+                    Text(verbatim: quantieme)
+                        .font(RUFont.sans(.micro, weight: jour.weekday == aujourdHui ? .bold : .regular))
+                        .foregroundColor(jour.weekday == aujourdHui ? encre : encre2)
+                        .lineLimit(1)
+                }
+            }
             // Le repère du jour, identique à celui de la semaine en cours sur le graphique du
             // plan : même objet, même forme, même taille.
             Circle()
-                .fill(jour.weekday == aujourdHui ? RUColor.surLaNuit : Color.clear)
+                .fill(jour.weekday == aujourdHui ? encre : Color.clear)
                 .frame(width: 4, height: 4)
         }
         .frame(maxWidth: .infinity)
     }
 
-    /// Ce que VoiceOver lit à la place du dessin : combien de séances sont faites, sur combien.
+    /// Le quantième du jour `index` de la semaine en cours, ou `nil` si le calendrier n'a pas su.
+    private func quantieme(de index: Int) -> String? {
+        guard let lundi,
+              let date = Calendar.current.date(byAdding: .day, value: index, to: lundi)
+        else { return nil }
+        return String(Calendar.current.component(.day, from: date))
+    }
+
+    /// Ce que VoiceOver lit sur un jour.
     ///
-    /// L'accord se règle sur `faites`, pas sur le total : c'est lui qui gouverne « séance faite ».
-    /// « 0 séance faite sur 4 » et « 1 séance faite sur 4 » sont justes, « 0 séances faites » ne
-    /// l'est pas — et le zéro est le cas du lundi matin, donc le plus fréquent des deux.
-    private var resume: String {
-        let prevues = jours.filter { ($0.session?.durationMinutes ?? 0) > 0 }
-        let faites = prevues.filter(\.completed).count
-        return Pluriel.choisir(faites,
-            String(localized: "\(faites) séance faite sur \(prevues.count)"),
-            String(localized: "\(faites) séances faites sur \(prevues.count)"))
+    /// Les quatre tournures sont celles que la bande de l'accueil employait déjà, mot pour mot :
+    /// elles sont au catalogue, traduites, et éprouvées. Les reprendre plutôt que d'en écrire de
+    /// nouvelles garde à VoiceOver exactement ce qu'il disait avant le remplacement.
+    private func libelle(_ jour: PlannedDay) -> String {
+        let index = min(max(0, jour.weekday), 6)
+        let nom = quantieme(de: index).map { "\(DayStatus.fullNames[index]) \($0)" }
+            ?? DayStatus.fullNames[index]
+        if jour.completed { return String(localized: "\(nom), séance faite") }
+        if (jour.session?.durationMinutes ?? 0) == 0 { return String(localized: "\(nom), repos") }
+        if jour.weekday == aujourdHui { return String(localized: "\(nom), aujourd'hui") }
+        return String(localized: "\(nom), à venir")
     }
 }

@@ -5469,3 +5469,56 @@ Le défilement en coordonnées reste la règle partout ailleurs.
 La troisième tentative a été la bonne parce qu'elle a cessé de chercher une cause dans le rendu
 pour aller chercher **une autre image du même écran**. La leçon tient en une ligne : une couleur
 ne se juge pas sur une image dont on n'a pas vérifié qu'elle était stable.
+
+## 14 novembre 2026 — l'accueil : une seule semaine, et le programme au-dessus de la ligne
+
+Charlotte : « tu peux faire l'écran d'accueil comme tu veux. » J'ai commencé par chercher un
+dessin propre à cet écran, et j'ai trouvé l'inverse : **l'accueil est un hub, et tout ce qu'il
+pourrait dessiner appartient déjà à un autre écran.** Le profil d'effort d'une séance aurait été
+le seul objet vraiment neuf — la règle 2 l'interdit : `IntervalStructure` connaît `reps`,
+`repMeters` et `recoveryMeters`, rien sur l'échauffement ni le retour au calme. Dessiner le profil
+aurait inventé son début et sa fin, et la plupart des jours il n'aurait montré qu'un rectangle,
+puisqu'un footing n'a qu'une zone.
+
+Trois défauts constatés sur la capture, trois corrections.
+
+### L'app avait DEUX semaines
+
+L'accueil portait sa propre bande : sept lettres, sept quantièmes, une pastille rose cochée.
+Elle dit quel jour on est et ce qui est fait — un calendrier. Le ruban que j'ai ajouté au Coach
+**la veille** dit en plus quoi et combien de temps, par la couleur et la hauteur.
+
+Deux objets « semaine » dessinés dans deux langages, dans la même app. C'est exactement la
+divergence que le jeton `traceBackground` décrit depuis septembre, et celle-ci était de moi : je
+n'avais pas regardé si l'accueil en avait déjà une.
+
+Le ruban devient donc la semaine de l'app. Il reprend les quantièmes — la seule chose que la
+bande faisait de plus — et reçoit `surLaNuit`, comme l'anneau des objectifs, parce qu'il vit
+maintenant sur les deux fonds. `check_nuit.py` l'a signalé de lui-même à la première exécution
+qui a suivi : il était inscrit comme fichier de nuit, il ne l'est plus, et sa note prévoyait ce
+cas mot pour mot.
+
+**Ce qui est perdu, et dit plutôt que caché :** la pastille cochée. Une séance faite recule
+maintenant à 0,3 d'opacité, comme les semaines faites du graphique du Plan — le geste que l'app
+emploie déjà pour dire « c'est derrière toi ».
+
+**Ce qui a failli l'être :** la bande donnait à VoiceOver un élément par jour, avec son libellé.
+Le ruban n'en donnait qu'un, résumé. Il en donne maintenant un par jour, et reprend mot pour mot
+les quatre tournures déjà au catalogue — le Coach y gagne aussi, sa semaine se parcourt.
+
+### Le programme était sous la ligne de flottaison
+
+« Ton programme · 10 km · 47:30 » n'apparaissait qu'en bas de l'écran, à moitié caché par la barre
+d'onglets. C'est la promesse que l'app vend — un plan qui s'adapte — et c'était la seule chose
+qu'on ne voyait pas en ouvrant. Il passe avant les objectifs du jour.
+
+### L'anneau des objectifs faisait trois cents points de haut
+
+Pour un objet que l'écran Journée porte désormais en grand, sur sa carte de nuit. Il passe de 186
+à 72 points et se range À CÔTÉ de son compte au lieu de l'entourer : la carte tient en moitié
+moins de hauteur. Rien n'est retiré — le compte, le libellé et les trois mesures sont tous là.
+
+### L'ordre, maintenant
+
+Séance du jour · dernière sortie · programme et semaine · objectifs du jour · chiffres. C'est
+l'ordre des questions qu'on se pose en ouvrant l'app.

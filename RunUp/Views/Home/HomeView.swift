@@ -40,10 +40,6 @@ struct HomeView: View {
         )
     }
 
-    /// La taille de la pastille d'état de la bande de semaine, en points, suivant le réglage de
-    /// taille du texte — voir `bandeDeSemaine(avecQuantieme:)`.
-    @ScaledMetric(relativeTo: .body) private var tailleMarqueur: CGFloat = 19
-
     /// La hauteur du bandeau de la dernière sortie, qui suit le réglage de taille du texte.
     ///
     /// LE CADRE SUIT LE TEXTE, PARCE QUE C'EST LE TEXTE QUI EST DESSUS. Le bandeau est un tracé
@@ -188,7 +184,16 @@ struct HomeView: View {
                 // de la ligne de flottaison.
                 derniereSortie.ruRises(reduceMotion)
 
-                ringsCard.ruRises(reduceMotion)
+                // L'ORDRE SUIT LES QUESTIONS QU'ON SE POSE EN OUVRANT L'APP.
+                //
+                // Qu'est-ce que je fais aujourd'hui (la séance) — qu'est-ce que je viens de faire
+                // (le tracé) — où j'en suis dans mon plan (le programme) — et le reste.
+                //
+                // Le programme passait APRÈS les objectifs du jour, c'est-à-dire sous la ligne de
+                // flottaison : sur la capture du 13 novembre, « Ton programme · 10 km · 47:30 »
+                // n'apparaissait qu'en bas de l'écran, à moitié caché par la barre d'onglets.
+                // C'est la promesse que l'app vend — un plan qui s'adapte — et c'était la seule
+                // chose qu'on ne voyait pas en ouvrant.
 
                 // La bande de la semaine pour tout le monde. Elle disait deux choses, et une
                 // seule était le produit payant : CE QUI EST PRÉVU. Ce qu'on a COURU est son
@@ -198,6 +203,8 @@ struct HomeView: View {
                 // montre la forme de ce qui manque, là où une case grise s'apprend à ne plus
                 // être vue.
                 programWeekCard.ruRises(reduceMotion)
+
+                ringsCard.ruRises(reduceMotion)
 
                 // Les chiffres, pour tout le monde aussi, et cachés tant qu'il n'y a rien à
                 // montrer : « 0 km · 0 sortie » le premier jour est une carte qui décourage.
@@ -259,9 +266,9 @@ struct HomeView: View {
         let block = AdaptivePlanEngine.trainingBlock(forWeek: profile.weekNumber, shape: shape)
         return Button(action: { appState.go(.plan) }) {
             VStack(alignment: .leading, spacing: 12) {
-                // Combined separately from `weekStrip` below — that already exposes one element
-                // per day (see `dayAccessibilityLabel`); flattening it into this same combine would
-                // undo that per-day granularity instead of adding to it.
+                // Combiné à part du ruban ci-dessous : il expose déjà un élément par jour, avec
+                // son libellé, et l'aplatir dans ce même `combine` déferèrait cette granularité
+                // au lieu de s'y ajouter.
                 Group {
                     if montreLeProgramme {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
@@ -338,127 +345,30 @@ struct HomeView: View {
     ///
     /// `ViewThatFits` et pas un seuil de catégorie, pour la même raison qu'ailleurs : ce qui
     /// décide est la place, pas le réglage.
+    /// LA SEMAINE DE L'ACCUEIL EST CELLE DU COACH, et c'était deux objets jusqu'au 14 novembre.
+    ///
+    /// Ici vivait une bande à soi : sept lettres, sept quantièmes, une pastille rose cochée pour
+    /// les séances faites. Elle disait quel jour on est et ce qui est fait. Le ruban dit en plus
+    /// QUOI et COMBIEN DE TEMPS — la famille par la couleur, la durée par la hauteur — et il
+    /// reprend les quantièmes, qui étaient la seule chose que la bande faisait de plus.
+    ///
+    /// Deux semaines dessinées dans deux langages, dans la même app, c'est la divergence que le
+    /// jeton `traceBackground` décrit depuis septembre. Celle-ci était de moi : le ruban est
+    /// arrivé sur le Coach la veille, sans que je voie que l'accueil en avait déjà une.
     private var weekStrip: some View {
-        ViewThatFits(in: .horizontal) {
-            bandeDeSemaine(avecQuantieme: true)
-            bandeDeSemaine(avecQuantieme: false)
-        }
+        RubanDeSemaine(jours: profile.weekSessions.sorted { $0.weekday < $1.weekday },
+                       aujourdHui: indexDuJour,
+                       surLaNuit: false,
+                       quantiemes: true)
+            .frame(height: 104)
+            .padding(.top, 2)
     }
 
-    private func bandeDeSemaine(avecQuantieme: Bool) -> some View {
-        HStack(spacing: 6) {
-            ForEach(profile.weekStrip) { day in
-                // Plus de contour, et un fond pour ceux qui n'en avaient pas.
-                //
-                // Une case « à venir » était de la couleur de la carte : seul son filet la
-                // rendait visible. Sept cases cerclées côte à côte, c'était une grille dans une
-                // grille — le motif qu'on retire partout ailleurs. Elles prennent maintenant la
-                // sous-surface prévue pour ça (`card2`), qui les montre par leur couleur, et le
-                // filet disparaît.
-                //
-                // Le jour COURANT garde un anneau, mais lui n'est pas un contour de boîte : c'est
-                // un repère, le seul de la rangée, et il ne se répète pas sept fois.
-                //
-                // ── Et plus de fond du tout pour les jours ordinaires ────────────────────────
-                //
-                // Sept rectangles remplis côte à côte pour porter une lettre et un nombre, c'est
-                // sept objets dessinés là où il n'y a que deux états à signaler : ce qui est fait,
-                // et où l'on est. Les cinq autres jours ne sont rien de particulier — ils n'ont
-                // pas besoin d'une boîte pour le dire.
-                //
-                // C'est le même geste que partout ailleurs aujourd'hui : on cesse de dessiner un
-                // contenant autour de ce qui n'est pas un objet. Il reste une frise de sept
-                // colonnes, dont deux portent une marque.
-                // AUJOURD'HUI SE LIT DE LA DATE, PAS DE L'ÉTAT.
-                //
-                // `applyProgramSettingsChange` teste `.rest` AVANT `i == today` : un jour de repos
-                // n'est donc JAMAIS marqué « aujourd'hui ». La frise entière se lisait éteinte le
-                // jour où l'on ne court pas, sans aucun repère pour savoir où l'on en est — ce
-                // qu'une capture a montré sans ambiguïté.
-                //
-                // Les deux ne sont pas la même question : un jour peut être aujourd'hui ET un jour
-                // de repos, et l'énumération les force dans une seule valeur. La date, elle, ne se
-                // trompe jamais et ne peut pas devenir périmée.
-                let estAujourdhui = Calendar.current.isDateInToday(day.date)
-                let (bg, color): (Color, Color) = {
-                    if day.state != .done && estAujourdhui { return (RUColor.card2, RUColor.rose2) }
-                    switch day.state {
-                    // Un jour FAIT était une case entièrement remplie de rose : sur une frise
-                    // dont les autres cases n'ont plus de fond, ce pavé devenait l'objet le plus
-                    // saturé de l'écran — plus fort que le bouton DÉMARRER. Pour dire « mardi ».
-                    // La marque descend là où elle suffit : un disque rose autour de la coche.
-                    case .done: return (RUColor.card2, RUColor.textPrimary)
-                    // Le fond de la case du jour était un accent dilué dans la carte. Sur un
-                    // thème sombre, un rose à 14 % sur du #16161F ne donne pas « rose pâle », il
-                    // donne un bordeaux terne — la couleur la plus sale de l'écran, et elle
-                    // désignait justement le jour où l'on est. La case prend donc la même
-                    // sous-surface que ses voisines : c'est l'anneau et le texte roses qui la
-                    // distinguent, et ils le font sans salir.
-                    case .today: return (RUColor.card2, RUColor.rose2)
-                    // `text3` et non `text4` : sans fond derrière lui, un chiffre à 20 %
-                    // d'opacité ne se lit plus, il se devine. La boîte lui servait de contraste.
-                    case .rest: return (.clear, RUColor.text3)
-                    case .upcoming: return (.clear, RUColor.text2)
-                    }
-                }()
-                VStack(spacing: 6) {
-                    Text(day.displayLetter).displayStyle(.caption).foregroundColor(color)
-                    ZStack {
-                        if estAujourdhui && day.state != .done {
-                            Circle().stroke(RUColor.rose2, lineWidth: 1.5)
-                                .frame(width: tailleMarqueur, height: tailleMarqueur)
-                        }
-                        if day.state == .done {
-                            Circle().fill(RUColor.rose)
-                                .frame(width: tailleMarqueur, height: tailleMarqueur)
-                            Image(systemName: "checkmark")
-                                .font(RUFont.icone(.small, weight: .bold))
-                                .foregroundColor(RUColor.onRose)
-                        } else if avecQuantieme {
-                            Text("\(Calendar.current.component(.day, from: day.date))")
-                                .font(RUFont.sans(.small, weight: estAujourdhui ? .bold : .regular))
-                                .foregroundColor(color)
-                                .lineLimit(1)
-                                .fixedSize()
-                        }
-                    }
-                    // La marque grandit avec le texte : un anneau de 19 points figé autour d'un
-                    // chiffre qui en fait 18 ne l'entoure plus, il le coupe. `@ScaledMetric`
-                    // suit le même réglage que la police, donc les deux restent proportionnés.
-                    .frame(width: tailleMarqueur, height: tailleMarqueur)
-                }
-                .frame(maxWidth: .infinity)
-                // 11, et non plus 14. La rangée avait été montée à 68 points quand les sept
-                // cases portaient un fond : il fallait de la hauteur pour que des boîtes de cette
-                // largeur ne paraissent pas écrasées. Cinq d'entre elles n'ont plus de fond, et
-                // la seule qui en garde un devient, à cette hauteur, un bloc rose isolé qui pèse
-                // plus lourd que la séance du jour. Une frise se mesure à ce qu'elle porte, pas à
-                // ce qu'elle portait.
-                .padding(.vertical, 12)
-                // Each cell (weekday letter + a date number or checkmark, colored by state) was
-                // 2-3 separate disconnected VoiceOver stops with no indication of which day is
-                // today, done, or a rest day — that information lived only in color/border, never
-                // announced.
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel(dayAccessibilityLabel(day))
-                // `radiusInner` et non `radiusCard` : le rayon de carte vaut 24, et 24 sur une
-                // case de 43 points de large en ferait une gélule. Le rayon d'une forme doit
-                // rester proportionné à sa taille, pas suivre la carte qui la contient.
-                .background(bg, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
-            }
-        }
+    /// Lundi = 0, comme `PlannedDay.weekday`. `Calendar` compte le dimanche comme 1.
+    private var indexDuJour: Int {
+        (Calendar.current.component(.weekday, from: .now) + 5) % 7
     }
 
-    private func dayAccessibilityLabel(_ day: DayStatus) -> String {
-        let dayNumber = Calendar.current.component(.day, from: day.date)
-        let name = "\(DayStatus.fullNames[day.weekday]) \(dayNumber)"
-        switch day.state {
-        case .today: return String(localized: "\(name), aujourd'hui")
-        case .done: return String(localized: "\(name), séance faite")
-        case .rest: return String(localized: "\(name), repos")
-        case .upcoming: return String(localized: "\(name), à venir")
-        }
-    }
 
     /// Was one big `Button` wrapping the FAIT/DÉMARRER buttons INSIDE it — nested SwiftUI buttons
     /// have unreliable hit-testing (the outer button can swallow or fight taps meant for the
@@ -1138,34 +1048,26 @@ struct HomeView: View {
         let goalColors = DailyGoalsBarsView.fillColors
         return Button(action: { appState.go(.rings) }) {
             VStack(spacing: 18) {
-                ZStack {
+                // L'ANNEAU PASSE À CÔTÉ DE SON COMPTE, AU LIEU DE L'ENTOURER.
+                //
+                // Il faisait 186 points, avec « 2/3 » en `hero` au centre et les trois mesures
+                // dessous : près de trois cents points de haut, pour un objet que l'écran
+                // Journée porte désormais EN GRAND, sur sa carte de nuit. Sur la capture du
+                // 13 novembre, cette carte poussait le programme — la promesse du coach — sous
+                // la ligne de flottaison, et se faisait elle-même couper.
+                //
+                // Rien n'est retiré : le compte, le libellé et les trois mesures sont tous là.
+                // C'est la mise en page qui change — un anneau de 72 points à gauche de son
+                // chiffre plutôt qu'autour, et la carte tient en moitié moins de hauteur.
+                HStack(spacing: 14) {
                     DailyGoalsBarsView(
                         goals: p.dailyGoalSlotsToday.map { .init(slot: $0.slot, progress: $0.progress) },
-                        size: 186,
-                        animateOnAppear: true,
-                        strokeScale: 0.74
+                        size: 72,
+                        animateOnAppear: true
                     )
-                    // LE TEXTE RESTE DANS L'ANNEAU, ET L'ANNEAU NE BOUGE PAS.
-                    //
-                    // L'anneau fait 186 points, son trait 15 × 0,74 sur un canevas de 100 —
-                    // soit un diamètre intérieur de (100 − 2 × 11,1) × 1,86 ≈ 145 points, et un
-                    // carré inscrit de ≈ 102. Au deuxième cran d'accessibilité, « TA JOURNÉE »
-                    // en demandait plus du double : le mot chevauchait le trait de l'anneau.
-                    // Vu sur la capture en grand texte.
-                    //
-                    // Les deux lignes rétrécissent donc pour tenir. C'est le même arbitrage que
-                    // la barre d'onglets : ce qui porte une GÉOMÉTRIE ne grandit pas, ce qui
-                    // porte du texte s'adapte. Faire grandir l'anneau le ferait déborder de
-                    // l'écran au même cran.
-                    VStack(spacing: 2) {
-                        // `verbatim` : une fraction n'est pas une phrase, elle n'a rien à faire
-                        // dans le catalogue de traduction.
+                    VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: "\(p.dailyGoalsDone)/\(p.dailyGoalsTotal)")
-                            // 44 → 36. Trois éléments énormes se disputaient cet écran — le
-                            // prénom, la durée, cette fraction — et deux cartes suffisaient à
-                            // le remplir en entier. Chacun reste le point de fixation de SON
-                            // bloc ; aucun ne prétend plus l'être pour la page.
-                            .font(RUFont.display(.hero))
+                            .displayStyle(.banner)
                             .foregroundColor(RUColor.textPrimary)
                             .monospacedDigit()
                         Text("Ta journée")
@@ -1175,15 +1077,13 @@ struct HomeView: View {
                             .tracking(1.6)
                     }
                     .lineLimit(1)
-                    .minimumScaleFactor(0.4)
-                    .frame(maxWidth: 102)
+                    .minimumScaleFactor(0.5)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(RUFont.icone(.small, weight: .semibold))
+                        .foregroundColor(RUColor.text3)
                 }
-                // LA LÉGENDE LIT LA MÊME LISTE QUE L'ANNEAU, et c'est toute la correction.
-                //
-                // Elle fabriquait ses colonnes avec sa propre condition. Un lundi de repos,
-                // l'anneau comptait deux objectifs et la légende en affichait trois : l'écran
-                // montrait « 0/2 » au centre, et juste en dessous une colonne « Course · Faite »
-                // dont aucun arc ne portait la couleur. Deux sources pour « quels sont les
+
                 // objectifs du jour », et elles ne répondaient pas pareil.
                 HStack(alignment: .top, spacing: 10) {
                     ForEach(p.dailyGoalSlotsToday.map { $0.slot }, id: \.self) { slot in
@@ -1199,8 +1099,10 @@ struct HomeView: View {
             // hauteur — un objet rond a besoin de plus d'air qu'un bloc de texte pour ne pas
             // paraître à l'étroit, parce que ses coins sont vides et que l'œil mesure la distance
             // au point le plus PROCHE du bord, pas au cadre.
-            .padding(.horizontal, RUSpacing.cardPadding)
-            .padding(.vertical, 24)
+            // 24 points de marge verticale visaient un anneau de 186 : « un objet rond a besoin
+            // de plus d'air qu'un bloc de texte ». À 72, il n'est plus la masse de la carte, et
+            // les marges ordinaires suffisent.
+            .padding(RUSpacing.cardPadding)
         }
         .buttonStyle(PressableStyle())
         // La carte revient. Je l'avais retirée en pariant qu'un anneau de cette taille n'a plus

@@ -2193,23 +2193,6 @@
         }
       }
     },
-    "%lld séance faite sur %lld": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld session done out of %lld"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld sesión hecha de %lld"
-          }
-        }
-      }
-    },
     "%lld séance sur %lld prévues": {
       "localizations": {
         "en": {
@@ -2239,23 +2222,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld sesiones"
-          }
-        }
-      }
-    },
-    "%lld séances faites sur %lld": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld sessions done out of %lld"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld sesiones hechas de %lld"
           }
         }
       }
@@ -14715,23 +14681,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo crear la copia."
-          }
-        }
-      }
-    },
-    "La semaine que ton coach regarde": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The week your coach is reading"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La semana que mira tu entrenador"
           }
         }
       }

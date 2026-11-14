@@ -52,8 +52,12 @@ INTERDITS = [
 # Les fichiers dont TOUT le contenu est dessiné sur la nuit.
 FICHIERS_DE_NUIT = [
     "RunUp/Views/Components/DrawnRoute.swift",
-    "RunUp/Views/Components/RubanDeSemaine.swift",
 ]
+
+# `RubanDeSemaine` y a figuré du 13 au 14 novembre. Il en est sorti le jour où l'accueil a
+# remplacé sa bande de semaine par lui : il vit maintenant sur les deux fonds, donc il reçoit
+# `surLaNuit` et choisit — c'est le cas que la note ci-dessus prévoit, et le garde l'a signalé
+# de lui-même à la première exécution qui a suivi le changement.
 
 MOTIF_JETON = re.compile(r"RUColor\.(" + "|".join(INTERDITS) + r")\b")
 

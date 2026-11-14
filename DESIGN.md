@@ -458,13 +458,17 @@ de ses trois composantes est sous 70, sur un échantillon d'un pixel sur quatre.
 | Écran | Avant | Après |
 | --- | --- | --- |
 | Club | 30,1 % | 30,1 % *(inchangé — il la portait déjà)* |
-| Journée | 1,5 % | **20,8 %** |
+| Coach | 2,7 % | **20,3 %** |
 | Stats | 1,9 % | **20,2 %** |
-| Coach | 2,7 % | **17,9 %** |
-| Accueil | 15,1 % | 15,1 % *(inchangé — c'est l'original)* |
-| Plan | 1,3 % | **13,9 %** |
+| Journée | 1,5 % | **19,4 %** |
+| Accueil | 15,1 % | 15,0 % *(inchangé — c'est l'original)* |
+| Plan | 1,3 % | **13,8 %** |
 
-Les six écrans tiennent maintenant entre 13,9 % et 30,1 %. Avant, quatre d'entre eux étaient sous
+Les trois dessins qui suivent la journée — le ruban du Coach, l'anneau de la Journée, la courbe
+des Stats — bougent de quelques dixièmes d'une campagne à l'autre, puisque leur contenu change
+avec le jour. La colonne « après » est celle du 14 novembre.
+
+Les six écrans tiennent maintenant entre 13,8 % et 30,1 %. Avant, quatre d'entre eux étaient sous
 3 % : ils n'avaient aucun élément de signature, et étaient interchangeables avec ceux de n'importe
 quelle app de course.
 

@@ -5377,11 +5377,15 @@ sous 70, un pixel sur quatre) :
 | Écran | Avant | Après |
 | --- | --- | --- |
 | Club | 30,1 % | 30,1 % |
-| Journée | 1,5 % | **20,8 %** |
+| Coach | 2,7 % | **20,3 %** |
 | Stats | 1,9 % | **20,2 %** |
-| Coach | 2,7 % | **17,9 %** |
-| Accueil | 15,1 % | 15,1 % |
-| Plan | 1,3 % | **13,9 %** |
+| Journée | 1,5 % | **19,4 %** |
+| Accueil | 15,1 % | 15,0 % |
+| Plan | 1,3 % | **13,8 %** |
+
+Les trois dessins qui suivent la journée — le ruban du Coach, l'anneau de la Journée, la courbe
+des Stats — bougent de quelques dixièmes d'une campagne à l'autre, puisque leur contenu change
+avec le jour. Les valeurs ci-dessus sont celles du 14 novembre.
 
 Quatre écrans étaient sous 3 %. Les six tiennent maintenant entre 13,9 % et 30,1 %.
 

@@ -138,11 +138,22 @@ enum CaptureSeed {
     /// Zéro pixel de `#F6EAE5` et zéro de `#80462E` sur l'image obtenue : la mesure, pas
     /// l'impression.
     ///
-    /// Depuis, la surface pêche ressort exacte. L'encre, elle, mesure `#834C33` au lieu de
-    /// `#80462E`, et la cause reste ouverte — voir `test29Cycle`, qui porte ce qui a été établi
-    /// et ce qui ne l'est pas.
+    /// Depuis, elle est photographiée et son encre est juste : l'image espagnole du 14 novembre
+    /// contient 6 315 pixels exactement `#80462E`. Deux images françaises avaient dit le
+    /// contraire, et c'étaient les images qui étaient fausses, pas le jeton — voir `test29Cycle`.
     static var plusDeReglagesDemandes: Bool {
         ProcessInfo.processInfo.arguments.contains("--reglages-plus")
+    }
+
+    /// `--cycle` : poser la vue sur le bloc du cycle, sans compter de gestes.
+    ///
+    /// Trois glissements l'atteignaient en espagnol, le dépassaient en français et en anglais —
+    /// vérifié sur la campagne du 14 novembre, où la même capture a donné trois résultats. Les
+    /// quatre cartes qui le précèdent sont plus courtes dans ces deux langues, donc le même geste
+    /// va plus loin. Une fonctionnalité dont l'unique image dépend de la longueur des textes qui
+    /// la précèdent n'est pas photographiée, elle est tirée au sort.
+    static var cycleDemande: Bool {
+        ProcessInfo.processInfo.arguments.contains("--cycle")
     }
 
     /// `--encours` : démarrer une course, pour photographier l'écran de course.

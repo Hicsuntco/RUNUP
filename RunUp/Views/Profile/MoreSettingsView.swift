@@ -9,6 +9,10 @@ import ActivityKit
 /// pattern (`NavigationStack` + a "Fermer" toolbar button) for the same reason it exists there —
 /// nothing here is behind a second, internal tap once she's on this screen.
 struct MoreSettingsView: View {
+    /// L'ancre que la capture du cycle vise. Nommée une fois : la poser et la viser sont deux
+    /// endroits différents, et une chaîne écrite deux fois finit par diverger.
+    static let ancreDuCycle = "bloc-du-cycle"
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(AppState.self) private var appState
@@ -30,6 +34,22 @@ struct MoreSettingsView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
+                // # LA CAPTURE DU CYCLE NOMME SA DESTINATION, ELLE NE COMPTE PLUS LES GESTES
+                //
+                // Le bloc du cycle est la cinquième carte de cet écran, et la seule image qui le
+                // montre y arrivait par trois glissements en coordonnées. Le 14 novembre, la même
+                // campagne a donné trois résultats différents : l'espagnol tombait dessus, le
+                // français et l'anglais le dépassaient — leurs quatre cartes précédentes sont
+                // plus courtes, donc trois gestes vont plus loin.
+                //
+                // Une fonctionnalité dont l'unique image dépend de la longueur des textes qui la
+                // précèdent n'est pas photographiée, elle est tirée au sort.
+                //
+                // `ScrollViewReader` ne rouvre PAS le piège que `CapturesUITests` documente : ce
+                // qui avait tué le premier essai, c'était d'interroger l'arbre d'accessibilité
+                // DEPUIS LE TEST. Ici le défilement se décide dans l'app, qui connaît ses propres
+                // vues, et le test ne demande rien.
+                ScrollViewReader { defileur in
                 VStack(alignment: .leading, spacing: 18) {
                     sectionTitle("Course")
                     runSettingsCard
@@ -45,7 +65,7 @@ struct MoreSettingsView: View {
 
                     if profile.sex == "female" {
                         sectionTitle("Cycle")
-                        cycleCard
+                        cycleCard.id(Self.ancreDuCycle)
                     }
 
                     sectionTitle("Confidentialité")
@@ -104,6 +124,17 @@ struct MoreSettingsView: View {
                     betaFeedbackCard
                 }
                 .padding(18)
+                // Rien en production : `cycleDemande` lit un argument de lancement qui n'existe
+                // que sous la capture, et le bloc entier est compilé hors des versions publiées.
+                #if DEBUG
+                .onAppear {
+                    guard CaptureSeed.cycleDemande else { return }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        defileur.scrollTo(Self.ancreDuCycle, anchor: .center)
+                    }
+                }
+                #endif
+                }
             }
             .background(RUColor.pageBackground)
             .navigationTitle("Plus de réglages")

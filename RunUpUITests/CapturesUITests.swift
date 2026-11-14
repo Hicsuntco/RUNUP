@@ -175,30 +175,41 @@ final class CapturesUITests: XCTestCase {
     /// était pas : zéro pixel de `#F6EAE5` et zéro de `#80462E` sur l'image. Elle n'est pas DANS
     /// cette feuille, elle est derrière sa ligne « Plus de réglages », soit un troisième niveau.
     ///
-    /// Deux captures avaient été prises, à un et à trois défilements : le défilement se fait en
-    /// coordonnées et non en éléments — c'est ce qui a sauvé ces captures — donc on ne peut pas
-    /// demander « descends jusqu'au bloc du cycle », il faut compter les gestes. Trois les a
-    /// montrés, un ne montrait rien. La seconde reste, la première est retirée.
+    /// AUCUN DÉFILEMENT : c'est l'app qui se pose sur le bloc, par `--cycle`.
+    ///
+    /// Les versions précédentes comptaient les gestes — un, puis trois. Trois ont marché le
+    /// 13 novembre en français. Le 14, la même capture a donné TROIS RÉSULTATS dans la même
+    /// campagne : l'espagnol tombait sur le bloc, le français et l'anglais le dépassaient, parce
+    /// que les quatre cartes qui le précèdent sont plus courtes dans ces deux langues.
+    ///
+    /// Le défilement en coordonnées reste la règle pour tout le reste de ce fichier, et sa raison
+    /// tient toujours : interroger l'arbre d'accessibilité DEPUIS LE TEST avait tué le premier
+    /// essai de ces captures. Ici, rien n'est demandé depuis le test — l'app connaît ses propres
+    /// vues et se place elle-même.
     ///
     /// `attente: 4.0` et non les deux secondes par défaut : deux feuilles s'ouvrent l'une après
     /// l'autre avant d'arriver ici, et la marge ne coûte rien.
     ///
-    /// CE N'ÉTAIT PAS UN FONDU, ET JE L'AVAIS ÉCRIT. L'encre de la ligne de phase mesure
-    /// `#834C33` là où `RUColor.cycle` déclare `#80462E` — ce qui est exactement `#80462E` à
-    /// 97 % sur du blanc, d'où ma première explication. Elle est fausse : avec quatre secondes
-    /// d'attente, la campagne suivante rend EXACTEMENT le même compte de pixels, 33 020, au
-    /// pixel près. Une image saisie pendant un fondu ne se reproduit pas à l'identique.
+    /// ET L'ENCRE DE LA LIGNE DE PHASE EST JUSTE. Je l'ai crue fausse deux fois.
     ///
-    /// Ce qui est établi, et qui suffit à dormir tranquille : tous les autres jetons de la même
-    /// image ressortent exacts — `textPrimary`, `text2`, `text3`, `card2`, la page, la carte et
-    /// `cycleSurface` —, le rose de marque y compte 142 223 pixels exacts, et en thème SOMBRE le
-    /// même jeton `cycle` rend exactement `#F2B8A0`. Le contraste réellement rendu vaut 5,85:1
-    /// contre 6,29 attendus : au-dessus du seuil, donc la lectrice est protégée.
+    /// Sur l'image française, elle mesurait `#834C33` là où `RUColor.cycle` déclare `#80462E`.
+    /// J'ai d'abord conclu à un fondu saisi en cours — faux : deux campagnes aux attentes
+    /// différentes rendaient le même compte de pixels, au pixel près. J'ai ensuite soupçonné le
+    /// rendu des teintes saturées — faux aussi : le rose de marque comptait 142 223 pixels
+    /// exacts dans cette même image, et le jeton `cycle` rend exactement `#F2B8A0` en thème
+    /// sombre.
     ///
-    /// La cause de l'écart reste ouverte. Elle est notée plutôt que devinée.
+    /// La réponse était dans la campagne elle-même : l'image ESPAGNOLE du même écran contient
+    /// 6 315 pixels exactement `#80462E`. Le jeton rend juste. C'était l'image française qui ne
+    /// valait rien comme mesure — prise alors que le défilement n'était pas posé, ce que le
+    /// présent correctif supprime en ne défilant plus du tout.
+    ///
+    /// La leçon tient en une ligne : une couleur ne se juge pas sur une image dont on n'a pas
+    /// vérifié qu'elle était stable.
+    ///
     func test29Cycle() {
         prendre(rang: 29, ecran: "profile", nom: "cycle", diagnostic: true,
-                defilements: 3, reglages: true, plusDeReglages: true, attente: 4.0)
+                reglages: true, plusDeReglages: true, cycle: true, attente: 4.0)
     }
 
     // MARK: Les trois écrans que personne ne revoit
@@ -330,6 +341,7 @@ final class CapturesUITests: XCTestCase {
                          sortie: Bool = false, onglet: String? = nil, defilements: Int = 0,
                          inscription: Bool = false, paywall: Bool = false,
                          reglages: Bool = false, plusDeReglages: Bool = false,
+                         cycle: Bool = false,
                          courseEnCours: Bool = false, attente: TimeInterval = 2.0,
                          tailleDuTexte: String? = nil) {
         let clair = ProcessInfo.processInfo.environment["RUNUP_CAPTURES_CLAIR"] != nil
@@ -348,6 +360,7 @@ final class CapturesUITests: XCTestCase {
         // doit être demandée aussi. Les deux ensemble plutôt qu'un drapeau qui en implique un
         // autre — un appelant qui lit la liste voit le chemin complet.
         if plusDeReglages { app.launchArguments += ["--reglages-plus"] }
+        if cycle { app.launchArguments += ["--cycle"] }
         if courseEnCours { app.launchArguments += ["--encours"] }
         // LA TAILLE DU TEXTE, PAR LE MÊME CHEMIN QUE LA LANGUE.
         //

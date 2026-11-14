@@ -5433,3 +5433,39 @@ Ce qui protège la lectrice, lui, est mesuré : le contraste réellement rendu v
 
 Les barres du Plan espagnol sont redevenues des aplats — le voile ne les éteint plus. Et
 « 31 km en su pico » est traduit.
+
+## 14 novembre 2026 — la capture du cycle était tirée au sort
+
+Hier j'ai écrit que l'encre de la ligne de phase rendait `#834C33` au lieu de `#80462E`, et que
+la cause restait ouverte. Elle est fermée, et la réponse était dans la campagne elle-même :
+**l'image ESPAGNOLE du même écran contient 6 315 pixels exactement `#80462E`.** Le jeton rend
+juste. C'est l'image française qui ne valait rien comme mesure.
+
+Pourquoi : le bloc du cycle est la cinquième carte de `MoreSettingsView`, et la capture y arrivait
+par trois glissements comptés en coordonnées. La campagne du 14 a donné **trois résultats
+différents pour la même capture** — l'espagnol tombait sur le bloc, le français et l'anglais le
+dépassaient, parce que les quatre cartes qui le précèdent sont plus courtes dans ces deux langues.
+
+Une fonctionnalité dont l'unique image dépend de la longueur des textes qui la précèdent n'est pas
+photographiée, elle est tirée au sort.
+
+### Ce qui change
+
+`--cycle` pose la vue sur le bloc par son ancre, et la capture ne défile plus. `ScrollViewReader`
+ne rouvre pas le piège que `CapturesUITests` documente depuis septembre : ce qui avait tué le
+premier essai de ces captures, c'était d'interroger l'arbre d'accessibilité **depuis le test**.
+Ici le défilement se décide dans l'app, qui connaît ses propres vues, et le test ne demande rien.
+Le défilement en coordonnées reste la règle partout ailleurs.
+
+### Deux explications fausses, dans l'ordre
+
+1. **Un fondu saisi en cours.** `#834C33` est exactement `#80462E` à 97 % sur du blanc, ce qui
+   rendait l'hypothèse séduisante. Réfutée : deux campagnes aux attentes différentes — deux
+   secondes, puis quatre — rendaient le même compte de pixels, au pixel près. Une image prise
+   pendant un fondu ne se reproduit pas à l'identique.
+2. **Le rendu des teintes saturées.** Réfutée dans la même image : le rose de marque y comptait
+   142 223 pixels exacts, et le jeton `cycle` rend exactement `#F2B8A0` en thème sombre.
+
+La troisième tentative a été la bonne parce qu'elle a cessé de chercher une cause dans le rendu
+pour aller chercher **une autre image du même écran**. La leçon tient en une ligne : une couleur
+ne se juge pas sur une image dont on n'a pas vérifié qu'elle était stable.
